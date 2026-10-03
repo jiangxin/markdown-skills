@@ -21,7 +21,7 @@ The bundled example already lives in this repository. Skip git init when buildin
 
 `[build] skill` is the markdown-slides directory (the one that contains `scripts/build-slides.py`). If the deck and the skill share a git tree, store a path relative to the deck root. Otherwise store the absolute path of this skill. `SKILL` or `MARKDOWN_SLIDES_HOME` overrides the ini value. Copy `templates/Makefile.deck` to the deck root as `Makefile`.
 
-`[build] theme` selects a directory under `templates/` (default `templates/swiss-modern`). That directory holds `deck.css`, `deck.js`, and `pptx/`. Do not restyle by editing HTML. To add a later look, add another directory there (from a frontend-slides pick) and point `theme` at it.
+`[build] theme` selects a directory under `templates/` (default `templates/swiss-modern`). That directory holds `deck.css`, `deck.js`, and `pptx/`. The generator inlines Google Fonts into the HTML at build time (cache under `.cache/fonts/`). Viewing the deck does not request fonts.googleapis.com or fonts.gstatic.com. Do not restyle by editing HTML. To add a later look, add another directory there (from a frontend-slides pick) and point `theme` at it.
 
 ## Write, commit, then build
 

@@ -63,6 +63,8 @@ Skill 会：
 
 在 `[build] theme` 里写目录名。要再加一种：用 `/frontend-slides` 做视觉挑选，然后在 `templates/<slug>/` 放入 `deck.css`、`deck.js`、`pptx/`（可从 `swiss-modern` 拷一份再改编配色）。把 `[build] theme` 指过去。不要把 frontend-slides 的 HTML 丢进稿仓库。
 
+构建好的 HTML 会内联 webfont。`make html` 可能把 Google Fonts 下载一次到 `skills/markdown-slides/.cache/`（需要联网）。打开 HTML 不再访问外网。`make fonts` 可预热缓存。没有缓存、也没有网络时，构建仍会成功，稿用系统字体，而不会卡在 CDN。
+
 Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill 目录执行 `make html` 会构建那一套。
 
 ## 本仓库的演示稿

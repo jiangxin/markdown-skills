@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import config
+from embed_fonts import embedded_font_css
 from md_html import render_markdown
 from slide_model import (
     git_describe,
@@ -736,7 +737,7 @@ def build(output: Path | None = None) -> None:
         rev = html.escape(version, quote=True)
         title = html.escape(deck.title)
         icon = favicon_link(root)
-        fonts = html.escape(theme_font_href(deck.theme_dir), quote=True)
+        font_css = embedded_font_css(theme_font_href(deck.theme_dir))
         doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -761,10 +762,8 @@ def build(output: Path | None = None) -> None:
     }})();
     </script>
     <!-- git describe: {rev} -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="{fonts}" rel="stylesheet">
     <style>
+{font_css}
 {css}
     </style>
 </head>

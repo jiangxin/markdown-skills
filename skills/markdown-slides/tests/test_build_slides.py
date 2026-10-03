@@ -45,6 +45,7 @@ class TestBuildSlides(unittest.TestCase):
 
     def _run(self, deck: Path, *, use_flag: bool = False) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
+        env["MARKDOWN_SLIDES_EMBED_FONTS"] = "0"
         command = [sys.executable, str(SCRIPT)]
         if use_flag:
             env.pop("DECK_ROOT", None)
@@ -69,6 +70,8 @@ class TestBuildSlides(unittest.TestCase):
             self.assertTrue(html_path.is_file())
             self.assertEqual(html_path.parent.resolve(), deck.resolve())
             html = html_path.read_text(encoding="utf-8")
+            self.assertNotIn("fonts.googleapis.com", html)
+            self.assertNotIn("fonts.gstatic.com", html)
             self.assertIn("<title>Fixture Title</title>", html)
             self.assertIn('this.storageKey = "markdown-slides:fixture-deck"', html)
             self.assertIn('a.download = "fixture-deck.html"', html)
@@ -168,7 +171,7 @@ class TestBuildSlides(unittest.TestCase):
         self.assertTrue(template.is_file())
         text = template.read_text(encoding="utf-8")
         self.assertIn('$(MAKE) -C "$(SKILL)" $@ DECK_ROOT="$(DECK_ROOT)"', text)
-        self.assertIn("html ppt pdf serve lint fmt test:", text)
+        self.assertIn("html ppt pdf serve lint fmt test fonts:", text)
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             self._write_deck(deck, name="tramp-deck", title="Trampoline Title")

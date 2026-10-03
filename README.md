@@ -63,6 +63,8 @@ Looks live in [`skills/markdown-slides/templates/`](skills/markdown-slides/templ
 
 Set the name in `[build] theme`. To add another look: run `/frontend-slides` for visual discovery, pick a style, then add `templates/<slug>/` with `deck.css`, `deck.js`, and `pptx/` (copy `swiss-modern` and restyle tokens). Point `[build] theme` at the new directory. Do not drop frontend-slides HTML into the deck.
 
+The built HTML inlines webfonts. `make html` may download Google Fonts once into `skills/markdown-slides/.cache/` (needs network). Opening the HTML does not. `make fonts` warms that cache. Without a cache and without a network, the build still succeeds and the deck uses system fonts instead of blocking on the CDN.
+
 `examples/slides/` inside the skill is English engine self-test pages. `make html` in the skill directory builds that set.
 
 ## Demo deck in this repo

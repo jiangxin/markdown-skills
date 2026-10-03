@@ -72,6 +72,7 @@ class TestBundledThemes(unittest.TestCase):
             )
             env = os.environ.copy()
             env["DECK_ROOT"] = str(deck)
+            env["MARKDOWN_SLIDES_EMBED_FONTS"] = "0"
             result = subprocess.run(
                 [sys.executable, str(BUILD)],
                 env=env,
@@ -81,7 +82,9 @@ class TestBundledThemes(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             html = (deck / "theme-deck.html").read_text(encoding="utf-8")
-            self.assertIn("JetBrains+Mono", html)
+            self.assertNotIn("fonts.googleapis.com", html)
+            self.assertNotIn("fonts.gstatic.com", html)
+            self.assertIn("JetBrains Mono", html)
             self.assertIn("THEME — Terminal Green", html)
             self.assertIn("#0d1117", html)
 

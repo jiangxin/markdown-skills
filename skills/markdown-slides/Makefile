@@ -2,7 +2,7 @@
 
 SKILL_ROOT := $(abspath .)
 
-.PHONY: help html ppt pdf serve test lint fmt
+.PHONY: help html ppt pdf serve test lint fmt fonts
 
 help:
 	@echo "Targets (run from skills/markdown-slides):"
@@ -13,8 +13,12 @@ help:
 	@echo "  make fmt     format Python with ruff"
 	@echo "  make lint    ruff + markdownlint-cli2"
 	@echo "  make test    run unit tests"
+	@echo "  make fonts   download Google Fonts into .cache (once per theme)"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
 	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and slides/*.md."
+
+fonts:
+	python3 scripts/embed_fonts.py
 
 html:
 	DECK_ROOT="$(DECK_ROOT)" python3 scripts/build-slides.py

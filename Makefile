@@ -32,7 +32,7 @@ SKILL := $(shell MARKDOWN_SLIDES_HOME="$(MARKDOWN_SLIDES_HOME)" printf '%s\n' \
 	| python3 - "$(DECK_ROOT)")
 endif
 
-.PHONY: help html ppt pdf serve lint fmt test
+.PHONY: help html ppt pdf serve lint fmt test fonts
 
 help:
 	@echo "Targets (run from the deck root):"
@@ -43,9 +43,10 @@ help:
 	@echo "  make fmt     format Python in the skill"
 	@echo "  make lint    ruff + markdownlint (skill, plus this deck's Markdown)"
 	@echo "  make test    run the skill unit tests"
+	@echo "  make fonts   vendor Google Fonts into the skill cache"
 	@echo "Set SKILL or MARKDOWN_SLIDES_HOME, or [build] skill in config.ini."
 
-html ppt pdf serve lint fmt test:
+html ppt pdf serve lint fmt test fonts:
 	@if [ -z "$(SKILL)" ]; then \
 		echo "set SKILL= or MARKDOWN_SLIDES_HOME, or [build] skill in config.ini" >&2; \
 		exit 1; \
