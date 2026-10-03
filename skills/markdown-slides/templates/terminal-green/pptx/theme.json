@@ -11,7 +11,8 @@
     "ink": "E6EDF3",
     "muted": "7EE787",
     "faint": "30363D",
-    "accent": "39D353"
+    "accent": "39D353",
+    "paper": "21262D"
   },
   "fonts": {
     "display": "Courier New",
