@@ -17,9 +17,11 @@ If the deck root is not a git work tree, ask in English before git init. If the 
 
 The bundled example already lives in this repository. Skip git init when building it. Its `[deck] slides` value is `examples/slides`. Build that example from the skill directory with `make html`. Do not write `[build] skill` for it.
 
-`config.ini` in the deck root holds `[deck] name`, `[deck] title`, `[deck] slides`, the page-order keys, and `[build] skill`. `name` is the output basename and the storage key `markdown-slides:<name>`. `title` is the HTML document title. `slides` is the page directory relative to the deck root. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto`). Set `sort = <file.md>` to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together.
+`config.ini` in the deck root holds `[deck] name`, `[deck] title`, `[deck] slides`, the page-order keys, `[build] skill`, and `[build] theme`. `name` is the output basename and the storage key `markdown-slides:<name>`. `title` is the HTML document title. `slides` is the page directory relative to the deck root. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto`). Set `sort = <file.md>` to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together.
 
 `[build] skill` is the markdown-slides directory (the one that contains `scripts/build-slides.py`). If the deck and the skill share a git tree, store a path relative to the deck root. Otherwise store the absolute path of this skill. `SKILL` or `MARKDOWN_SLIDES_HOME` overrides the ini value. Copy `templates/Makefile.deck` to the deck root as `Makefile`.
+
+`[build] theme` selects a directory under `templates/` (default `templates/swiss-modern`). That directory holds `deck.css`, `deck.js`, and `pptx/`. Do not restyle by editing HTML. To add a later look, add another directory there and point `theme` at it.
 
 ## Write, commit, then build
 

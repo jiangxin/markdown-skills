@@ -11,8 +11,8 @@ from pathlib import Path
 
 SKILL = Path(__file__).resolve().parent.parent
 SCRIPT = SKILL / "scripts" / "build-slides.py"
-DECK_JS = SKILL / "templates" / "deck.js"
-DECK_CSS = SKILL / "templates" / "deck.css"
+DECK_JS = SKILL / "templates" / "swiss-modern" / "deck.js"
+DECK_CSS = SKILL / "templates" / "swiss-modern" / "deck.css"
 
 PAGE = """---
 layout: title

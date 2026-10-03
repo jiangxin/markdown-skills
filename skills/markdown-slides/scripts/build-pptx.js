@@ -6,7 +6,6 @@ const fs = require("fs");
 const path = require("path");
 
 const { SKILL_ROOT, SCRIPTS, loadOutputs, deckEnv } = require("./deck-paths");
-const THEME_PATH = path.join(SKILL_ROOT, "templates", "pptx", "theme.json");
 
 function loadPptxgen() {
   const local = path.join(SKILL_ROOT, "node_modules", "pptxgenjs");
@@ -71,8 +70,15 @@ async function main() {
     return;
   }
   const out = explicitOut(argv) || outputs.pptx;
-  const theme = JSON.parse(fs.readFileSync(THEME_PATH, "utf8"));
-  const layouts = require(path.join(SKILL_ROOT, "templates", "pptx", "layouts.js"));
+  const themeDir = outputs.themeDir;
+  if (!themeDir) {
+    process.stderr.write("config.py json is missing themeDir\n");
+    process.exit(1);
+  }
+  const theme = JSON.parse(
+    fs.readFileSync(path.join(themeDir, "pptx", "theme.json"), "utf8")
+  );
+  const layouts = require(path.join(themeDir, "pptx", "layouts.js"));
   const PptxGenJS = loadPptxgen();
   const deck = loadDeck(outputs);
   const pres = new PptxGenJS();

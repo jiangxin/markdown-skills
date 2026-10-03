@@ -14,6 +14,8 @@ REQUIRED = (
     "do not git init",
     "from the deck root",
     "[build] skill",
+    "[build] theme",
+    "templates/swiss-modern",
     "templates/Makefile.deck",
     "examples/slides/010-cover.md",
     "Do not hand-edit HTML",

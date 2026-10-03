@@ -13,12 +13,18 @@
 ;         MARKDOWN_SLIDES_HOME override this value. Omit it when running
 ;         make from the skill directory itself.
 ;         Example: skill = ../markdown-slides
+; [build] theme: template directory under the skill templates/.
+;         Defaults to swiss-modern. Letters, digits, and hyphens only.
 
 [deck]
 name = markdown-slides-examples
 title = Markdown Slides Examples
 slides = examples/slides
 order = auto
+
+[build]
+; skill =
+theme = swiss-modern
 
 [cover]
 presenter =

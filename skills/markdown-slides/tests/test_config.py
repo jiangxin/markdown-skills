@@ -30,6 +30,11 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.order, "auto")
             self.assertIsNone(loaded.sort)
             self.assertEqual(loaded.sort_rel, "")
+            self.assertEqual(loaded.theme, "swiss-modern")
+            self.assertEqual(
+                loaded.theme_dir,
+                (config_module.skill_root() / "templates" / "swiss-modern").resolve(),
+            )
 
     def test_empty_fields_use_defaults(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -182,6 +187,11 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(loaded.order, "auto")
         self.assertIsNone(loaded.sort)
         self.assertEqual(loaded.sort_rel, "")
+        self.assertEqual(loaded.theme, "swiss-modern")
+        self.assertEqual(
+            loaded.theme_dir,
+            (config_module.skill_root() / "templates" / "swiss-modern").resolve(),
+        )
 
     def test_deck_root_resolution(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -261,6 +271,29 @@ class TestConfig(unittest.TestCase):
             with self.assertRaises(SystemExit) as caught:
                 config_module.load_deck(deck)
             self.assertIn("escapes", str(caught.exception))
+
+    def test_default_theme_is_swiss_modern(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            loaded = config_module.load_deck(deck)
+            self.assertEqual(loaded.theme, "swiss-modern")
+            self.assertTrue((loaded.theme_dir / "deck.css").is_file())
+
+    def test_explicit_theme_must_exist_under_templates(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[build]\ntheme = missing-look\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_deck(deck)
+            self.assertIn("theme", str(caught.exception))
+
+    def test_theme_rejects_path_separators(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[build]\ntheme = ../swiss-modern\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_deck(deck)
+            self.assertIn("theme", str(caught.exception))
 
     def test_bundled_example_has_no_build_skill(self):
         skill = config_module.skill_root()

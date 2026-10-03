@@ -19,7 +19,13 @@ from pathlib import Path
 DEFAULT_PORT = 8000
 DEFAULT_SLIDES = "slides"
 DEFAULT_ORDER = "auto"
+DEFAULT_THEME = "swiss-modern"
 ENGINE_MARKER = Path("scripts") / "build-slides.py"
+THEME_MARKERS = (
+    Path("deck.css"),
+    Path("deck.js"),
+    Path("pptx") / "theme.json",
+)
 COVER_FIELDS = ("presenter", "presented_at")
 _NAME_RE = re.compile(r"^[A-Za-z0-9-]+$")
 
@@ -33,6 +39,8 @@ class Deck:
     order: str
     sort: Path | None
     sort_rel: str
+    theme: str
+    theme_dir: Path
 
 
 @dataclass(frozen=True)
@@ -45,6 +53,8 @@ class Outputs:
     html: Path
     pptx: Path
     pdf: Path
+    theme: str
+    theme_dir: Path
 
 
 def skill_root() -> Path:
@@ -71,6 +81,7 @@ def load_deck(deck_root: Path) -> Deck:
     title = parser.get("deck", "title", fallback="").strip() or name
     slides_rel = parser.get("deck", "slides", fallback="").strip() or DEFAULT_SLIDES
     order, sort, sort_rel = _deck_order(parser, root)
+    theme, theme_dir = _deck_theme(parser)
     return Deck(
         name,
         title,
@@ -79,6 +90,8 @@ def load_deck(deck_root: Path) -> Deck:
         order,
         sort,
         sort_rel,
+        theme,
+        theme_dir,
     )
 
 
@@ -98,6 +111,8 @@ def output_paths(root: Path | None = None) -> Outputs:
         html=resolved / f"{deck.name}.html",
         pptx=resolved / f"{deck.name}.pptx",
         pdf=resolved / f"{deck.name}.pdf",
+        theme=deck.theme,
+        theme_dir=deck.theme_dir,
     )
 
 
@@ -241,6 +256,25 @@ def _deck_order(
     return DEFAULT_ORDER, None, ""
 
 
+def _deck_theme(parser: configparser.ConfigParser) -> tuple[str, Path]:
+    raw = parser.get("build", "theme", fallback="").strip() or DEFAULT_THEME
+    if _NAME_RE.fullmatch(raw) is None:
+        sys.exit(
+            "config.ini [build] theme must contain only letters, digits, and "
+            f"hyphens, got: {raw!r}"
+        )
+    theme_dir = skill_root() / "templates" / raw
+    if not theme_dir.is_dir():
+        sys.exit(f"config.ini [build] theme is not a template directory: {raw}")
+    missing = [str(marker) for marker in THEME_MARKERS if not (theme_dir / marker).is_file()]
+    if missing:
+        sys.exit(
+            "config.ini [build] theme is incomplete "
+            f"(missing {', '.join(missing)}): {raw}"
+        )
+    return raw, theme_dir.resolve()
+
+
 def _relative_path(root: Path, raw: str, key: str) -> Path:
     relative = Path(raw)
     if relative.is_absolute():
@@ -273,6 +307,8 @@ def _print_output(kind: str, paths: Outputs) -> None:
                 "html": str(paths.html),
                 "pptx": str(paths.pptx),
                 "pdf": str(paths.pdf),
+                "theme": paths.theme,
+                "themeDir": str(paths.theme_dir),
             },
             sys.stdout,
             ensure_ascii=False,

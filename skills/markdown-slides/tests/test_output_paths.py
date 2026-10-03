@@ -38,6 +38,11 @@ class TestOutputPaths(unittest.TestCase):
             self.assertEqual(paths.pptx, deck / "sample-deck.pptx")
             self.assertEqual(paths.pdf, deck / "sample-deck.pdf")
             self.assertEqual(paths.html, deck / "sample-deck.html")
+            self.assertEqual(paths.theme, "swiss-modern")
+            self.assertEqual(
+                paths.theme_dir,
+                (SKILL / "templates" / "swiss-modern").resolve(),
+            )
             self.assertEqual(paths.pptx.parent, deck)
             self.assertEqual(paths.pdf.parent, deck)
             self.assertFalse(paths.pptx.exists())
@@ -102,9 +107,9 @@ class TestOutputPaths(unittest.TestCase):
             SCRIPTS / "serve.py",
             SCRIPTS / "compress-images.py",
             SCRIPTS / "deck-paths.js",
-            SKILL / "templates" / "pptx" / "layouts.js",
-            SKILL / "templates" / "pptx" / "chrome.js",
-            SKILL / "templates" / "pptx" / "theme.json",
+            SKILL / "templates" / "swiss-modern" / "pptx" / "layouts.js",
+            SKILL / "templates" / "swiss-modern" / "pptx" / "chrome.js",
+            SKILL / "templates" / "swiss-modern" / "pptx" / "theme.json",
         ]
         for path in files:
             text = path.read_text(encoding="utf-8")

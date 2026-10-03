@@ -25,7 +25,6 @@ from slide_model import (
 )
 
 
-TEMPLATES = config.skill_root() / "templates"
 _DECK_PLACEHOLDER = "__DECK_NAME__"
 _FAVICON_FILES = ("favicon.svg", "favicon.ico", "favicon.png")
 _FAVICON_TYPES = {
@@ -708,10 +707,13 @@ def build(output: Path | None = None) -> None:
         slides = "\n\n".join(
             render_page(path, i, total) for i, path in enumerate(pages, start=1)
         )
-        css = (TEMPLATES / "deck.css").read_text(encoding="utf-8")
-        js = (TEMPLATES / "deck.js").read_text(encoding="utf-8")
+        css = (deck.theme_dir / "deck.css").read_text(encoding="utf-8")
+        js = (deck.theme_dir / "deck.js").read_text(encoding="utf-8")
         if _DECK_PLACEHOLDER not in js:
-            sys.exit("templates/deck.js is missing the __DECK_NAME__ placeholder")
+            sys.exit(
+                f"{deck.theme_dir / 'deck.js'} is missing the "
+                f"{_DECK_PLACEHOLDER} placeholder"
+            )
         js = js.replace(_DECK_PLACEHOLDER, _js_string(deck.name))
         rev = html.escape(version, quote=True)
         title = html.escape(deck.title)

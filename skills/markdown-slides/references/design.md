@@ -1,6 +1,6 @@
 # Slide design
 
-This file is the syntax source for a deck. The generator reads the layouts, frontmatter, blocks, and inline marks defined here. The stage size and color tokens live in `templates/deck.css`; change those tokens together with this file when the visual system changes.
+This file is the syntax source for a deck. The generator reads the layouts, frontmatter, blocks, and inline marks defined here. The stage size and color tokens live in `templates/<theme>/deck.css`; change those tokens together with this file when the visual system changes. The default theme is `swiss-modern`.
 
 ## Stage
 
@@ -27,7 +27,7 @@ Title and section pages paint an 80px grid. The left red bar is on every page.
 
 ## Page order
 
-The generator and the Swiss Modern stage live in the skill (`scripts/` and `templates/`). A user deck does not copy those files. `[build] skill` in the deck-root `config.ini` points at the skill directory. The deck `Makefile` (copied from `templates/Makefile.deck`) runs `make` in that directory with `DECK_ROOT` set to the deck. `SKILL` and `MARKDOWN_SLIDES_HOME` override the ini path.
+The generator and the Swiss Modern stage live in the skill (`scripts/` and `templates/swiss-modern/`). A user deck does not copy those files. `[build] skill` in the deck-root `config.ini` points at the skill directory. `[build] theme` names a directory under `templates/` (default `swiss-modern`). The deck `Makefile` (copied from `templates/Makefile.deck`) runs `make` in that directory with `DECK_ROOT` set to the deck. `SKILL` and `MARKDOWN_SLIDES_HOME` override the ini skill path.
 
 The slides directory is the `[deck] slides` path in the deck-root `config.ini`, relative to the deck root. When the key is omitted, that directory is `slides`.
 
@@ -257,7 +257,7 @@ The nearer scope wins:
 - One card: `:::card xl` or `size: xl` inside the card.
 - The note: `note_size: xxl` in frontmatter, for both the band and `foot`. When it is omitted, the note uses the page `text_size`.
 
-The generator maps a step to a class such as `text-l` and the variables in `templates/deck.css`.
+The generator maps a step to a class such as `text-l` and the variables in `templates/<theme>/deck.css`.
 
 ## Paths
 
