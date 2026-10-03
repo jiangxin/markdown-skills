@@ -2,6 +2,7 @@
 
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -161,6 +162,69 @@ class TestBuildSlides(unittest.TestCase):
             'html:\n\tDECK_ROOT="$(DECK_ROOT)" python3 scripts/build-slides.py\n',
             text,
         )
+
+    def test_deck_makefile_builds_html_via_skill(self):
+        template = SKILL / "templates" / "Makefile.deck"
+        self.assertTrue(template.is_file())
+        text = template.read_text(encoding="utf-8")
+        self.assertIn("$(MAKE) -C \"$(SKILL)\" $@ DECK_ROOT=\"$(DECK_ROOT)\"", text)
+        self.assertNotIn("\ntest:", text)
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write_deck(deck, name="tramp-deck", title="Trampoline Title")
+            (deck / "config.ini").write_text(
+                "[deck]\n"
+                "name = tramp-deck\n"
+                "title = Trampoline Title\n"
+                "slides = pages\n"
+                f"[build]\nskill = {SKILL}\n",
+                encoding="utf-8",
+            )
+            shutil.copy(template, deck / "Makefile")
+            env = os.environ.copy()
+            env.pop("SKILL", None)
+            env.pop("MARKDOWN_SLIDES_HOME", None)
+            env.pop("DECK_ROOT", None)
+            result = subprocess.run(
+                ["make", "-C", str(deck), "html"],
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            html_path = deck / "tramp-deck.html"
+            self.assertTrue(html_path.is_file())
+            html = html_path.read_text(encoding="utf-8")
+            self.assertIn("<title>Trampoline Title</title>", html)
+            self.assertIn('this.storageKey = "markdown-slides:tramp-deck"', html)
+            js = DECK_JS.read_text(encoding="utf-8")
+            self.assertIn("userZoom", js)
+            self.assertIn("userZoom", html)
+
+    def test_deck_makefile_requires_skill(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write_deck(deck, name="no-skill", title="No Skill")
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            env = os.environ.copy()
+            env.pop("SKILL", None)
+            env.pop("MARKDOWN_SLIDES_HOME", None)
+            env.pop("DECK_ROOT", None)
+            result = subprocess.run(
+                ["make", "-C", str(deck), "html"],
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((deck / "no-skill.html").exists())
+            combined = result.stderr + result.stdout
+            self.assertTrue(
+                "[build] skill" in combined or "SKILL" in combined,
+                combined,
+            )
 
 
 if __name__ == "__main__":

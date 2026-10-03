@@ -1,5 +1,7 @@
 """Tests for scripts/config.py."""
 
+import contextlib
+import io
 import os
 import sys
 import tempfile
@@ -259,6 +261,111 @@ class TestConfig(unittest.TestCase):
             with self.assertRaises(SystemExit) as caught:
                 config_module.load_deck(deck)
             self.assertIn("escapes", str(caught.exception))
+
+    def test_bundled_example_has_no_build_skill(self):
+        skill = config_module.skill_root()
+        loaded = config_module.load_build_skill(skill, environ={})
+        self.assertIsNone(loaded)
+
+    def test_build_skill_relative_may_leave_deck(self):
+        with tempfile.TemporaryDirectory() as raw:
+            parent = Path(raw)
+            engine = parent / "engine"
+            (engine / "scripts").mkdir(parents=True)
+            (engine / "scripts" / "build-slides.py").write_text("# marker\n")
+            deck = parent / "deck"
+            deck.mkdir()
+            self._write(deck, "[build]\nskill = ../engine\n")
+            loaded = config_module.load_build_skill(deck, environ={})
+            self.assertEqual(loaded, engine.resolve())
+
+    def test_build_skill_absolute_path(self):
+        with tempfile.TemporaryDirectory() as raw:
+            parent = Path(raw)
+            engine = parent / "engine"
+            (engine / "scripts").mkdir(parents=True)
+            (engine / "scripts" / "build-slides.py").write_text("# marker\n")
+            deck = parent / "deck"
+            deck.mkdir()
+            self._write(deck, f"[build]\nskill = {engine.resolve()}\n")
+            loaded = config_module.load_build_skill(deck, environ={})
+            self.assertEqual(loaded, engine.resolve())
+
+    def test_build_skill_tilde_expands(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw) / "home"
+            engine = home / "slides-engine"
+            (engine / "scripts").mkdir(parents=True)
+            (engine / "scripts" / "build-slides.py").write_text("# marker\n")
+            deck = Path(raw) / "deck"
+            deck.mkdir()
+            self._write(deck, "[build]\nskill = ~/slides-engine\n")
+            with patch.dict(os.environ, {"HOME": str(home)}, clear=False):
+                loaded = config_module.load_build_skill(deck, environ={})
+            self.assertEqual(loaded, engine.resolve())
+
+    def test_build_skill_env_overrides_ini(self):
+        with tempfile.TemporaryDirectory() as raw:
+            parent = Path(raw)
+            ini_engine = parent / "ini-engine"
+            (ini_engine / "scripts").mkdir(parents=True)
+            (ini_engine / "scripts" / "build-slides.py").write_text("#\n")
+            env_engine = parent / "env-engine"
+            (env_engine / "scripts").mkdir(parents=True)
+            (env_engine / "scripts" / "build-slides.py").write_text("#\n")
+            deck = parent / "deck"
+            deck.mkdir()
+            self._write(deck, "[build]\nskill = ../ini-engine\n")
+            loaded = config_module.load_build_skill(
+                deck, environ={"SKILL": str(env_engine)}
+            )
+            self.assertEqual(loaded, env_engine.resolve())
+            loaded = config_module.load_build_skill(
+                deck, environ={"MARKDOWN_SLIDES_HOME": str(env_engine)}
+            )
+            self.assertEqual(loaded, env_engine.resolve())
+
+    def test_build_skill_missing_marker_fails(self):
+        with tempfile.TemporaryDirectory() as raw:
+            parent = Path(raw)
+            fake = parent / "not-engine"
+            fake.mkdir()
+            deck = parent / "deck"
+            deck.mkdir()
+            self._write(deck, "[build]\nskill = ../not-engine\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_build_skill(deck, environ={})
+            self.assertIn("build-slides.py", str(caught.exception))
+
+    def test_build_skill_missing_directory_fails(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[build]\nskill = ../gone\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_build_skill(deck, environ={})
+            self.assertIn("not a directory", str(caught.exception))
+
+    def test_print_skill_cli(self):
+        with tempfile.TemporaryDirectory() as raw:
+            parent = Path(raw)
+            engine = parent / "engine"
+            (engine / "scripts").mkdir(parents=True)
+            (engine / "scripts" / "build-slides.py").write_text("#\n")
+            deck = parent / "deck"
+            deck.mkdir()
+            self._write(deck, "[build]\nskill = ../engine\n")
+            saved = sys.argv
+            buf = io.StringIO()
+            try:
+                sys.argv = ["config.py", "--print-skill", "--deck-root", str(deck)]
+                with patch.dict(
+                    os.environ, {"SKILL": "", "MARKDOWN_SLIDES_HOME": ""}, clear=False
+                ):
+                    with contextlib.redirect_stdout(buf):
+                        config_module.main()
+            finally:
+                sys.argv = saved
+            self.assertEqual(buf.getvalue().strip(), str(engine.resolve()))
 
 
 if __name__ == "__main__":

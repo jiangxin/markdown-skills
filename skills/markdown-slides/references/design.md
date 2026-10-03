@@ -27,6 +27,8 @@ Title and section pages paint an 80px grid. The left red bar is on every page.
 
 ## Page order
 
+The generator and the Swiss Modern stage live in the skill (`scripts/` and `templates/`). A user deck does not copy those files. `[build] skill` in the deck-root `config.ini` points at the skill directory. The deck `Makefile` (copied from `templates/Makefile.deck`) runs `make` in that directory with `DECK_ROOT` set to the deck. `SKILL` and `MARKDOWN_SLIDES_HOME` override the ini path.
+
 The slides directory is the `[deck] slides` path in the deck-root `config.ini`, relative to the deck root. When the key is omitted, that directory is `slides`.
 
 Page order defaults to the filename sort of `NNN-slug.md` files in that directory. `index.md` and other files that do not match `NNN-slug.md` are not slides. Set `[deck] order = auto` to name that mode. Set `[deck] sort` to a Markdown file relative to the deck root (for example `examples/slides/index.md`) to use a link list instead. Do not set `order` and `sort` together.

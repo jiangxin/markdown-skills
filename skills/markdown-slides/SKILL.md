@@ -5,7 +5,7 @@ description: Create or edit a Markdown slide deck that builds onto the existing 
 
 # Markdown Slides
 
-Build a deck from Markdown pages and the engine already in this skill. User project files are only config.ini, the slides directory, and build outputs. The engine stays in the skill. Deck root resolution is --deck-root, else DECK_ROOT, else the skill root. Visual is the existing Swiss Modern stage; do not restyle.
+Build a deck from Markdown pages and the engine already in this skill. User project files are config.ini, Makefile, the slides directory, and build outputs. The engine stays in the skill. Do not copy scripts/ or templates/. Deck root resolution is --deck-root, else DECK_ROOT, else the skill root. Visual is the existing Swiss Modern stage; do not restyle.
 
 ## Before any page
 
@@ -13,17 +13,19 @@ Read references/design.md before creating slides. That file is the grammar: layo
 
 If the prompt does not name a directory, ask in English and offer slides/ as the default. Store the choice in [deck] slides. Do not write slides until that choice is recorded. A path the prompt already names is the choice; record that path and do not ask again.
 
-If the deck root is not a git work tree, ask in English before git init. If the user agrees, git init, ignore <name>.html, <name>.pptx, <name>.pdf, node_modules/, and .cache/, then commit the slide markdown and config.ini. If the user refuses, do not write slides and do not git init.
+If the deck root is not a git work tree, ask in English before git init. If the user agrees, git init, ignore <name>.html, <name>.pptx, <name>.pdf, node_modules/, and .cache/, then commit the slide markdown, config.ini, and Makefile. If the user refuses, do not write slides and do not git init.
 
-The bundled example already lives in this repository. Skip git init when building it. Its `[deck] slides` value is `examples/slides`.
+The bundled example already lives in this repository. Skip git init when building it. Its `[deck] slides` value is `examples/slides`. Build that example from the skill directory with `make html`. Do not write `[build] skill` for it.
 
-`config.ini` in the deck root holds `[deck] name`, `[deck] title`, `[deck] slides`, and the page-order keys. `name` is the output basename and the storage key `markdown-slides:<name>`. `title` is the HTML document title. `slides` is the page directory relative to the deck root. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto`). Set `sort = <file.md>` to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together.
+`config.ini` in the deck root holds `[deck] name`, `[deck] title`, `[deck] slides`, the page-order keys, and `[build] skill`. `name` is the output basename and the storage key `markdown-slides:<name>`. `title` is the HTML document title. `slides` is the page directory relative to the deck root. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto`). Set `sort = <file.md>` to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together.
+
+`[build] skill` is the markdown-slides directory (the one that contains `scripts/build-slides.py`). If the deck and the skill share a git tree, store a path relative to the deck root. Otherwise store the absolute path of this skill. `SKILL` or `MARKDOWN_SLIDES_HOME` overrides the ini value. Copy `templates/Makefile.deck` to the deck root as `Makefile`.
 
 ## Write, commit, then build
 
 Write one Markdown file per slide under the recorded slides directory, named `NNN-slug.md`. Page order is that filename sort unless `[deck] sort` points at an index file.
 
-Commit the sources before the build. Then run make html DECK_ROOT=<deck-root> so the cover stamp is not unknown. Run `make` from `skills/markdown-slides`. The same `DECK_ROOT` selects `make ppt` and `make pdf` when those files are needed. Commit the slide markdown and `config.ini` only. Leave `<name>.html`, `<name>.pptx`, `<name>.pdf`, `node_modules/`, and `.cache/` untracked.
+Commit the sources before the build. Then run `make html` from the deck root so the cover stamp is not unknown. That Makefile forwards to the skill with `DECK_ROOT` set to the deck. The same targets are `make ppt` and `make pdf`. Commit the slide markdown, `config.ini`, and `Makefile`. Leave `<name>.html`, `<name>.pptx`, `<name>.pdf`, `node_modules/`, and `.cache/` untracked.
 
 Later edits change Markdown, then commit, then rebuild. Do not hand-edit HTML. Do not rerun frontend-slides to change copy.
 

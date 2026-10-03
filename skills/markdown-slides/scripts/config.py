@@ -19,6 +19,7 @@ from pathlib import Path
 DEFAULT_PORT = 8000
 DEFAULT_SLIDES = "slides"
 DEFAULT_ORDER = "auto"
+ENGINE_MARKER = Path("scripts") / "build-slides.py"
 COVER_FIELDS = ("presenter", "presented_at")
 _NAME_RE = re.compile(r"^[A-Za-z0-9-]+$")
 
@@ -98,6 +99,52 @@ def output_paths(root: Path | None = None) -> Outputs:
         pptx=resolved / f"{deck.name}.pptx",
         pdf=resolved / f"{deck.name}.pdf",
     )
+
+
+def load_build_skill(
+    deck_root: Path, environ: dict[str, str] | None = None
+) -> Path | None:
+    """Return the engine directory for a deck, or None if unset.
+
+    Override order: ``SKILL``, then ``MARKDOWN_SLIDES_HOME``, then
+    ``[build] skill`` in the deck ``config.ini``. Relative values are
+    resolved from the deck root. Absolute paths and ``~`` are allowed, and
+    the path may leave the deck root. The directory must contain
+    ``scripts/build-slides.py``.
+    """
+    root = _existing_dir(deck_root)
+    env = os.environ if environ is None else environ
+    raw = _env_skill(env)
+    if not raw:
+        parser = _load_parser(root)
+        raw = parser.get("build", "skill", fallback="").strip()
+    if not raw:
+        return None
+    return _engine_dir(root, raw)
+
+
+def _env_skill(env: dict[str, str]) -> str:
+    for key in ("SKILL", "MARKDOWN_SLIDES_HOME"):
+        raw = env.get(key, "").strip()
+        if raw:
+            return raw
+    return ""
+
+
+def _engine_dir(deck_root: Path, raw: str) -> Path:
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        path = deck_root / path
+    resolved = path.resolve()
+    if not resolved.is_dir():
+        sys.exit(f"markdown-slides skill is not a directory: {raw}")
+    marker = resolved / ENGINE_MARKER
+    if not marker.is_file():
+        sys.exit(
+            "not a markdown-slides skill "
+            f"(missing {ENGINE_MARKER}): {raw}"
+        )
+    return resolved
 
 
 def serve_port(deck_root: Path) -> int:
@@ -236,17 +283,34 @@ def _print_output(kind: str, paths: Outputs) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Print a default artifact path without building it.
+    """Print a default artifact path or the configured engine directory.
 
     ``python3 scripts/config.py --print-output pptx`` prints the PPTX path.
-    ``pdf``, ``html``, and ``json`` are the other kinds. ``--deck-root`` and
-    ``DECK_ROOT`` are read by ``deck_root()``.
+    ``pdf``, ``html``, and ``json`` are the other kinds. ``--print-skill``
+    prints the engine path. ``--deck-root`` and ``DECK_ROOT`` are read by
+    ``deck_root()``.
     """
     args = list(sys.argv[1:] if argv is None else argv)
+    if "--print-skill" in args:
+        saved = sys.argv
+        try:
+            if argv is not None:
+                sys.argv = ["config.py", *args]
+            engine = load_build_skill(deck_root())
+        finally:
+            sys.argv = saved
+        if engine is None:
+            sys.exit(
+                "set SKILL= or MARKDOWN_SLIDES_HOME, or [build] skill in "
+                "config.ini"
+            )
+        sys.stdout.write(str(engine) + "\n")
+        return
     flag = "--print-output"
     if flag not in args:
         sys.exit(
-            "usage: python3 scripts/config.py --print-output {html,pptx,pdf,json}"
+            "usage: python3 scripts/config.py --print-output "
+            "{html,pptx,pdf,json} | --print-skill"
         )
     index = args.index(flag)
     kind = "json"

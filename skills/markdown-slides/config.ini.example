@@ -8,6 +8,11 @@
 ; sort: optional Markdown file, relative to the deck root, whose ## Slides
 ;       links set the page order. Do not set order and sort together.
 ;       Example: sort = examples/slides/index.md
+; [build] skill: markdown-slides engine directory. Relative to the deck
+;         root, absolute, or ~. May leave the deck root. SKILL and
+;         MARKDOWN_SLIDES_HOME override this value. Omit it when running
+;         make from the skill directory itself.
+;         Example: skill = ../markdown-slides
 
 [deck]
 name = markdown-slides-examples

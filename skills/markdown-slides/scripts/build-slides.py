@@ -24,6 +24,7 @@ from slide_model import (
     parse_table,
 )
 
+
 TEMPLATES = config.skill_root() / "templates"
 _DECK_PLACEHOLDER = "__DECK_NAME__"
 _FAVICON_FILES = ("favicon.svg", "favicon.ico", "favicon.png")
