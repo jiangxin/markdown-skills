@@ -34,7 +34,7 @@ serve:
 
 fmt:
 	@command -v ruff >/dev/null || { echo "ruff is required: https://docs.astral.sh/ruff/" >&2; exit 1; }
-	ruff format scripts tests
+	ruff format scripts tests templates/build.py
 
 EXTRA_MD :=
 ifneq ($(DECK_ROOT),)
@@ -45,8 +45,8 @@ endif
 
 lint:
 	@command -v ruff >/dev/null || { echo "ruff is required: https://docs.astral.sh/ruff/" >&2; exit 1; }
-	ruff check scripts tests
-	ruff format --check scripts tests
+	ruff check scripts tests templates/build.py
+	ruff format --check scripts tests templates/build.py
 	@if [ ! -d node_modules/markdownlint-cli2 ]; then \
 		echo "run npm install in skills/markdown-slides (markdownlint-cli2)" >&2; \
 		exit 1; \

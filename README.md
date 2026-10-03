@@ -20,7 +20,7 @@ Install or attach the skill from [`skills/markdown-slides/`](skills/markdown-sli
 The skill will:
 
 1. Record `[deck] slides` (default `slides/` if you do not name a directory).
-2. Write `NNN-slug.md` pages, `config.ini`, and a `Makefile` copied from `templates/Makefile.deck`. It does **not** copy `scripts/` or `templates/`.
+2. Write `NNN-slug.md` pages, `config.ini`, a `Makefile` copied from `templates/Makefile.deck`, and `build.py` copied from `templates/build.py`. It does **not** copy `scripts/` or theme templates.
 3. Point `[build] skill` at this skill (a path relative to the deck if they share a git tree; otherwise an absolute path).
 4. Commit those sources, then `make html` from the **deck root**.
 
@@ -48,7 +48,7 @@ Path: [`skills/markdown-slides/`](skills/markdown-slides/).
 
 It turns Markdown pages into a single-file HTML deck (PPTX and PDF as well). Dialect: [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md). Agent workflow: [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md).
 
-The engine (`scripts/`, `templates/`) stays in the skill. User decks keep `config.ini`, `Makefile`, slide Markdown, and build outputs.
+The engine (`scripts/`, theme directories under `templates/`) stays in the skill. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs.
 
 ## Themes
 
@@ -75,7 +75,8 @@ Root [`slides/`](slides/) **is** the skill’s example deck: generated here with
 |------|------|
 | [`slides/`](slides/) | Page sources, `NNN-slug.md`, ordered by filename |
 | [`config.ini`](config.ini) | `slides = slides`, `skill = skills/markdown-slides`, `theme = swiss-modern` |
-| [`Makefile`](Makefile) | Forwards to the skill with `DECK_ROOT` set to this repo root |
+| [`Makefile`](Makefile) | Thin wrapper: `python3 build.py <target>` |
+| [`build.py`](build.py) | Resolves `[build] skill` and forwards `make` with `DECK_ROOT` |
 
 Build from the repo root:
 

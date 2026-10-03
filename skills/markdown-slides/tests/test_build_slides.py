@@ -170,8 +170,11 @@ class TestBuildSlides(unittest.TestCase):
         template = SKILL / "templates" / "Makefile.deck"
         self.assertTrue(template.is_file())
         text = template.read_text(encoding="utf-8")
-        self.assertIn('$(MAKE) -C "$(SKILL)" $@ DECK_ROOT="$(DECK_ROOT)"', text)
-        self.assertIn("html ppt pdf serve lint fmt test fonts:", text)
+        self.assertIn("python3 build.py $@", text)
+        builder = SKILL / "templates" / "build.py"
+        self.assertTrue(builder.is_file())
+        self.assertIn('"-C"', builder.read_text(encoding="utf-8"))
+        self.assertIn("DECK_ROOT=", builder.read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             self._write_deck(deck, name="tramp-deck", title="Trampoline Title")
@@ -184,6 +187,7 @@ class TestBuildSlides(unittest.TestCase):
                 encoding="utf-8",
             )
             shutil.copy(template, deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
                 ["make", "-C", str(deck), "html"],
                 env=isolated_env.isolated(),
@@ -206,6 +210,7 @@ class TestBuildSlides(unittest.TestCase):
             deck = Path(raw)
             self._write_deck(deck, name="no-skill", title="No Skill")
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
                 ["make", "-C", str(deck), "html"],
                 env=isolated_env.isolated(),

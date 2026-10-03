@@ -20,7 +20,7 @@
 Skill 会：
 
 1. 记下 `[deck] slides`（未指定目录时默认 `slides/`）。
-2. 写下 `NNN-slug.md`、`config.ini`，以及从 `templates/Makefile.deck` 拷来的 `Makefile`。**不会**拷贝 `scripts/` 或 `templates/`。
+2. 写下 `NNN-slug.md`、`config.ini`，从 `templates/Makefile.deck` 拷来的 `Makefile`，以及从 `templates/build.py` 拷来的 `build.py`。**不会**拷贝 `scripts/` 或主题模板。
 3. 把 `[build] skill` 指到本 skill（与稿同处一个 git 树时用相对路径，否则用绝对路径）。
 4. 提交这些源文件，再在**稿根目录**执行 `make html`。
 
@@ -48,7 +48,7 @@ Skill 会：
 
 用 Markdown 页面生成单文件 HTML 演示稿（也可出 PPTX / PDF）。语法见 [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md)。Agent 用法见 [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md)。
 
-引擎（`scripts/`、`templates/`）留在 skill 里，不拷进稿仓库。用户稿只有 `config.ini`、`Makefile`、幻灯片 Markdown，以及构建产物。
+引擎（`scripts/`、`templates/` 下的主题目录）留在 skill 里，不拷进稿仓库。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。
 
 ## 主题
 
@@ -75,7 +75,8 @@ Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill
 |------|------|
 | [`slides/`](slides/) | 页面源文件，`NNN-slug.md`，顺序按文件名 |
 | [`config.ini`](config.ini) | `slides = slides`，`skill = skills/markdown-slides`，`theme = swiss-modern` |
-| [`Makefile`](Makefile) | 转发到 skill，设置 `DECK_ROOT` 为本仓库根 |
+| [`Makefile`](Makefile) | 薄封装：`python3 build.py <target>` |
+| [`build.py`](build.py) | 解析 `[build] skill`，再带 `DECK_ROOT` 转发到 skill 的 `make` |
 
 在仓库根目录构建：
 

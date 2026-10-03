@@ -13,7 +13,8 @@ LAYOUT = re.compile(r"^layout:\s*(\S+)\s*$", re.M)
 def _publisher_deck() -> bool:
     ini = REPO / "config.ini"
     makefile = REPO / "Makefile"
-    if not ini.is_file() or not makefile.is_file():
+    builder = REPO / "build.py"
+    if not ini.is_file() or not makefile.is_file() or not builder.is_file():
         return False
     parser = configparser.ConfigParser(interpolation=None)
     parser.read(ini, encoding="utf-8")
@@ -40,6 +41,14 @@ class TestPublisherDeck(unittest.TestCase):
     def test_root_makefile_matches_template(self):
         template = SKILL / "templates" / "Makefile.deck"
         deployed = REPO / "Makefile"
+        self.assertEqual(
+            deployed.read_text(encoding="utf-8"),
+            template.read_text(encoding="utf-8"),
+        )
+
+    def test_root_build_py_matches_template(self):
+        template = SKILL / "templates" / "build.py"
+        deployed = REPO / "build.py"
         self.assertEqual(
             deployed.read_text(encoding="utf-8"),
             template.read_text(encoding="utf-8"),

@@ -11,7 +11,7 @@ note_size: xxl
 :::card
 num: "01"
 title: 源文件
-body: `config.ini`、`Makefile`、以及 `slides/` 下的 `NNN-slug.md`。行内可用 `code`、==强调==、**粗体**。
+body: `config.ini`、`Makefile`、`build.py`、以及 `slides/` 下的 `NNN-slug.md`。行内可用 `code`、==强调==、**粗体**。
 :::
 
 :::card
