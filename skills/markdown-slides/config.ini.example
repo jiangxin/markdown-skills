@@ -1,0 +1,18 @@
+; Copy to config.ini in the deck root.
+; name: output basename. Letters, digits, and hyphens only.
+;       When missing or empty, defaults to the deck directory name.
+; title: HTML document title. Defaults to name when empty.
+; slides: slide directory relative to the deck root. Defaults to slides.
+;         Absolute paths, and ".." that escapes the deck root, are rejected.
+
+[deck]
+name = markdown-slides-examples
+title = Markdown Slides Examples
+slides = examples/slides
+
+[cover]
+presenter =
+presented_at =
+
+[serve]
+port = 8000
