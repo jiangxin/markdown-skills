@@ -1,4 +1,4 @@
-"""Default PPTX and PDF paths follow the deck root and [deck] name."""
+"""Default PPTX and PDF paths follow build/<slides>/ and meta.toml name."""
 
 import os
 import subprocess
@@ -9,6 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import isolated_env
 import config as config_module
 
 SKILL = config_module.skill_root()
@@ -25,10 +26,8 @@ BANNED = (
 class TestOutputPaths(unittest.TestCase):
     def _deck(self, raw: str, name: str = "sample-deck") -> Path:
         deck = Path(raw).resolve()
-        (deck / "config.ini").write_text(
-            f"[deck]\nname = {name}\ntitle = Sample\nslides = slides\n",
-            encoding="utf-8",
-        )
+        (deck / "slides").mkdir(parents=True, exist_ok=True)
+        isolated_env.write_meta(deck / "slides", name, "Sample")
         return deck
 
     def test_default_paths_use_deck_name(self):

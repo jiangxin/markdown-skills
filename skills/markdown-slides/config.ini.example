@@ -1,46 +1,28 @@
 ; Copy to config.ini in the deck root.
-; name: output basename. Letters, digits, and hyphens only.
-;       When missing or empty, defaults to the deck directory name.
-; title: HTML document title. Defaults to name when empty.
-; slides: slide directory relative to the deck root. Defaults to slides.
-;         Absolute paths, and ".." that escapes the deck root, are rejected.
-; order: auto (default) sorts NNN-slug.md files in slides/ by filename.
-; sort: optional Markdown file, relative to the deck root, whose ## Slides
-;       links set the page order. Do not set order and sort together.
-;       Example: sort = examples/slides/index.md
-; Artifacts: build/<slides>/<name>.html / .pptx / .pdf
-;         make slides           HTML for slides/
-;         make ppt slides       PPTX
-;         make pdf slides       PDF
-;         make html             HTML for [deck] slides
-; [build] skill: markdown-slides engine directory. Relative to the deck
-;         root, absolute, or ~. May leave the deck root. SKILL and
-;         MARKDOWN_SLIDES_HOME override this value. Omit it when running
-;         make from the skill directory itself.
-;         Example: skill = ../markdown-slides
-; [build] theme: look name. Letters, digits, and hyphens only.
+; Project keys live here. Per-slides keys live in that directory's meta.toml.
+; [serve] port: make serve listens here and uses build/ as the document root.
+;
+; Each page directory has meta.toml:
+;         type: slides for this skill. Other values (ebook, ...) are not built here.
+;         name: output basename under build/<slides>/. Letters, digits, hyphens.
+;         title: HTML document title. Defaults to name when omitted.
+;         theme: look name. Letters, digits, and hyphens only.
 ;         Resolved from the deck themes/<theme>/ when that copy is
 ;         complete, else skill templates/<theme>/. Defaults to
 ;         swiss-modern. Bundled: swiss-modern, paper-ink,
 ;         terminal-green, blue-professional.
-; [build] scripts: optional scripts directory relative to the deck
-;         root (must contain build-slides.py). When set, make html
-;         and make serve use that copy. Leave unset to keep the
-;         engine in the skill.
-
-[deck]
-name = markdown-slides-examples
-title = Markdown Slides Examples
-slides = examples/slides
-order = auto
-
-[build]
-; skill =
-theme = swiss-modern
-
-[cover]
-presenter =
-presented_at =
+; [deck] order: auto (default) sorts NNN-slug.md files by filename.
+; [deck] sort: optional Markdown file, relative to the slides directory,
+;         whose ## Slides links set the page order. Do not set order and
+;         sort together. Example: sort = "index.md"
+; [cover] presenter / presented_at: optional overrides when a page is
+;         010-cover.md. Empty values do not override frontmatter.
+;
+; Artifacts: build/<slides>/<name>.html / .pptx / .pdf
+;         make slides           HTML for that type=slides directory
+;         make ppt slides       PPTX
+;         make pdf slides       PDF
+;         make serve            preview build/
 
 [serve]
 port = 8000

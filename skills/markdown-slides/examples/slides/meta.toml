@@ -1,0 +1,7 @@
+type = "slides"
+name = "markdown-slides-examples"
+title = "Markdown Slides Examples"
+theme = "swiss-modern"
+
+[deck]
+order = "auto"

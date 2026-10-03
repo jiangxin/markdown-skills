@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Serve the deck root with Cache-Control: no-store headers."""
+"""Serve the deck ``build/`` directory with Cache-Control: no-store headers."""
 
 from __future__ import annotations
 
@@ -21,9 +21,11 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 def main() -> None:
     root = config.deck_root()
     port = config.serve_port(root)
-    os.chdir(root)
+    served = root / "build"
+    served.mkdir(parents=True, exist_ok=True)
+    os.chdir(served)
     with socketserver.TCPServer(("", port), NoCacheHandler) as httpd:
-        print(f"Serving {root} at http://localhost:{port}/")
+        print(f"Serving {served} at http://localhost:{port}/")
         httpd.serve_forever()
 
 

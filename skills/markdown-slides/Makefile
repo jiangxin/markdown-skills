@@ -6,16 +6,16 @@ SKILL_ROOT := $(abspath .)
 
 help:
 	@echo "Targets (run from skills/markdown-slides):"
-	@echo "  make html    build HTML via scripts/build-slides.py"
+	@echo "  make html    build HTML (set SLIDES= or a single type=slides dir)"
 	@echo "  make ppt     build PPTX via scripts/build-pptx.js"
 	@echo "  make pdf     export PDF via scripts/export-pdf.js"
-	@echo "  make serve   serve the deck locally"
+	@echo "  make serve   serve build/ locally"
 	@echo "  make fmt     format Python with ruff"
 	@echo "  make lint    ruff + markdownlint-cli2"
 	@echo "  make test    run unit tests"
 	@echo "  make fonts   download Google Fonts into .cache (once per theme)"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
-	@echo "Pass SLIDES to select a page directory (build/<dir>/). Default is [deck] slides."
+	@echo "Pass SLIDES to select a page directory (build/<dir>/)."
 	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and slides/*.md."
 
 fonts:

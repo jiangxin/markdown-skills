@@ -1,0 +1,7 @@
+type = "slides"
+name = "markdown-publisher"
+title = "Markdown 幻灯片"
+theme = "swiss-modern"
+
+[deck]
+order = "auto"

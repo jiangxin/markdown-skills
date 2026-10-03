@@ -8,14 +8,12 @@ SKILL_MD = Path(__file__).resolve().parent.parent / "SKILL.md"
 REQUIRED = (
     "ask in English",
     "slides/",
-    "[deck] slides",
     "ask in English before git init",
     "do not write slides",
     "do not git init",
     "from the deck root",
-    "[build] skill",
-    "[build] theme",
-    "[build] scripts",
+    "SKILL",
+    "theme =",
     "templates/swiss-modern",
     "templates/Makefile.deck",
     "templates/build.py",
@@ -33,6 +31,8 @@ REQUIRED = (
     "Ask the user to confirm before copying scripts.",
     "make slides",
     "build/",
+    "meta.toml",
+    'type = "slides"',
 )
 
 

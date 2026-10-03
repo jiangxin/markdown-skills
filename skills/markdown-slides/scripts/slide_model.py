@@ -4,9 +4,10 @@
 Shared by the HTML builder and the PPTX builder. Do not put presentation
 markup here — only page data.
 
-Slide order defaults to filename order of ``NNN-slug.md`` in ``[deck] slides``.
-Set ``[deck] sort`` to a Markdown file whose ``## Slides`` links list the
-pages. ``[deck] order = auto`` is the explicit filename mode.
+Slide order defaults to filename order of ``NNN-slug.md`` in the page
+directory. Set ``[deck] sort`` in that directory's ``meta.toml`` to a
+Markdown file whose ``## Slides`` links list the pages. ``[deck] order =
+auto`` is the explicit filename mode.
 """
 
 from __future__ import annotations

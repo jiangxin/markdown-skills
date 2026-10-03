@@ -11,7 +11,7 @@ To run the skill (HTML build and `make` trampoline):
 - **Python 3** (3.11 or newer)
 - **Make** (GNU Make)
 
-`make html` and `make serve` use only Python. `make ppt` and `make pdf` also need **Node.js**. Quality targets (`make fmt`, `make lint`, `make test`) need `ruff` on PATH and `npm install` in `skills/markdown-slides/` (for markdownlint).
+`make slides` and `make serve` use only Python. `make ppt` and `make pdf` also need **Node.js**. Quality targets (`make fmt`, `make lint`, `make test`) need `ruff` on PATH and `npm install` in `skills/markdown-slides/` (for markdownlint).
 
 ## Create slides with `/markdown-slides`
 
@@ -21,29 +21,32 @@ With **no extra words**, the skill inspects the project. If `config.ini`, the tr
 
 Create (only when missing):
 
-1. Record `[deck] slides` (default `slides/` if you do not name a directory).
-2. Write `config.ini`, a `Makefile` from `templates/Makefile.deck`, and `build.py` from `templates/build.py`. Seed `NNN-slug.md` from `examples/slides/` only when that slides directory has no pages. It does **not** copy `scripts/` unless you run `scripts` and confirm. A custom look is copied into `themes/` only on `theme`.
-3. Point `[build] skill` at this skill (a path relative to the deck if they share a git tree; otherwise an absolute path).
+1. Choose a page directory (default `slides/` if you do not name one).
+2. Write `config.ini` (`[serve]` only), a `Makefile` from `templates/Makefile.deck`, and `build.py` from `templates/build.py`. Write `meta.toml` (`type = "slides"`, `name`, optional `title`, `theme`, `[deck] order`) in the slides directory. Seed `NNN-slug.md` from `examples/slides/` only when that directory has no pages.
+3. Nest this skill under `skills/markdown-slides` or set `SKILL`.
 4. Commit those sources, then `make slides` from the **deck root** (HTML under `build/slides/`). Use `make ppt slides` and `make pdf slides` for those formats.
 
 Later edits: change Markdown, commit, rebuild. Do not hand-edit the HTML.
 
-## `config.ini`
+## `config.ini` and `meta.toml`
 
-Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config.ini.example) or let the skill write the file. Keys you usually change:
+Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config.ini.example) or let the skill write the file. Each page directory has [`slides/meta.toml`](slides/meta.toml). `type` must be `slides` for this skill.
+
+Project keys in `config.ini`:
 
 | Section | Key | What to set |
 |---------|-----|-------------|
-| `[deck]` | `name` | Output basename under `build/<slides>/`. Letters, digits, hyphens. Default: directory name. |
-| `[deck]` | `title` | HTML document title. Default: `name`. |
-| `[deck]` | `slides` | Slide directory relative to the deck root. Default: `slides`. |
+| `[serve]` | `port` | `make serve` port. Default: `8000`. Document root is `build/`. |
+
+Per-slides keys in that directory's `meta.toml`:
+
+| Table | Key | What to set |
+|-------|-----|-------------|
+| (top) | `type`, `name`, `title` | Document kind (`slides`), output basename, HTML title. |
+| (top) | `theme` | Look name. Deck `themes/<name>/` if complete, else skill `templates/`. Default: `swiss-modern`. Bundled also: `paper-ink`, `terminal-green`, `blue-professional`. |
 | `[deck]` | `order` | `auto` (default): sort `NNN-slug.md` by filename. Do not set together with `sort`. |
-| `[deck]` | `sort` | Optional Markdown file whose `## Slides` links list page order. |
-| `[build]` | `skill` | Path to the markdown-slides directory (the one with `scripts/build-slides.py`). In this repo: `skills/markdown-slides`. Override with `SKILL` or `MARKDOWN_SLIDES_HOME`. Omit when you `make` from the skill directory itself. |
-| `[build]` | `theme` | Look name. Deck `themes/<name>/` if complete, else skill `templates/`. Default: `swiss-modern`. Bundled also: `paper-ink`, `terminal-green`, `blue-professional`. |
-| `[build]` | `scripts` | Optional deck-local `scripts/` (must contain `build-slides.py`). Leave unset to keep the engine in the skill. |
+| `[deck]` | `sort` | Optional Markdown file relative to the slides directory whose `## Slides` links list page order. |
 | `[cover]` | `presenter`, `presented_at` | Optional cover overrides when a page is `010-cover.md`. |
-| `[serve]` | `port` | `make serve` port. Default: `8000`. |
 
 ## Skill
 
@@ -57,16 +60,16 @@ The engine (`scripts/`, theme directories under `templates/`) stays in the skill
 
 Looks live in [`skills/markdown-slides/templates/`](skills/markdown-slides/templates/). They are **ports of frontend-slides presets** onto this Markdown dialect (same layouts and `:::card` grammar). They are not a copy of the frontend-slides HTML generator.
 
-| `[build] theme` | Use |
+| `theme` in `meta.toml` | Use |
 |-----------------|-----|
 | `swiss-modern` | Teaching and engineering talks (default). White, black, signal red, visible grid. |
 | `paper-ink` | Reports, literary, async reading. Cream paper, crimson, serif. |
 | `terminal-green` | Developer / internal tech. Dark canvas, green, monospace. |
 | `blue-professional` | Consulting and B2B. Cream paper, cobalt. |
 
-Set the name in `[build] theme`. To customize a look in the project, copy `templates/<slug>/` to `themes/<slug>/` (the `/markdown-slides theme` command). To add another look: run `/frontend-slides` for visual discovery, then put `deck.css`, `deck.js`, and `pptx/` in deck `themes/<slug>/` or skill `templates/<slug>/`. Point `[build] theme` at the name. Do not drop frontend-slides HTML into the deck.
+Set the name in `meta.toml` `theme`. To customize a look in the project, copy `templates/<slug>/` to `themes/<slug>/` (the `/markdown-slides theme` command). To add another look: run `/frontend-slides` for visual discovery, then put `deck.css`, `deck.js`, and `pptx/` in deck `themes/<slug>/` or skill `templates/<slug>/`. Point `theme` at the name. Do not drop frontend-slides HTML into the deck.
 
-The built HTML inlines webfonts. `make html` may download Google Fonts once into `skills/markdown-slides/.cache/` (needs network). Opening the HTML does not. `make fonts` warms that cache. Without a cache and without a network, the build still succeeds and the deck uses system fonts instead of blocking on the CDN.
+The built HTML inlines webfonts. `make slides` may download Google Fonts once into `skills/markdown-slides/.cache/` (needs network). Opening the HTML does not. `make fonts` warms that cache. Without a cache and without a network, the build still succeeds and the deck uses system fonts instead of blocking on the CDN.
 
 `examples/slides/` inside the skill is English engine self-test pages. `make html` in the skill directory builds that set.
 
@@ -77,9 +80,9 @@ Root [`slides/`](slides/) **is** the skill’s example deck: generated here with
 | File | Role |
 |------|------|
 | [`slides/`](slides/) | Page sources, `NNN-slug.md`, ordered by filename |
-| [`config.ini`](config.ini) | `slides = slides`, `skill = skills/markdown-slides`, `theme = swiss-modern` |
+| [`config.ini`](config.ini) | `[serve]` port; document root is `build/` |
 | [`Makefile`](Makefile) | Thin wrapper: `python3 build.py <target>` |
-| [`build.py`](build.py) | Resolves `[build] skill` and forwards `make` with `DECK_ROOT` |
+| [`build.py`](build.py) | Finds the nested skill and forwards `make` with `DECK_ROOT` |
 
 Build from the repo root:
 

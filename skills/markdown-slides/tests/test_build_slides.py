@@ -35,10 +35,7 @@ class TestBuildSlides(unittest.TestCase):
     ) -> None:
         slides = deck / "pages"
         slides.mkdir(parents=True)
-        (deck / "config.ini").write_text(
-            "[deck]\n" f"name = {name}\n" f"title = {title}\n" "slides = pages\n",
-            encoding="utf-8",
-        )
+        isolated_env.write_meta(slides, name, title)
         (slides / "010-hello.md").write_text(page, encoding="utf-8")
         if favicon is not None:
             (deck / "favicon.svg").write_text(favicon, encoding="utf-8")
@@ -170,8 +167,9 @@ class TestBuildSlides(unittest.TestCase):
         template = SKILL / "templates" / "Makefile.deck"
         self.assertTrue(template.is_file())
         text = template.read_text(encoding="utf-8")
-        self.assertIn("python3 build.py html $@", text)
-        self.assertIn("python3 build.py $@ $(EXTRA)", text)
+        self.assertIn("python3 build.py $@", text)
+        self.assertIn("FORMATS := html ppt pdf serve", text)
+        self.assertNotIn("\tmake html", text)
         builder = SKILL / "templates" / "build.py"
         self.assertTrue(builder.is_file())
         self.assertIn('"-C"', builder.read_text(encoding="utf-8"))
@@ -179,19 +177,11 @@ class TestBuildSlides(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             self._write_deck(deck, name="tramp-deck", title="Trampoline Title")
-            (deck / "config.ini").write_text(
-                "[deck]\n"
-                "name = tramp-deck\n"
-                "title = Trampoline Title\n"
-                "slides = pages\n"
-                f"[build]\nskill = {SKILL}\n",
-                encoding="utf-8",
-            )
             shutil.copy(template, deck / "Makefile")
             shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
-                ["make", "-C", str(deck), "html"],
-                env=isolated_env.isolated(),
+                ["make", "-C", str(deck), "pages"],
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
                 capture_output=True,
                 text=True,
                 check=False,
@@ -213,7 +203,7 @@ class TestBuildSlides(unittest.TestCase):
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
             shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
-                ["make", "-C", str(deck), "html"],
+                ["make", "-C", str(deck), "pages"],
                 env=isolated_env.isolated(),
                 capture_output=True,
                 text=True,
@@ -223,7 +213,7 @@ class TestBuildSlides(unittest.TestCase):
             self.assertFalse((deck / "build" / "pages" / "no-skill.html").exists())
             combined = result.stderr + result.stdout
             self.assertTrue(
-                "[build] skill" in combined or "SKILL" in combined,
+                "SKILL" in combined or "skills/" in combined,
                 combined,
             )
 
@@ -236,19 +226,11 @@ class TestBuildSlides(unittest.TestCase):
                 deck / "scripts",
                 ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
             )
-            (deck / "config.ini").write_text(
-                "[deck]\n"
-                "name = local-scripts\n"
-                "title = Local Scripts\n"
-                "slides = pages\n"
-                f"[build]\nskill = {SKILL}\nscripts = scripts\n",
-                encoding="utf-8",
-            )
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
             shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
-                ["make", "-C", str(deck), "html"],
-                env=isolated_env.isolated(),
+                ["make", "-C", str(deck), "pages"],
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
                 capture_output=True,
                 text=True,
                 check=False,
@@ -264,17 +246,34 @@ class TestBuildSlides(unittest.TestCase):
             deck = Path(raw)
             slides = deck / "slides"
             slides.mkdir()
+            isolated_env.write_meta(slides, "demo-deck", "Demo")
             (slides / "010-hello.md").write_text(PAGE, encoding="utf-8")
-            (deck / "config.ini").write_text(
-                "[deck]\nname = demo-deck\ntitle = Demo\nslides = slides\n"
-                f"[build]\nskill = {SKILL}\n",
-                encoding="utf-8",
-            )
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
             shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
                 ["make", "-C", str(deck), "slides"],
-                env=isolated_env.isolated(),
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            html_path = deck / "build" / "slides" / "demo-deck.html"
+            self.assertTrue(html_path.is_file(), result.stdout)
+            self.assertFalse((deck / "demo-deck.html").exists())
+
+    def test_make_html_format_builds_html_into_build(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            slides = deck / "slides"
+            slides.mkdir()
+            isolated_env.write_meta(slides, "demo-deck", "Demo")
+            (slides / "010-hello.md").write_text(PAGE, encoding="utf-8")
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "html", "slides"],
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
                 capture_output=True,
                 text=True,
                 check=False,
@@ -291,16 +290,11 @@ class TestBuildSlides(unittest.TestCase):
                 path = deck / folder
                 path.mkdir()
                 (path / "010-hello.md").write_text(PAGE, encoding="utf-8")
-            (deck / "config.ini").write_text(
-                "[deck]\nname = demo-deck\ntitle = Demo\nslides = slides\n"
-                f"[build]\nskill = {SKILL}\n",
-                encoding="utf-8",
-            )
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
             shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
                 ["make", "-C", str(deck), "talk"],
-                env=isolated_env.isolated(),
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
                 capture_output=True,
                 text=True,
                 check=False,
@@ -315,16 +309,11 @@ class TestBuildSlides(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             self._write_deck(deck, name="need-dir", title="Need Dir")
-            (deck / "config.ini").write_text(
-                "[deck]\nname = need-dir\ntitle = Need Dir\nslides = pages\n"
-                f"[build]\nskill = {SKILL}\n",
-                encoding="utf-8",
-            )
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
             shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
                 ["make", "-C", str(deck), "ppt"],
-                env=isolated_env.isolated(),
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
                 capture_output=True,
                 text=True,
                 check=False,

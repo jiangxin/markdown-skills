@@ -3,7 +3,7 @@ layout: table
 overline: Build
 title: Make from the deck root
 summary: Commit Markdown and config.ini first, then build, or the cover stamp is unknown.
-summary_after: html and serve need Python. ppt and pdf also need Node.js. Outputs stay untracked.
+summary_after: slides and serve need Python. ppt and pdf also need Node.js. Outputs stay untracked.
 ---
 
 | Command | Output | Needs |

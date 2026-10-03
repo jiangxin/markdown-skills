@@ -18,6 +18,7 @@ MARKERS = (Path("deck.css"), Path("deck.js"), Path("pptx") / "theme.json")
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import isolated_env
 import config as config_module
 
 
@@ -45,13 +46,9 @@ class TestBundledThemes(unittest.TestCase):
     def test_config_loads_paper_ink(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
-            (deck / "slides").mkdir()
+            isolated_env.write_meta(deck / "slides", "theme-deck", theme="paper-ink")
             (deck / "slides" / "010-cover.md").write_text(
                 "---\nlayout: title\ntitle: Hi\n---\n",
-                encoding="utf-8",
-            )
-            (deck / "config.ini").write_text(
-                "[deck]\nname = theme-deck\nslides = slides\n[build]\ntheme = paper-ink\n",
                 encoding="utf-8",
             )
             loaded = config_module.load_deck(deck)
@@ -61,13 +58,9 @@ class TestBundledThemes(unittest.TestCase):
     def test_html_build_embeds_theme_font_and_css(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
-            (deck / "slides").mkdir()
+            isolated_env.write_meta(deck / "slides", "theme-deck", theme="terminal-green")
             (deck / "slides" / "010-cover.md").write_text(
                 "---\nlayout: title\ntitle: Hi\n---\n",
-                encoding="utf-8",
-            )
-            (deck / "config.ini").write_text(
-                "[deck]\nname = theme-deck\nslides = slides\n" "[build]\ntheme = terminal-green\n",
                 encoding="utf-8",
             )
             env = os.environ.copy()

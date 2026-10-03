@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Read presentation configuration from a deck-root config.ini.
+"""Read presentation configuration from meta.toml and optional config.ini.
 
 The skill root is the directory that contains ``scripts/``. The deck root is
 ``--deck-root``, else the ``DECK_ROOT`` environment variable, else the skill
-root. ``config.ini`` is read from the deck root.
+root. ``config.ini`` holds ``[serve]``. Page directories are selected by
+``--slides`` / ``SLIDES``, or by scanning for ``meta.toml`` with
+``type = "slides"``.
 """
 
 from __future__ import annotations
@@ -13,13 +15,16 @@ import json
 import os
 import re
 import sys
+import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_PORT = 8000
-DEFAULT_SLIDES = "slides"
 DEFAULT_ORDER = "auto"
 DEFAULT_THEME = "swiss-modern"
+DOC_TYPE_SLIDES = "slides"
+META_FILE = "meta.toml"
 ENGINE_MARKER = Path("scripts") / "build-slides.py"
 THEME_MARKERS = (
     Path("deck.css"),
@@ -31,9 +36,20 @@ _NAME_RE = re.compile(r"^[A-Za-z0-9-]+$")
 
 
 @dataclass(frozen=True)
+class DocMeta:
+    kind: str
+    name: str
+    title: str
+    order: str
+    sort_rel: str
+    theme: str
+
+
+@dataclass(frozen=True)
 class Deck:
     name: str
     title: str
+    kind: str
     slides: Path
     slides_rel: str
     order: str
@@ -50,6 +66,7 @@ class Outputs:
     root: Path
     name: str
     title: str
+    kind: str
     slides_rel: str
     html: Path
     pptx: Path
@@ -75,36 +92,24 @@ def deck_root(argv: list[str] | None = None) -> Path:
 
 
 def load_deck(deck_root: Path) -> Deck:
-    """Load ``[deck]`` name, title, slides, and page-order keys for ``deck_root``.
+    """Load identity and slides options from that directory's ``meta.toml``.
 
-    ``--slides`` or ``SLIDES`` selects another page directory in the same
-    project. When it matches ``[deck] slides``, name and title stay as
-    configured. Otherwise the last path component is the basename.
+    ``--slides`` or ``SLIDES`` selects a page directory. When omitted, a
+    single ``type = "slides"`` directory under the deck root is used.
+    ``config.ini`` holds ``[serve]``. This skill only builds
+    ``type = "slides"``.
     """
     root = _existing_dir(deck_root)
-    parser = _load_parser(root)
-    configured = _norm_slides_rel(
-        parser.get("deck", "slides", fallback="").strip() or DEFAULT_SLIDES
-    )
-    requested = _requested_slides_rel()
-    slides_rel = requested or configured
-    if requested is not None and requested != configured:
-        name = Path(slides_rel).name
-        if _NAME_RE.fullmatch(name) is None:
-            sys.exit(
-                "slides directory name must contain only letters, digits, and "
-                f"hyphens, got: {name!r}"
-            )
-        title = name
-    else:
-        name = _deck_name(parser, root)
-        title = parser.get("deck", "title", fallback="").strip() or name
-    order, sort, sort_rel = _deck_order(parser, root)
-    theme, theme_dir = _deck_theme(parser, root)
+    slides_rel = _requested_slides_rel() or _default_slides_rel(root)
+    slides = _relative_path(root, slides_rel, "slides")
+    doc = _load_doc_meta(slides, slides_rel)
+    order, sort, sort_rel = _meta_order(slides, slides_rel, doc)
+    theme, theme_dir = _resolve_theme(root, slides_rel, doc.theme)
     return Deck(
-        name,
-        title,
-        _relative_path(root, slides_rel, "slides"),
+        doc.name,
+        doc.title,
+        doc.kind,
+        slides,
         slides_rel,
         order,
         sort,
@@ -117,10 +122,10 @@ def load_deck(deck_root: Path) -> Deck:
 def output_paths(root: Path | None = None) -> Outputs:
     """Return ``<root>/build/<slides>/<name>.html``, ``.pptx``, and ``.pdf``.
 
-    ``name`` comes from ``[deck] name`` for the configured slides directory,
-    else the directory name. When ``root`` is omitted, the deck root is
-    ``deck_root()`` (``--deck-root``, else ``DECK_ROOT``, else the skill
-    root). ``--slides`` and ``SLIDES`` select the page directory.
+    ``name`` comes from that directory's ``meta.toml``. When ``root`` is
+    omitted, the deck root is ``deck_root()`` (``--deck-root``, else
+    ``DECK_ROOT``, else the skill root). ``--slides`` and ``SLIDES``
+    select the page directory.
     """
     resolved = deck_root() if root is None else _existing_dir(root)
     deck = load_deck(resolved)
@@ -129,6 +134,7 @@ def output_paths(root: Path | None = None) -> Outputs:
         root=resolved,
         name=deck.name,
         title=deck.title,
+        kind=deck.kind,
         slides_rel=deck.slides_rel,
         html=out_dir / f"{deck.name}.html",
         pptx=out_dir / f"{deck.name}.pptx",
@@ -139,44 +145,35 @@ def output_paths(root: Path | None = None) -> Outputs:
 
 
 def load_build_skill(deck_root: Path, environ: dict[str, str] | None = None) -> Path | None:
-    """Return the engine directory for a deck, or None if unset.
+    """Return the engine directory for a deck, or None if not found.
 
-    Override order: ``SKILL``, then ``MARKDOWN_SLIDES_HOME``, then
-    ``[build] skill`` in the deck ``config.ini``. Relative values are
-    resolved from the deck root. Absolute paths and ``~`` are allowed, and
-    the path may leave the deck root. The directory must contain
-    ``scripts/build-slides.py``.
+    Override order: ``SKILL``, then ``MARKDOWN_SLIDES_HOME``, then this
+    directory if it is the skill, then ``skills/<name>/`` under the deck
+    that contains ``scripts/build-slides.py``.
     """
     root = _existing_dir(deck_root)
     env = os.environ if environ is None else environ
     raw = _env_skill(env)
-    if not raw:
-        parser = _load_parser(root)
-        raw = parser.get("build", "skill", fallback="").strip()
-    if not raw:
-        return None
-    return _engine_dir(root, raw)
+    if raw:
+        return _engine_dir(root, raw)
+    if _is_engine(root):
+        return root
+    return _nested_engine(root)
 
 
 def load_build_scripts(deck_root: Path) -> Path | None:
-    """Return a deck-local scripts directory, or None if unset.
+    """Return a deck-local scripts directory, or None.
 
-    ``[build] scripts`` is relative to the deck root and must stay inside
-    it. The directory must contain ``build-slides.py``.
+    When the deck is not the skill itself and ``scripts/build-slides.py``
+    exists under the deck root, html and serve run from that copy.
     """
     root = _existing_dir(deck_root)
-    parser = _load_parser(root)
-    raw = parser.get("build", "scripts", fallback="").strip()
-    if not raw:
+    if _is_engine(root):
         return None
-    resolved = _relative_path(root, raw, "scripts")
-    marker = resolved / "build-slides.py"
+    marker = root / "scripts" / "build-slides.py"
     if not marker.is_file():
-        sys.exit(
-            "config.ini [build] scripts is not a markdown-slides scripts "
-            f"directory (missing build-slides.py): {raw}"
-        )
-    return resolved
+        return None
+    return marker.parent.resolve()
 
 
 def _env_skill(env: dict[str, str]) -> str:
@@ -200,6 +197,26 @@ def _engine_dir(deck_root: Path, raw: str) -> Path:
     return resolved
 
 
+def _is_engine(root: Path) -> bool:
+    return (root / ENGINE_MARKER).is_file() and (root / "templates").is_dir()
+
+
+def _nested_engine(root: Path) -> Path | None:
+    skills = root / "skills"
+    if not skills.is_dir():
+        return None
+    found: list[Path] = []
+    for child in sorted(skills.iterdir()):
+        if _is_engine(child):
+            found.append(child.resolve())
+    named = [path for path in found if path.name == "markdown-slides"]
+    if named:
+        return named[0]
+    if len(found) == 1:
+        return found[0]
+    return None
+
+
 def serve_port(deck_root: Path) -> int:
     """Return the local server port, defaulting to 8000."""
     parser = _load_parser(_existing_dir(deck_root))
@@ -213,17 +230,23 @@ def cover_overrides(deck_root: Path, path: Path, meta: dict[str, str]) -> dict[s
     """Return a copy of ``meta`` with optional ``[cover]`` overrides.
 
     Only a file named ``010-cover.md`` is updated. Empty values do not override.
+    Values come from that page directory's ``meta.toml``.
     """
     result = dict(meta)
     if Path(path).name != "010-cover.md":
         return result
-    parser = _load_parser(_existing_dir(deck_root))
-    if not parser.has_section("cover"):
-        return result
+    root = _existing_dir(deck_root)
+    page = Path(path)
+    page = page if page.is_absolute() else (root / page)
+    try:
+        rel = page.parent.resolve().relative_to(root)
+        where = f"{rel.as_posix()}/{META_FILE}"
+    except ValueError:
+        where = f"{page.parent.name}/{META_FILE}"
+    data = _read_toml(page.parent / META_FILE, where)
+    cover = _toml_table(data, "cover", where)
     for field in COVER_FIELDS:
-        if not parser.has_option("cover", field):
-            continue
-        value = parser.get("cover", field, fallback="").strip()
+        value = _toml_str(cover, field, f"{where} [cover]")
         if value:
             result[field] = value
     return result
@@ -270,6 +293,54 @@ def _requested_slides_rel() -> str | None:
     return _norm_slides_rel(chosen)
 
 
+_SCAN_SKIP = {
+    ".cache",
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "node_modules",
+    "scripts",
+    "skills",
+    "templates",
+    "tests",
+    "themes",
+}
+
+
+def _default_slides_rel(root: Path) -> str:
+    found = _scan_slides_rels(root)
+    if len(found) == 1:
+        return found[0]
+    if not found:
+        sys.exit("pass a slides directory (make slides)")
+    listed = ", ".join(found)
+    sys.exit(f"multiple type=slides directories ({listed}); pass make <dir>")
+
+
+def _scan_slides_rels(root: Path, current: Path | None = None, depth: int = 0) -> list[str]:
+    if depth > 4:
+        return []
+    here = root if current is None else current
+    found: list[str] = []
+    try:
+        children = sorted(here.iterdir())
+    except OSError:
+        return []
+    for child in children:
+        if not child.is_dir() or child.name.startswith(".") or child.name in _SCAN_SKIP:
+            continue
+        meta = child / META_FILE
+        if meta.is_file():
+            rel = child.relative_to(root).as_posix()
+            data = _read_toml(meta, f"{rel}/{META_FILE}")
+            kind = _toml_str(data, "type", f"{rel}/{META_FILE}") or DOC_TYPE_SLIDES
+            if kind == DOC_TYPE_SLIDES:
+                found.append(rel)
+        found.extend(_scan_slides_rels(root, child, depth + 1))
+    return found
+
+
 def _load_parser(root: Path) -> configparser.ConfigParser:
     parser = configparser.ConfigParser(interpolation=None)
     path = root / "config.ini"
@@ -282,28 +353,99 @@ def _load_parser(root: Path) -> configparser.ConfigParser:
     return parser
 
 
-def _deck_name(parser: configparser.ConfigParser, root: Path) -> str:
-    raw = parser.get("deck", "name", fallback="").strip()
-    if not raw:
-        return root.name
+def _check_name(raw: str, where: str) -> str:
     if _NAME_RE.fullmatch(raw) is None:
-        sys.exit(
-            "config.ini [deck] name must contain only letters, digits, and "
-            f"hyphens, got: {raw!r}"
-        )
+        sys.exit(f"{where} must contain only letters, digits, and hyphens, got: {raw!r}")
     return raw
 
 
-def _deck_order(parser: configparser.ConfigParser, root: Path) -> tuple[str, Path | None, str]:
-    order = parser.get("deck", "order", fallback="").strip()
-    sort_rel = parser.get("deck", "sort", fallback="").strip()
+def _toml_str(data: Mapping[str, object], key: str, where: str) -> str:
+    if key not in data:
+        return ""
+    value = data[key]
+    if not isinstance(value, str):
+        sys.exit(f"{where} {key} must be a string")
+    return value.strip()
+
+
+def _toml_table(data: Mapping[str, object], key: str, where: str) -> dict[str, object]:
+    if key not in data:
+        return {}
+    value = data[key]
+    if not isinstance(value, dict):
+        sys.exit(f"{where} [{key}] must be a table")
+    return {str(name): item for name, item in value.items()}
+
+
+def _read_toml(path: Path, where: str) -> dict[str, object]:
+    if not path.is_file():
+        return {}
+    try:
+        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError as exc:
+        sys.exit(f"{where}: {exc}")
+    if not isinstance(raw, dict):
+        sys.exit(f"{where} must be a TOML table")
+    return {str(name): item for name, item in raw.items()}
+
+
+def _load_doc_meta(slides_dir: Path, slides_rel: str) -> DocMeta:
+    """Return identity and slides options from ``meta.toml``, or defaults."""
+    where = f"{slides_rel}/{META_FILE}"
+    data = _read_toml(slides_dir / META_FILE, where)
+    folder = Path(slides_rel).name
+    if not data:
+        name = _check_name(folder, f"{slides_rel}/ (directory)")
+        return DocMeta(DOC_TYPE_SLIDES, name, name, DEFAULT_ORDER, "", DEFAULT_THEME)
+    kind = _toml_str(data, "type", where) or DOC_TYPE_SLIDES
+    if kind != DOC_TYPE_SLIDES:
+        sys.exit(f'{where} type is {kind!r}; this skill only builds type = "slides"')
+    name = _toml_str(data, "name", where) or folder
+    name = _check_name(name, f"{where} name")
+    title = _toml_str(data, "title", where) or name
+    deck = _toml_table(data, "deck", where)
+    order = _toml_str(deck, "order", f"{where} [deck]")
+    sort_rel = _toml_str(deck, "sort", f"{where} [deck]")
+    theme = _toml_str(data, "theme", where)
+    return DocMeta(
+        kind,
+        name,
+        title,
+        order,
+        sort_rel,
+        theme or DEFAULT_THEME,
+    )
+
+
+def _meta_order(
+    slides_dir: Path,
+    slides_rel: str,
+    doc: DocMeta,
+) -> tuple[str, Path | None, str]:
+    where = f"{slides_rel}/{META_FILE}"
+    order = doc.order
+    sort_rel = doc.sort_rel
     if order and order != DEFAULT_ORDER:
-        sys.exit("config.ini [deck] order must be auto, " f"got: {order!r}")
+        sys.exit(f"{where} [deck] order must be auto, got: {order!r}")
     if order == DEFAULT_ORDER and sort_rel:
-        sys.exit("config.ini [deck] order and sort cannot both be set")
+        sys.exit(f"{where} [deck] order and sort cannot both be set")
     if sort_rel:
-        return "", _relative_path(root, sort_rel, "sort"), sort_rel
+        return "", _sort_path(slides_dir, sort_rel, where), sort_rel
     return DEFAULT_ORDER, None, ""
+
+
+def _sort_path(slides_dir: Path, raw: str, where: str) -> Path:
+    relative = Path(raw)
+    if relative.is_absolute():
+        sys.exit(
+            f"{where} [deck] sort must be a path relative to the slides " f"directory, got: {raw!r}"
+        )
+    resolved = (slides_dir / relative).resolve()
+    try:
+        resolved.relative_to(slides_dir.resolve())
+    except ValueError:
+        sys.exit(f"{where} [deck] sort escapes the slides directory, got: {raw!r}")
+    return resolved
 
 
 def _theme_complete(theme_dir: Path) -> bool:
@@ -324,13 +466,10 @@ def _bundled_theme_dir(root: Path, name: str) -> Path | None:
     return None
 
 
-def _deck_theme(parser: configparser.ConfigParser, root: Path) -> tuple[str, Path]:
-    raw = parser.get("build", "theme", fallback="").strip() or DEFAULT_THEME
+def _resolve_theme(root: Path, slides_rel: str, raw: str) -> tuple[str, Path]:
+    where = f"{slides_rel}/{META_FILE}"
     if _NAME_RE.fullmatch(raw) is None:
-        sys.exit(
-            "config.ini [build] theme must contain only letters, digits, and "
-            f"hyphens, got: {raw!r}"
-        )
+        sys.exit(f"{where} theme must contain only letters, digits, and " f"hyphens, got: {raw!r}")
     local = root / "themes" / raw
     if _theme_complete(local):
         return raw, local.resolve()
@@ -338,24 +477,19 @@ def _deck_theme(parser: configparser.ConfigParser, root: Path) -> tuple[str, Pat
     if bundled is not None:
         return raw, bundled.resolve()
     sys.exit(
-        "config.ini [build] theme is not a complete directory in deck "
-        f"themes/ or skill templates/: {raw}"
+        f"{where} theme is not a complete directory in deck " f"themes/ or skill templates/: {raw}"
     )
 
 
 def _relative_path(root: Path, raw: str, key: str) -> Path:
     relative = Path(raw)
-    section = "build" if key == "scripts" else "deck"
     if relative.is_absolute():
-        sys.exit(
-            f"config.ini [{section}] {key} must be a path relative to the "
-            f"deck root, got: {raw!r}"
-        )
+        sys.exit(f"{key} must be a path relative to the deck root, got: {raw!r}")
     resolved = (root / relative).resolve()
     try:
         resolved.relative_to(root)
     except ValueError:
-        sys.exit(f"config.ini [{section}] {key} escapes the deck root, got: {raw!r}")
+        sys.exit(f"{key} escapes the deck root, got: {raw!r}")
     return resolved
 
 
@@ -370,6 +504,7 @@ def _print_output(kind: str, paths: Outputs) -> None:
                 "skillRoot": str(skill_root()),
                 "name": paths.name,
                 "title": paths.title,
+                "type": paths.kind,
                 "slides": paths.slides_rel,
                 "html": str(paths.html),
                 "pptx": str(paths.pptx),
@@ -403,7 +538,7 @@ def main(argv: list[str] | None = None) -> None:
         finally:
             sys.argv = saved
         if engine is None:
-            sys.exit("set SKILL= or MARKDOWN_SLIDES_HOME, or [build] skill in " "config.ini")
+            sys.exit("set SKILL= or MARKDOWN_SLIDES_HOME, or put the skill under skills/")
         sys.stdout.write(str(engine) + "\n")
         return
     flag = "--print-output"

@@ -1,7 +1,8 @@
-"""Tests for slide order: filename auto, or [deck] sort index."""
+"""Tests for slide order: filename auto, or meta.toml [deck] sort index."""
 
 import contextlib
 import io
+import re
 import subprocess
 import sys
 import tempfile
@@ -11,6 +12,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import isolated_env
 import config as config_module
 import slide_model
 
@@ -32,9 +34,23 @@ class TestSlideIndex(unittest.TestCase):
         if index is not None:
             (slides / "index.md").write_text(index, encoding="utf-8")
             if config_text is None:
-                config_text = f"[deck]\nslides = {slides_rel}\n" f"sort = {slides_rel}/index.md\n"
-            elif "sort =" not in config_text and "sort=" not in config_text:
-                config_text = config_text.rstrip() + f"\nsort = {slides_rel}/index.md\n"
+                config_text = f"[deck]\nslides = {slides_rel}\n"
+        if "meta.toml" not in pages:
+            name = Path(slides_rel).name
+            title = name
+            if config_text:
+                found_name = re.search(r"(?m)^name\s*=\s*(\S+)\s*$", config_text)
+                if found_name:
+                    name = found_name.group(1)
+                found_title = re.search(r"(?m)^title\s*=\s*(.+)$", config_text)
+                if found_title:
+                    title = found_title.group(1).strip()
+            isolated_env.write_meta(
+                slides,
+                name,
+                title,
+                sort="index.md" if index is not None else "",
+            )
         if config_text is not None:
             (deck / "config.ini").write_text(config_text, encoding="utf-8")
         for name, text in pages.items():
@@ -101,7 +117,7 @@ class TestSlideIndex(unittest.TestCase):
                     "010-alpha.md": PAGE,
                     "020-beta.md": PAGE,
                 },
-                config_text="[deck]\norder = auto\nslides = slides\n",
+                config_text="[deck]\nslides = slides\n",
             )
             loaded = slide_model.load_deck(deck)
             self.assertEqual(

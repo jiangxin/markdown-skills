@@ -2,10 +2,10 @@
 # Copy this file to the deck root as Makefile, with build.py beside it.
 #
 #   make slides          HTML for slides/ -> build/slides/
+#   make html slides     HTML for that directory
 #   make ppt slides      PPTX for that directory
 #   make pdf slides      PDF for that directory
-#   make html            HTML for [deck] slides
-#   make serve           preview (default [deck] slides)
+#   make serve           preview build/
 
 .DEFAULT_GOAL := help
 
@@ -24,5 +24,5 @@ $(FORMATS):
 ifneq ($(EXTRA),)
 .PHONY: $(EXTRA)
 $(EXTRA):
-	$(if $(filter $(FORMATS),$(MAKECMDGOALS)),@:,python3 build.py html $@)
+	$(if $(filter $(FORMATS),$(MAKECMDGOALS)),@:,python3 build.py $@)
 endif

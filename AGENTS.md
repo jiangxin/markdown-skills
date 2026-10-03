@@ -2,7 +2,7 @@
 
 This repo is two things in one git tree: the **markdown-slides** skill under `skills/markdown-slides/`, and a **demo deck** at the repo root (`slides/`, `config.ini`, `Makefile`, `build.py`).
 
-Deck authoring follows `skills/markdown-slides/SKILL.md` and `skills/markdown-slides/references/design.md`. This demo keeps the engine in the skill: do not copy `scripts/` or theme templates into the publisher deck. Other projects may vendor a look into `themes/` or, after confirmation, copy `scripts/`. Do not restyle by editing generated HTML. Do not re-initialize this deck or overwrite `slides/` with the English example template.
+Deck authoring follows `skills/markdown-slides/SKILL.md` and `skills/markdown-slides/references/design.md`. This demo keeps the engine in the skill: do not copy `scripts/` or theme templates into the publisher deck. Other projects may vendor a look into `themes/` or, after confirmation, copy `scripts/`. Do not restyle by editing generated HTML. Do not re-initialize this deck or overwrite `slides/` with the English example template. Keep identity in `slides/meta.toml`.
 
 ## Quality
 
@@ -28,7 +28,7 @@ The root trampoline and slide tree come from **using** the skill in this repo. K
 |------------------|--------------|------|
 | `Makefile` | `skills/markdown-slides/templates/Makefile.deck` | Same file. If you change the trampoline Makefile, copy it to the root `Makefile`. Do not fork it in the deck. |
 | `build.py` | `skills/markdown-slides/templates/build.py` | Same file. If you change skill resolution or forwarding, copy it to the root `build.py`. |
-| `config.ini` | `skills/markdown-slides/config.ini.example` | Same keys and comments intent. This repo’s values: `slides = slides`, `skill = skills/markdown-slides`, `theme = swiss-modern`. |
+| `config.ini` | `skills/markdown-slides/config.ini.example` | Same keys and comments intent. This repo keeps `[serve]` only. Theme, order, and cover live in `slides/meta.toml`. |
 | `slides/` | `skills/markdown-slides/examples/slides/` | Same page set and layouts (`NNN-slug.md`, same `layout:` values). Root `slides/` is the Chinese demo; `examples/slides/` is the English engine self-test. Do not treat them as byte-identical. A dialect or layout change belongs in `design.md` first, then both decks if they still demonstrate that layout. |
 
-Do not add engine files next to this demo. `[build] skill` stays a path to `skills/markdown-slides`. Do not set `[build] scripts` here. Custom looks for other decks go in that deck’s `themes/`.
+Do not add engine files next to this demo. The trampoline finds `skills/markdown-slides`. Do not vendor `scripts/` here. Custom looks for other decks go in that deck’s `themes/`.

@@ -27,11 +27,11 @@ Title and section pages paint an 80px grid. The left red bar is on every page.
 
 ## Page order
 
-The generator and bundled stage live in the skill (`scripts/` and `templates/<theme>/`). By default a user deck does not copy those files. `[build] skill` in the deck-root `config.ini` points at the skill directory. `[build] theme` names a look (default `swiss-modern`): the generator reads `themes/<theme>/` in the deck when that copy is complete, otherwise `templates/<theme>/` in the skill. Optional `[build] scripts` points at a deck-local `scripts/` copy (html and serve run there). A project may contain several page directories. Artifacts are `build/<slides>/<name>.html` (and `.pptx` / `.pdf`). `make slides` builds HTML for that directory; `make ppt slides` and `make pdf slides` need the directory name. `make html` uses `[deck] slides`. The deck `Makefile` (copied from `templates/Makefile.deck`) runs `python3 build.py` (copied from `templates/build.py`). That script resolves the skill path and runs `make` in the skill with `DECK_ROOT` set to the deck, unless local scripts handle html or serve. `SKILL` and `MARKDOWN_SLIDES_HOME` override the ini skill path. `SLIDES` selects a page directory.
+The generator and bundled stage live in the skill (`scripts/` and `templates/<theme>/`). By default a user deck does not copy those files. The engine is this skill, a nested `skills/markdown-slides`, or `SKILL` / `MARKDOWN_SLIDES_HOME`. Each page directory has `meta.toml` with `type` (must be `slides` for this skill), `name`, optional `title`, `theme`, `[deck]` page-order keys, and optional `[cover]`. `theme` names a look (default `swiss-modern`): the generator reads `themes/<theme>/` in the deck when that copy is complete, otherwise `templates/<theme>/` in the skill. A deck-local `scripts/` copy runs html and serve when present. A project may contain several page directories. Artifacts are `build/<slides>/<name>.html` (and `.pptx` / `.pdf`). `make slides` builds HTML for that directory; `make ppt slides` and `make pdf slides` need the directory name. `make serve` serves `build/`. The deck `Makefile` (copied from `templates/Makefile.deck`) runs `python3 build.py` (copied from `templates/build.py`). That script resolves the skill path and runs `make` in the skill with `DECK_ROOT` set to the deck, unless local scripts handle html or serve. `SLIDES` selects a page directory.
 
-The slides directory is the `[deck] slides` path in the deck-root `config.ini`, relative to the deck root. When the key is omitted, that directory is `slides`.
+The slides directory is `--slides` / `SLIDES`, or the only `type = "slides"` directory under the deck root.
 
-Page order defaults to the filename sort of `NNN-slug.md` files in that directory. `index.md` and other files that do not match `NNN-slug.md` are not slides. Set `[deck] order = auto` to name that mode. Set `[deck] sort` to a Markdown file relative to the deck root (for example `examples/slides/index.md`) to use a link list instead. Do not set `order` and `sort` together.
+Page order defaults to the filename sort of `NNN-slug.md` files in that directory. `index.md` and other files that do not match `NNN-slug.md` are not slides. Set `[deck] order = auto` in that directory's `meta.toml` to name that mode. Set `[deck] sort` to a Markdown file relative to the slides directory (for example `index.md`) to use a link list instead. Do not set `order` and `sort` together.
 
 When `sort` is set, the generator walks Markdown links under the heading `## Slides` from top to bottom. A link target is a slug: an optional `NNN-` prefix, then lowercase letters, digits, and hyphens. The file on disk is `NNN-slug.md` in the slides directory, so a link written as `cover.md` resolves to `010-cover.md` when that file is the only `cover` slug. The link label is not read. A missing `## Slides` heading, an empty list, a missing file, or a duplicate slug is an error. The numeric prefix does not set the order in this mode.
 
@@ -65,7 +65,7 @@ The closing page uses the same layout as the cover. The generator draws, from to
 6. Session lines, only when `presenter` or `presented_at` is set. The labels are Speaker and When.
 7. The footer.
 
-On a file named `010-cover.md`, a non-empty `[cover]` value for `presenter` or `presented_at` in `config.ini` replaces the frontmatter value. Empty config values do not.
+On a file named `010-cover.md`, a non-empty `[cover]` value for `presenter` or `presented_at` in that directory's `meta.toml` replaces the frontmatter value. Empty values do not.
 
 ### `section`
 

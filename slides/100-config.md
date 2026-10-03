@@ -2,16 +2,13 @@
 layout: table
 overline: 配置
 title: config.ini 常改键
-summary: 文件在稿根。skill 与稿同仓库时，[build] skill 用相对路径。
+summary: 每套页面目录有 meta.toml。稿根 config.ini 只管预览服务。
 ---
 
-| 段 | 键 | 含义 |
+| 文件 | 键 | 含义 |
 | --- | --- | --- |
-| [deck] | name | 产物基名，写到 `build/<slides>/` |
-| [deck] | title | HTML 文档标题 |
-| [deck] | slides | 相对稿根的页面目录 |
-| [deck] | order / sort | 页序；两键不要同时设 |
-| [build] | skill | 引擎目录（可用环境变量覆盖） |
-| [build] | theme | 稿 `themes/` 或 skill `templates/` |
-| [build] | scripts | 可选，稿内引擎副本 |
-| [serve] | port | `make serve` 端口，缺省 8000 |
+| meta.toml | type / name | `slides`；产物基名，写到 `build/<slides>/` |
+| meta.toml | theme | 稿 `themes/` 或 skill `templates/` |
+| meta.toml [deck] | order / sort | 页序；两键不要同时设 |
+| meta.toml [cover] | presenter | 封面可选覆盖 |
+| config.ini [serve] | port | `make serve` 端口；根是 `build/` |

@@ -17,7 +17,7 @@ body: `config.ini`、`Makefile`、`build.py`、以及 `slides/` 下的 `NNN-slug
 :::card
 num: "02"
 title: 构建
-body: `[build] skill` 指向 `skills/markdown-slides`。主题是 ==swiss-modern==。在稿根运行 `make slides`。
+body: 嵌套的 `skills/markdown-slides` 即引擎。主题写在 `meta.toml` 的 `theme`。在稿根运行 `make slides`。
 :::
 
 :::note
