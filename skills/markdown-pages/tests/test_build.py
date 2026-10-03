@@ -1,10 +1,12 @@
 """HTML builder writes a multi-page site and a one-page ebook."""
 
+import importlib.util
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -172,6 +174,70 @@ runpy.run_path(sys.argv[1], run_name="__main__")
             self.assertEqual(proc.returncode, 0, proc.stderr)
             self.assertTrue(paths.html.is_file())
             self.assertIn("Notes", paths.html.read_text(encoding="utf-8"))
+
+
+def _load_builder():
+    name = "build_pages"
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(name, BUILD_PAGES)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+class TestPdfExport(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.builder = _load_builder()
+
+    def test_missing_browser_exits_with_message(self):
+        with tempfile.TemporaryDirectory() as raw:
+            html = Path(raw) / "book.html"
+            html.write_text("<html><body><p>hi</p></body></html>", encoding="utf-8")
+            pdf = Path(raw) / "book.pdf"
+            real_import = __import__
+
+            def no_playwright(name, *args, **kwargs):
+                if name == "playwright" or name.startswith("playwright."):
+                    raise ImportError("No module named 'playwright'")
+                return real_import(name, *args, **kwargs)
+
+            with (
+                patch.object(self.builder, "_chrome_candidates", return_value=[]),
+                patch("builtins.__import__", side_effect=no_playwright),
+                patch.object(self.builder.sys, "stderr", new=StringIO()) as err,
+                self.assertRaises(SystemExit) as ctx,
+            ):
+                self.builder.html_to_pdf(html, pdf)
+            self.assertEqual(ctx.exception.code, 1)
+            message = err.getvalue()
+            self.assertIn("Playwright", message)
+            self.assertIn("Chrome", message)
+            self.assertFalse(pdf.is_file())
+
+    def test_make_pdf_writes_nonempty_file(self):
+        if not self.builder.pdf_browser_available():
+            self.skipTest("no Playwright Chromium or system Chrome")
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            write_book(deck / "pages", "my-book", "My Book")
+            proc = subprocess.run(
+                ["make", "pdf", f"DECK_ROOT={deck}", "SLIDES=pages"],
+                cwd=str(SKILL_ROOT),
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+            out = deck / "build" / "pages"
+            ebook = out / "my-book.html"
+            pdf = out / "my-book.pdf"
+            self.assertTrue(ebook.is_file())
+            self.assertTrue(pdf.is_file())
+            self.assertGreater(pdf.stat().st_size, 0)
+            self.assertTrue(pdf.read_bytes().startswith(b"%PDF"))
 
 
 if __name__ == "__main__":

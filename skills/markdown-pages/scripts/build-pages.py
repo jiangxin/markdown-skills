@@ -14,6 +14,7 @@ import argparse
 import html
 import re
 import shutil
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -645,6 +646,106 @@ def build_one_page_book(
     return output
 
 
+def _chrome_candidates() -> list[Path]:
+    return [
+        Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+        Path("/Applications/Chromium.app/Contents/MacOS/Chromium"),
+        Path("/usr/bin/google-chrome"),
+        Path("/usr/bin/google-chrome-stable"),
+        Path("/usr/bin/chromium"),
+        Path("/usr/bin/chromium-browser"),
+    ]
+
+
+def pdf_browser_available() -> bool:
+    """True when Playwright Chromium or a system Chrome binary can print PDF."""
+    if any(path.is_file() for path in _chrome_candidates()):
+        return True
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as playwright:
+            exe = playwright.chromium.executable_path
+            return bool(exe and Path(exe).is_file())
+    except Exception:  # noqa: BLE001 — probe only
+        return False
+
+
+def html_to_pdf(html_path: Path, pdf_path: Path) -> None:
+    """Render a local HTML file to PDF via Playwright or Chrome headless."""
+    html_path = html_path.resolve()
+    pdf_path = pdf_path.resolve()
+    if not html_path.is_file():
+        print(f"HTML not found: {html_path}", file=sys.stderr)
+        sys.exit(1)
+    pdf_path.parent.mkdir(parents=True, exist_ok=True)
+    uri = html_path.as_uri()
+
+    # Prefer Playwright when Chromium is available (waits for fonts/CDN).
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch()
+            page = browser.new_page()
+            page.goto(uri, wait_until="networkidle", timeout=120_000)
+            page.pdf(
+                path=str(pdf_path),
+                format="A4",
+                print_background=True,
+                margin={
+                    "top": "16mm",
+                    "bottom": "16mm",
+                    "left": "14mm",
+                    "right": "14mm",
+                },
+            )
+            browser.close()
+        return
+    except Exception as exc:  # noqa: BLE001 — fall back to Chrome CLI
+        playwright_err = exc
+
+    chrome = next((candidate for candidate in _chrome_candidates() if candidate.is_file()), None)
+    if chrome is not None:
+        cmd = [
+            str(chrome),
+            "--headless=new",
+            "--disable-gpu",
+            "--no-pdf-header-footer",
+            f"--print-to-pdf={pdf_path}",
+            uri,
+        ]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        if proc.returncode != 0 or not pdf_path.is_file():
+            print(proc.stderr or proc.stdout or "chrome print failed", file=sys.stderr)
+            sys.exit(1)
+        return
+
+    print(
+        "PDF export needs Playwright (chromium) or Chrome/Chromium.\n"
+        f"  Playwright error: {playwright_err}\n"
+        "  pip install playwright && python3 -m playwright install chromium\n"
+        "  or install Google Chrome",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
+def build_book_pdf(
+    pages_dir: Path,
+    *,
+    html_path: Path,
+    pdf_path: Path,
+    title: str,
+    chapters: list[Chapter] | None = None,
+) -> Path:
+    """Build one-page HTML then PDF under ``build/<rel>/``."""
+    build_one_page_book(pages_dir, output=html_path, title=title, chapters=chapters)
+    html_to_pdf(html_path, pdf_path)
+    print(f"Built PDF → {pdf_path}")
+    return pdf_path
+
+
 def build_single_page(
     md_path: Path,
     *,
@@ -809,10 +910,15 @@ def build() -> None:
         help="write only the one-page ebook (skip the multi-page site)",
     )
     parser.add_argument(
+        "--pdf",
+        action="store_true",
+        help="build one-page HTML then PDF (Playwright Chromium or Chrome)",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=Path,
-        help="output path for --page or --one-page",
+        help="output path for --page / --one-page / --pdf",
     )
     parser.add_argument(
         "--title",
@@ -824,12 +930,13 @@ def build() -> None:
         [
             args.page is not None,
             bool(args.one_page),
+            bool(args.pdf),
             args.only is not None,
         ]
     )
     if modes > 1:
         print(
-            "use only one of --page, --one-page, or --only",
+            "use only one of --page, --one-page, --pdf, or --only",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -859,6 +966,20 @@ def build() -> None:
         build_one_page_book(
             book.pages,
             output=dest.resolve(),
+            title=book_title,
+        )
+        return
+
+    if args.pdf:
+        dest = args.output
+        if dest is None:
+            dest = paths.pdf
+        elif not dest.is_absolute():
+            dest = root / dest
+        build_book_pdf(
+            book.pages,
+            html_path=paths.html,
+            pdf_path=dest.resolve(),
             title=book_title,
         )
         return

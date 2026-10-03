@@ -7,7 +7,7 @@ SKILL_ROOT := $(abspath .)
 help:
 	@echo "Targets (run from skills/markdown-pages):"
 	@echo "  make html    build HTML (set SLIDES= or PAGES= or a single type=pages dir)"
-	@echo "  make pdf     export PDF from the one-file HTML"
+	@echo "  make pdf     export PDF from the one-file HTML (Playwright or Chrome)"
 	@echo "  make serve   serve is not this skill; use the deck trampoline"
 	@echo "  make fmt     format Python with ruff"
 	@echo "  make lint    ruff + markdownlint-cli2"
@@ -20,7 +20,7 @@ html:
 	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/build-pages.py
 
 pdf:
-	@echo "pdf: not implemented yet (later steps add PDF export)"
+	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/build-pages.py --pdf
 
 serve:
 	@echo "serve: use the deck-root trampoline (make serve); this skill does not host build/"
