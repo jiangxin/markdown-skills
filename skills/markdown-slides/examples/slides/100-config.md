@@ -12,6 +12,6 @@ summary: The file sits at the deck root. Keep [build] skill relative when the sk
 | [deck] | slides | Page directory relative to the deck root |
 | [deck] | order / sort | Page order; do not set both |
 | [build] | skill | Engine directory (env vars may override) |
-| [build] | theme | Theme directory under `templates/` |
-| [cover] | presenter | Overrides speaker on `010-cover.md` only |
+| [build] | theme | Deck `themes/` or skill `templates/` |
+| [build] | scripts | Optional local engine copy |
 | [serve] | port | `make serve` port, default 8000 |

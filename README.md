@@ -15,12 +15,14 @@ To run the skill (HTML build and `make` trampoline):
 
 ## Create slides with `/markdown-slides`
 
-Install or attach the skill from [`skills/markdown-slides/`](skills/markdown-slides/) (see [`SKILL.md`](skills/markdown-slides/SKILL.md)). In the agent chat, invoke it with `/markdown-slides` and say you want a new deck.
+Install or attach the skill from [`skills/markdown-slides/`](skills/markdown-slides/) (see [`SKILL.md`](skills/markdown-slides/SKILL.md)). Commands: no extra words (infer create vs edit), `create`, `edit`, `theme`, `scripts`.
 
-The skill will:
+With **no extra words**, the skill inspects the project. If `config.ini`, the trampoline `Makefile` / `build.py`, and `NNN-slug.md` pages already exist, it **edits** and does not re-initialize or copy example pages over existing slides. If the project is not a deck yet, it **creates**.
+
+Create (only when missing):
 
 1. Record `[deck] slides` (default `slides/` if you do not name a directory).
-2. Write `NNN-slug.md` pages, `config.ini`, a `Makefile` copied from `templates/Makefile.deck`, and `build.py` copied from `templates/build.py`. It does **not** copy `scripts/` or theme templates.
+2. Write `config.ini`, a `Makefile` from `templates/Makefile.deck`, and `build.py` from `templates/build.py`. Seed `NNN-slug.md` from `examples/slides/` only when that slides directory has no pages. It does **not** copy `scripts/` unless you run `scripts` and confirm. A custom look is copied into `themes/` only on `theme`.
 3. Point `[build] skill` at this skill (a path relative to the deck if they share a git tree; otherwise an absolute path).
 4. Commit those sources, then `make html` from the **deck root**.
 
@@ -38,7 +40,8 @@ Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config
 | `[deck]` | `order` | `auto` (default): sort `NNN-slug.md` by filename. Do not set together with `sort`. |
 | `[deck]` | `sort` | Optional Markdown file whose `## Slides` links list page order. |
 | `[build]` | `skill` | Path to the markdown-slides directory (the one with `scripts/build-slides.py`). In this repo: `skills/markdown-slides`. Override with `SKILL` or `MARKDOWN_SLIDES_HOME`. Omit when you `make` from the skill directory itself. |
-| `[build]` | `theme` | Directory under skill `templates/`. Default: `swiss-modern`. Bundled also: `paper-ink`, `terminal-green`, `blue-professional`. |
+| `[build]` | `theme` | Look name. Deck `themes/<name>/` if complete, else skill `templates/`. Default: `swiss-modern`. Bundled also: `paper-ink`, `terminal-green`, `blue-professional`. |
+| `[build]` | `scripts` | Optional deck-local `scripts/` (must contain `build-slides.py`). Leave unset to keep the engine in the skill. |
 | `[cover]` | `presenter`, `presented_at` | Optional cover overrides when a page is `010-cover.md`. |
 | `[serve]` | `port` | `make serve` port. Default: `8000`. |
 
@@ -48,7 +51,7 @@ Path: [`skills/markdown-slides/`](skills/markdown-slides/).
 
 It turns Markdown pages into a single-file HTML deck (PPTX and PDF as well). Dialect: [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md). Agent workflow: [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md).
 
-The engine (`scripts/`, theme directories under `templates/`) stays in the skill. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs.
+The engine (`scripts/`, theme directories under `templates/`) stays in the skill by default. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs. Optional: copy a look into deck `themes/`; copy `scripts/` only after confirmation.
 
 ## Themes
 
@@ -61,7 +64,7 @@ Looks live in [`skills/markdown-slides/templates/`](skills/markdown-slides/templ
 | `terminal-green` | Developer / internal tech. Dark canvas, green, monospace. |
 | `blue-professional` | Consulting and B2B. Cream paper, cobalt. |
 
-Set the name in `[build] theme`. To add another look: run `/frontend-slides` for visual discovery, pick a style, then add `templates/<slug>/` with `deck.css`, `deck.js`, and `pptx/` (copy `swiss-modern` and restyle tokens). Point `[build] theme` at the new directory. Do not drop frontend-slides HTML into the deck.
+Set the name in `[build] theme`. To customize a look in the project, copy `templates/<slug>/` to `themes/<slug>/` (the `/markdown-slides theme` command). To add another look: run `/frontend-slides` for visual discovery, then put `deck.css`, `deck.js`, and `pptx/` in deck `themes/<slug>/` or skill `templates/<slug>/`. Point `[build] theme` at the name. Do not drop frontend-slides HTML into the deck.
 
 The built HTML inlines webfonts. `make html` may download Google Fonts once into `skills/markdown-slides/.cache/` (needs network). Opening the HTML does not. `make fonts` warms that cache. Without a cache and without a network, the build still succeeds and the deck uses system fonts instead of blocking on the CDN.
 

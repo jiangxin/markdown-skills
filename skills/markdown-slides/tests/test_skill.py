@@ -15,6 +15,7 @@ REQUIRED = (
     "from the deck root",
     "[build] skill",
     "[build] theme",
+    "[build] scripts",
     "templates/swiss-modern",
     "templates/Makefile.deck",
     "templates/build.py",
@@ -22,10 +23,14 @@ REQUIRED = (
     "examples/slides/010-cover.md",
     "Do not hand-edit HTML",
     "Read references/design.md before creating slides.",
-    "The engine stays in the skill.",
+    "The engine stays in the skill",
     "Skip git init when building it.",
     "order = auto",
     "sort = <file.md>",
+    "do not re-initialize",
+    "overwrite existing slides",
+    "themes/",
+    "Ask the user to confirm before copying scripts.",
 )
 
 

@@ -15,12 +15,14 @@
 
 ## 用 `/markdown-slides` 生成幻灯片
 
-从 [`skills/markdown-slides/`](skills/markdown-slides/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-slides/SKILL.md)）。在对话里输入 `/markdown-slides`，说明要新建一套稿。
+从 [`skills/markdown-slides/`](skills/markdown-slides/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-slides/SKILL.md)）。命令：不加参数（推断创建或编辑）、`create`、`edit`、`theme`、`scripts`。
 
-Skill 会：
+**不加参数**时先看工程：已有 `config.ini`、trampoline 的 `Makefile` / `build.py`、以及 `NNN-slug.md`，则只 **编辑**，不重复初始化，也不用示例页覆盖已有 slides。还不是一套稿时才 **创建**。
+
+创建（只补缺的文件）：
 
 1. 记下 `[deck] slides`（未指定目录时默认 `slides/`）。
-2. 写下 `NNN-slug.md`、`config.ini`，从 `templates/Makefile.deck` 拷来的 `Makefile`，以及从 `templates/build.py` 拷来的 `build.py`。**不会**拷贝 `scripts/` 或主题模板。
+2. 写下 `config.ini`，从 `templates/Makefile.deck` 拷来的 `Makefile`，以及从 `templates/build.py` 拷来的 `build.py`。仅当页面目录里还没有 `NNN-slug.md` 时，才从 `examples/slides/` 播种。默认 **不** 拷 `scripts/`，除非走 `scripts` 并得到确认。定制外观只在 `theme` 时拷到 `themes/`。
 3. 把 `[build] skill` 指到本 skill（与稿同处一个 git 树时用相对路径，否则用绝对路径）。
 4. 提交这些源文件，再在**稿根目录**执行 `make html`。
 
@@ -38,7 +40,8 @@ Skill 会：
 | `[deck]` | `order` | `auto`（默认）按文件名排序 `NNN-slug.md`。不要与 `sort` 同时设置。 |
 | `[deck]` | `sort` | 可选 Markdown，用其中 `## Slides` 的链接决定页序。 |
 | `[build]` | `skill` | markdown-slides 目录（含 `scripts/build-slides.py`）。本仓库为 `skills/markdown-slides`。可用 `SKILL` 或 `MARKDOWN_SLIDES_HOME` 覆盖。在 skill 目录里直接 `make` 时可省略。 |
-| `[build]` | `theme` | skill `templates/` 下的目录。缺省 `swiss-modern`。另有 `paper-ink`、`terminal-green`、`blue-professional`。 |
+| `[build]` | `theme` | 主题名。稿内 `themes/<name>/` 完整则用之，否则 skill `templates/`。缺省 `swiss-modern`。另有 `paper-ink`、`terminal-green`、`blue-professional`。 |
+| `[build]` | `scripts` | 可选，稿内 `scripts/`（须含 `build-slides.py`）。不设则引擎留在 skill。 |
 | `[cover]` | `presenter`、`presented_at` | 封面为 `010-cover.md` 时的可选覆盖。 |
 | `[serve]` | `port` | `make serve` 端口。缺省 `8000`。 |
 
@@ -48,7 +51,7 @@ Skill 会：
 
 用 Markdown 页面生成单文件 HTML 演示稿（也可出 PPTX / PDF）。语法见 [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md)。Agent 用法见 [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md)。
 
-引擎（`scripts/`、`templates/` 下的主题目录）留在 skill 里，不拷进稿仓库。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。
+引擎（`scripts/`、`templates/` 下的主题目录）默认留在 skill 里。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。可选：把外观拷到稿的 `themes/`；拷 `scripts/` 前必须确认。
 
 ## 主题
 
@@ -61,7 +64,7 @@ Skill 会：
 | `terminal-green` | 开发者 / 内部技术会。深色底、终端绿、等宽。 |
 | `blue-professional` | 咨询 / B2B。奶油纸、钴蓝。 |
 
-在 `[build] theme` 里写目录名。要再加一种：用 `/frontend-slides` 做视觉挑选，然后在 `templates/<slug>/` 放入 `deck.css`、`deck.js`、`pptx/`（可从 `swiss-modern` 拷一份再改编配色）。把 `[build] theme` 指过去。不要把 frontend-slides 的 HTML 丢进稿仓库。
+在 `[build] theme` 里写目录名。要在工程里改外观：把 `templates/<slug>/` 拷到 `themes/<slug>/`（`/markdown-slides theme`）。要再加一种：用 `/frontend-slides` 做视觉挑选，然后在稿 `themes/<slug>/` 或 skill `templates/<slug>/` 放入 `deck.css`、`deck.js`、`pptx/`。把 `[build] theme` 指过去。不要把 frontend-slides 的 HTML 丢进稿仓库。
 
 构建好的 HTML 会内联 webfont。`make html` 可能把 Google Fonts 下载一次到 `skills/markdown-slides/.cache/`（需要联网）。打开 HTML 不再访问外网。`make fonts` 可预热缓存。没有缓存、也没有网络时，构建仍会成功，稿用系统字体，而不会卡在 CDN。
 

@@ -13,10 +13,15 @@
 ;         MARKDOWN_SLIDES_HOME override this value. Omit it when running
 ;         make from the skill directory itself.
 ;         Example: skill = ../markdown-slides
-; [build] theme: template directory under the skill templates/.
-;         Defaults to swiss-modern. Letters, digits, and hyphens only.
-;         Bundled: swiss-modern, paper-ink, terminal-green,
-;         blue-professional. Add more from a frontend-slides pick.
+; [build] theme: look name. Letters, digits, and hyphens only.
+;         Resolved from the deck themes/<theme>/ when that copy is
+;         complete, else skill templates/<theme>/. Defaults to
+;         swiss-modern. Bundled: swiss-modern, paper-ink,
+;         terminal-green, blue-professional.
+; [build] scripts: optional scripts directory relative to the deck
+;         root (must contain build-slides.py). When set, make html
+;         and make serve use that copy. Leave unset to keep the
+;         engine in the skill.
 
 [deck]
 name = markdown-slides-examples

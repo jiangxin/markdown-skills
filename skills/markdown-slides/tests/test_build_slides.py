@@ -226,6 +226,38 @@ class TestBuildSlides(unittest.TestCase):
                 combined,
             )
 
+    def test_deck_makefile_uses_local_scripts_for_html(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write_deck(deck, name="local-scripts", title="Local Scripts")
+            shutil.copytree(
+                SKILL / "scripts",
+                deck / "scripts",
+                ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+            )
+            (deck / "config.ini").write_text(
+                "[deck]\n"
+                "name = local-scripts\n"
+                "title = Local Scripts\n"
+                "slides = pages\n"
+                f"[build]\nskill = {SKILL}\nscripts = scripts\n",
+                encoding="utf-8",
+            )
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "html"],
+                env=isolated_env.isolated(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            html_path = deck / "local-scripts.html"
+            self.assertTrue(html_path.is_file())
+            html = html_path.read_text(encoding="utf-8")
+            self.assertIn("<title>Local Scripts</title>", html)
+
 
 if __name__ == "__main__":
     unittest.main()

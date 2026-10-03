@@ -81,7 +81,7 @@ def load_deck(deck_root: Path) -> Deck:
     title = parser.get("deck", "title", fallback="").strip() or name
     slides_rel = parser.get("deck", "slides", fallback="").strip() or DEFAULT_SLIDES
     order, sort, sort_rel = _deck_order(parser, root)
-    theme, theme_dir = _deck_theme(parser)
+    theme, theme_dir = _deck_theme(parser, root)
     return Deck(
         name,
         title,
@@ -134,6 +134,27 @@ def load_build_skill(deck_root: Path, environ: dict[str, str] | None = None) -> 
     if not raw:
         return None
     return _engine_dir(root, raw)
+
+
+def load_build_scripts(deck_root: Path) -> Path | None:
+    """Return a deck-local scripts directory, or None if unset.
+
+    ``[build] scripts`` is relative to the deck root and must stay inside
+    it. The directory must contain ``build-slides.py``.
+    """
+    root = _existing_dir(deck_root)
+    parser = _load_parser(root)
+    raw = parser.get("build", "scripts", fallback="").strip()
+    if not raw:
+        return None
+    resolved = _relative_path(root, raw, "scripts")
+    marker = resolved / "build-slides.py"
+    if not marker.is_file():
+        sys.exit(
+            "config.ini [build] scripts is not a markdown-slides scripts "
+            f"directory (missing build-slides.py): {raw}"
+        )
+    return resolved
 
 
 def _env_skill(env: dict[str, str]) -> str:
@@ -244,33 +265,56 @@ def _deck_order(parser: configparser.ConfigParser, root: Path) -> tuple[str, Pat
     return DEFAULT_ORDER, None, ""
 
 
-def _deck_theme(parser: configparser.ConfigParser) -> tuple[str, Path]:
+def _theme_complete(theme_dir: Path) -> bool:
+    return theme_dir.is_dir() and all((theme_dir / marker).is_file() for marker in THEME_MARKERS)
+
+
+def _bundled_theme_dir(root: Path, name: str) -> Path | None:
+    """Skill ``templates/<name>/``, including when scripts are vendored."""
+    here = skill_root() / "templates" / name
+    if _theme_complete(here):
+        return here
+    engine = load_build_skill(root)
+    if engine is None:
+        return None
+    bundled = engine / "templates" / name
+    if _theme_complete(bundled):
+        return bundled
+    return None
+
+
+def _deck_theme(parser: configparser.ConfigParser, root: Path) -> tuple[str, Path]:
     raw = parser.get("build", "theme", fallback="").strip() or DEFAULT_THEME
     if _NAME_RE.fullmatch(raw) is None:
         sys.exit(
             "config.ini [build] theme must contain only letters, digits, and "
             f"hyphens, got: {raw!r}"
         )
-    theme_dir = skill_root() / "templates" / raw
-    if not theme_dir.is_dir():
-        sys.exit(f"config.ini [build] theme is not a template directory: {raw}")
-    missing = [str(marker) for marker in THEME_MARKERS if not (theme_dir / marker).is_file()]
-    if missing:
-        sys.exit("config.ini [build] theme is incomplete " f"(missing {', '.join(missing)}): {raw}")
-    return raw, theme_dir.resolve()
+    local = root / "themes" / raw
+    if _theme_complete(local):
+        return raw, local.resolve()
+    bundled = _bundled_theme_dir(root, raw)
+    if bundled is not None:
+        return raw, bundled.resolve()
+    sys.exit(
+        "config.ini [build] theme is not a complete directory in deck "
+        f"themes/ or skill templates/: {raw}"
+    )
 
 
 def _relative_path(root: Path, raw: str, key: str) -> Path:
     relative = Path(raw)
+    section = "build" if key == "scripts" else "deck"
     if relative.is_absolute():
         sys.exit(
-            f"config.ini [deck] {key} must be a path relative to the deck " f"root, got: {raw!r}"
+            f"config.ini [{section}] {key} must be a path relative to the "
+            f"deck root, got: {raw!r}"
         )
     resolved = (root / relative).resolve()
     try:
         resolved.relative_to(root)
     except ValueError:
-        sys.exit(f"config.ini [deck] {key} escapes the deck root, " f"got: {raw!r}")
+        sys.exit(f"config.ini [{section}] {key} escapes the deck root, got: {raw!r}")
     return resolved
 
 

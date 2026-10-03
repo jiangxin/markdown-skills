@@ -27,7 +27,7 @@ Title and section pages paint an 80px grid. The left red bar is on every page.
 
 ## Page order
 
-The generator and the Swiss Modern stage live in the skill (`scripts/` and `templates/swiss-modern/`). A user deck does not copy those files. `[build] skill` in the deck-root `config.ini` points at the skill directory. `[build] theme` names a directory under `templates/` (default `swiss-modern`). The deck `Makefile` (copied from `templates/Makefile.deck`) runs `python3 build.py` (copied from `templates/build.py`). That script resolves the skill path and runs `make` in the skill with `DECK_ROOT` set to the deck. `SKILL` and `MARKDOWN_SLIDES_HOME` override the ini skill path.
+The generator and bundled stage live in the skill (`scripts/` and `templates/<theme>/`). By default a user deck does not copy those files. `[build] skill` in the deck-root `config.ini` points at the skill directory. `[build] theme` names a look (default `swiss-modern`): the generator reads `themes/<theme>/` in the deck when that copy is complete, otherwise `templates/<theme>/` in the skill. Optional `[build] scripts` points at a deck-local `scripts/` copy (html and serve run there). The deck `Makefile` (copied from `templates/Makefile.deck`) runs `python3 build.py` (copied from `templates/build.py`). That script resolves the skill path and runs `make` in the skill with `DECK_ROOT` set to the deck, unless local scripts handle html or serve. `SKILL` and `MARKDOWN_SLIDES_HOME` override the ini skill path.
 
 The slides directory is the `[deck] slides` path in the deck-root `config.ini`, relative to the deck root. When the key is omitted, that directory is `slides`.
 

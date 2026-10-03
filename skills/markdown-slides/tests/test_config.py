@@ -3,6 +3,7 @@
 import contextlib
 import io
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -274,6 +275,55 @@ class TestConfig(unittest.TestCase):
             with self.assertRaises(SystemExit) as caught:
                 config_module.load_deck(deck)
             self.assertIn("theme", str(caught.exception))
+
+    def test_deck_themes_override_bundled_templates(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            source = config_module.skill_root() / "templates" / "paper-ink"
+            dest = deck / "themes" / "paper-ink"
+            shutil.copytree(source, dest)
+            self._write(deck, "[build]\ntheme = paper-ink\n")
+            loaded = config_module.load_deck(deck)
+            self.assertEqual(loaded.theme, "paper-ink")
+            self.assertEqual(loaded.theme_dir, dest.resolve())
+
+    def test_incomplete_local_theme_falls_back_to_bundled(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            (deck / "themes" / "swiss-modern").mkdir(parents=True)
+            (deck / "themes" / "swiss-modern" / "deck.css").write_text("/* incomplete */\n")
+            loaded = config_module.load_deck(deck)
+            self.assertEqual(
+                loaded.theme_dir,
+                (config_module.skill_root() / "templates" / "swiss-modern").resolve(),
+            )
+
+    def test_build_scripts_relative_inside_deck(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            scripts = deck / "scripts"
+            scripts.mkdir()
+            (scripts / "build-slides.py").write_text("# marker\n")
+            self._write(deck, "[build]\nscripts = scripts\n")
+            loaded = config_module.load_build_scripts(deck)
+            self.assertEqual(loaded, scripts.resolve())
+
+    def test_build_scripts_escape_rejected(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[build]\nscripts = ../outside\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_build_scripts(deck)
+            self.assertIn("escapes", str(caught.exception))
+
+    def test_build_scripts_missing_marker_fails(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            (deck / "scripts").mkdir()
+            self._write(deck, "[build]\nscripts = scripts\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_build_scripts(deck)
+            self.assertIn("build-slides.py", str(caught.exception))
 
     def test_theme_rejects_path_separators(self):
         with tempfile.TemporaryDirectory() as raw:
