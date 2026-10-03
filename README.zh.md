@@ -24,7 +24,7 @@
 1. 记下 `[deck] slides`（未指定目录时默认 `slides/`）。
 2. 写下 `config.ini`，从 `templates/Makefile.deck` 拷来的 `Makefile`，以及从 `templates/build.py` 拷来的 `build.py`。仅当页面目录里还没有 `NNN-slug.md` 时，才从 `examples/slides/` 播种。默认 **不** 拷 `scripts/`，除非走 `scripts` 并得到确认。定制外观只在 `theme` 时拷到 `themes/`。
 3. 把 `[build] skill` 指到本 skill（与稿同处一个 git 树时用相对路径，否则用绝对路径）。
-4. 提交这些源文件，再在**稿根目录**执行 `make html`。
+4. 提交这些源文件，再在**稿根目录**执行 `make slides`（HTML 在 `build/slides/`）。PPT/PDF 用 `make ppt slides`、`make pdf slides`。
 
 之后改 Markdown、提交、再构建。不要手改 HTML。
 
@@ -34,7 +34,7 @@
 
 | 段 | 键 | 含义 |
 |----|----|------|
-| `[deck]` | `name` | 产物基名（`name.html` / `.pptx` / `.pdf`）。仅字母、数字、连字符。缺省为稿目录名。 |
+| `[deck]` | `name` | 产物基名，写到 `build/<slides>/`。仅字母、数字、连字符。缺省为稿目录名。 |
 | `[deck]` | `title` | HTML 文档标题。缺省为 `name`。 |
 | `[deck]` | `slides` | 相对稿根的幻灯片目录。缺省 `slides`。 |
 | `[deck]` | `order` | `auto`（默认）按文件名排序 `NNN-slug.md`。不要与 `sort` 同时设置。 |
@@ -84,7 +84,7 @@ Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill
 在仓库根目录构建：
 
 ```bash
-make html
+make slides
 ```
 
-得到 `markdown-publisher.html`（不入库）。`make ppt`、`make pdf`、`make serve` 同样可用。改文案只改 Markdown，提交后再构建，不要手改 HTML。
+得到 `build/slides/markdown-publisher.html`（不入库）。`make ppt slides`、`make pdf slides`、`make serve` 同样可用。改文案只改 Markdown，提交后再构建，不要手改 HTML。

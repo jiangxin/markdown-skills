@@ -7,7 +7,7 @@ summary: 文件在稿根。skill 与稿同仓库时，[build] skill 用相对路
 
 | 段 | 键 | 含义 |
 | --- | --- | --- |
-| [deck] | name | 产物基名：`name.html` / `.pptx` / `.pdf` |
+| [deck] | name | 产物基名，写到 `build/<slides>/` |
 | [deck] | title | HTML 文档标题 |
 | [deck] | slides | 相对稿根的页面目录 |
 | [deck] | order / sort | 页序；两键不要同时设 |

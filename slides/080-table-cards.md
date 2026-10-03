@@ -16,7 +16,7 @@ columns: 3
 
 :::card
 title: 改文案
-body: 只改 Markdown，再提交，再 make html。
+body: 只改 Markdown，再提交，再 `make slides`。
 :::
 
 :::card

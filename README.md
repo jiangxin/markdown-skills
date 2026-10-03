@@ -24,7 +24,7 @@ Create (only when missing):
 1. Record `[deck] slides` (default `slides/` if you do not name a directory).
 2. Write `config.ini`, a `Makefile` from `templates/Makefile.deck`, and `build.py` from `templates/build.py`. Seed `NNN-slug.md` from `examples/slides/` only when that slides directory has no pages. It does **not** copy `scripts/` unless you run `scripts` and confirm. A custom look is copied into `themes/` only on `theme`.
 3. Point `[build] skill` at this skill (a path relative to the deck if they share a git tree; otherwise an absolute path).
-4. Commit those sources, then `make html` from the **deck root**.
+4. Commit those sources, then `make slides` from the **deck root** (HTML under `build/slides/`). Use `make ppt slides` and `make pdf slides` for those formats.
 
 Later edits: change Markdown, commit, rebuild. Do not hand-edit the HTML.
 
@@ -34,7 +34,7 @@ Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config
 
 | Section | Key | What to set |
 |---------|-----|-------------|
-| `[deck]` | `name` | Output basename (`name.html` / `.pptx` / `.pdf`). Letters, digits, hyphens. Default: deck directory name. |
+| `[deck]` | `name` | Output basename under `build/<slides>/`. Letters, digits, hyphens. Default: directory name. |
 | `[deck]` | `title` | HTML document title. Default: `name`. |
 | `[deck]` | `slides` | Slide directory relative to the deck root. Default: `slides`. |
 | `[deck]` | `order` | `auto` (default): sort `NNN-slug.md` by filename. Do not set together with `sort`. |
@@ -84,7 +84,7 @@ Root [`slides/`](slides/) **is** the skill’s example deck: generated here with
 Build from the repo root:
 
 ```bash
-make html
+make slides
 ```
 
-That writes `markdown-publisher.html` (not committed). `make ppt`, `make pdf`, and `make serve` work the same way. Edit Markdown only, commit, then rebuild. Do not hand-edit the HTML.
+That writes `build/slides/markdown-publisher.html` (not committed). `make ppt slides`, `make pdf slides`, and `make serve` work the same way. Edit Markdown only, commit, then rebuild. Do not hand-edit the HTML.

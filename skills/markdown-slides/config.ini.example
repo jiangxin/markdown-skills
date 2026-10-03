@@ -8,6 +8,11 @@
 ; sort: optional Markdown file, relative to the deck root, whose ## Slides
 ;       links set the page order. Do not set order and sort together.
 ;       Example: sort = examples/slides/index.md
+; Artifacts: build/<slides>/<name>.html / .pptx / .pdf
+;         make slides           HTML for slides/
+;         make ppt slides       PPTX
+;         make pdf slides       PDF
+;         make html             HTML for [deck] slides
 ; [build] skill: markdown-slides engine directory. Relative to the deck
 ;         root, absolute, or ~. May leave the deck root. SKILL and
 ;         MARKDOWN_SLIDES_HOME override this value. Omit it when running

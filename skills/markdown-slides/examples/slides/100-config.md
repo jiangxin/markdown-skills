@@ -7,7 +7,7 @@ summary: The file sits at the deck root. Keep [build] skill relative when the sk
 
 | Section | Key | Meaning |
 | --- | --- | --- |
-| [deck] | name | Output basename: `name.html` / `.pptx` / `.pdf` |
+| [deck] | name | Basename under `build/<slides>/` |
 | [deck] | title | HTML document title |
 | [deck] | slides | Page directory relative to the deck root |
 | [deck] | order / sort | Page order; do not set both |

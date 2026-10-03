@@ -18,7 +18,7 @@ make test
 
 Needs `ruff` on PATH and `npm install` in `skills/markdown-slides/` (for `markdownlint-cli2`).
 
-After editing the root demo, also `make html` from the repo root. Commit slide Markdown, `config.ini`, `Makefile`, and `build.py` before that build so the cover stamp is not `unknown`. Leave `markdown-publisher.html`, `.pptx`, `.pdf`, `node_modules/`, and `.cache/` untracked.
+After editing the root demo, also `make slides` from the repo root. Commit slide Markdown, `config.ini`, `Makefile`, and `build.py` before that build so the cover stamp is not `unknown`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
 
 ## Deployed deck files
 
