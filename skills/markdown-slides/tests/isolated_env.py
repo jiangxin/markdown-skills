@@ -8,8 +8,10 @@ from pathlib import Path
 MAKE_LEAK = (
     "SKILL",
     "MARKDOWN_SLIDES_HOME",
+    "MARKDOWN_PAGES_HOME",
     "DECK_ROOT",
     "SLIDES",
+    "PAGES",
     "MAKEFLAGS",
     "MAKELEVEL",
     "MFLAGS",

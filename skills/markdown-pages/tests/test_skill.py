@@ -15,7 +15,7 @@ REQUIRED = (
     "do not write pages",
     "do not git init",
     "from the deck root",
-    "SKILL",
+    "MARKDOWN_PAGES_HOME",
     "Do not hand-edit HTML",
     "Read references/design.md before creating pages.",
     "The engine stays in the skill",

@@ -344,6 +344,53 @@ class TestBuildSlides(unittest.TestCase):
             combined = result.stderr + result.stdout
             self.assertIn("slides directory", combined)
 
+    def test_deck_help_mentions_pages(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "help"],
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            text = result.stdout
+            self.assertIn("pages", text)
+            self.assertIn("MARKDOWN_PAGES_HOME", text)
+            self.assertIn("type=slides", text)
+            self.assertIn("scripts/markdown-pages/", text)
+
+    def test_nested_pages_skill_does_not_break_slides_html(self):
+        pages_skill = SKILL.parent / "markdown-pages"
+        if not (pages_skill / "scripts" / "build-pages.py").is_file():
+            self.skipTest("markdown-pages skill is not a sibling")
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            slides = deck / "slides"
+            slides.mkdir()
+            isolated_env.write_meta(slides, "demo-deck", "Demo")
+            (slides / "010-hello.md").write_text(PAGE, encoding="utf-8")
+            skills = deck / "skills"
+            skills.mkdir()
+            os.symlink(SKILL, skills / "markdown-slides")
+            os.symlink(pages_skill, skills / "markdown-pages")
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "html", "slides"],
+                env=isolated_env.isolated(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            html_path = deck / "build" / "slides" / "demo-deck.html"
+            self.assertTrue(html_path.is_file(), result.stdout)
+            self.assertIn("<title>Demo</title>", html_path.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()

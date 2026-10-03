@@ -60,7 +60,7 @@ Otherwise write only what is missing:
 2. Copy `skills/markdown-slides/templates/Makefile.deck` to the deck root as `Makefile` and `skills/markdown-slides/templates/build.py` as `build.py` if they are absent. This skill `templates/book.css` is engine CSS; do not copy it on create.
 3. Write `meta.toml` in the pages directory with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`. Seed chapters from `examples/pages/` into that directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter. Then replace the example copy with the user's topic.
 
-`SKILL` or `MARKDOWN_PAGES_HOME` selects an engine outside `skills/`. A nested `skills/markdown-pages` is discovered automatically.
+`MARKDOWN_PAGES_HOME` selects an engine outside `skills/`. A nested `skills/markdown-pages` is discovered automatically.
 
 ## edit
 
@@ -70,7 +70,7 @@ Read references/design.md. Change Markdown under the recorded pages directory. D
 
 By default do not copy `scripts/`. Use this command only when the user wants to patch the generator in the project.
 
-1. State what will be copied (`scripts/` from this skill into the deck `scripts/markdown-pages/`). That nested path leaves `scripts/` free for other tools, including `scripts/markdown-slides/`. Keep the skill on `SKILL` / `MARKDOWN_PAGES_HOME` or under `skills/` so PDF resources and tests still resolve bundled templates and `node_modules`.
+1. State what will be copied (`scripts/` from this skill into the deck `scripts/markdown-pages/`). That nested path leaves `scripts/` free for other tools, including `scripts/markdown-slides/`. Keep the skill on `MARKDOWN_PAGES_HOME` or under `skills/` so PDF resources and tests still resolve bundled templates and `node_modules`.
 2. Ask the user to confirm before copying scripts. If they refuse, stop. Do not copy.
 3. If the deck already has `scripts/markdown-pages/build-pages.py`, ask before replacing those files.
 4. After a yes: copy. The trampoline runs local html from that copy. Do not copy `tests/` or `templates/` unless the user asked for those too.
@@ -79,7 +79,7 @@ By default do not copy `scripts/`. Use this command only when the user wants to 
 
 `config.ini` in the deck root holds `[serve]`. Each book directory has `meta.toml`: `type` must be `pages` for this skill (other types such as slides are not built here), `name` is the output basename and the storage key `markdown-pages:<name>`, `title` is the HTML document title (defaults to `name`). Chapter order defaults to filename order of `NN-slug.md` / `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[book]`). Set `sort = <file.md>` relative to that pages directory to a Markdown file whose heading links list the chapters. Do not set `order` and `sort` together.
 
-The engine is this skill directory, a nested `skills/markdown-pages`, or `SKILL` / `MARKDOWN_PAGES_HOME`. A deck-local `scripts/markdown-pages/` copy (must contain `build-pages.py`) runs html when present. PDF still uses skill-bundled browser tooling.
+The engine is this skill directory, a nested `skills/markdown-pages`, or `MARKDOWN_PAGES_HOME`. A deck-local `scripts/markdown-pages/` copy (must contain `build-pages.py`) runs html when present. PDF still uses skill-bundled browser tooling.
 
 ## Write, commit, then build
 
