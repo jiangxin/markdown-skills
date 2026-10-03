@@ -1,0 +1,20 @@
+; Copy to config.ini in the deck root.
+; Project keys live here. Per-book keys live in that directory's meta.toml.
+; [serve] port: make serve listens here and uses build/ as the document root.
+;
+; Each book directory has meta.toml:
+;         type: pages for this skill. Other values (slides, ...) are not built here.
+;         name: output basename under build/<name>/. Letters, digits, hyphens.
+;         title: HTML document title. Defaults to name when omitted.
+; [book] order: auto (default) sorts NN-slug.md and NNN-slug.md by filename.
+; [book] sort: optional Markdown file, relative to the pages directory,
+;         whose heading links set the chapter order. Do not set order and
+;         sort together. Example: sort = "index.md"
+;
+; Artifacts: build/<name>/index.html, chapter pages, <name>.html, <name>.pdf
+;         make html <name>      multi-page site + one-file HTML
+;         make pdf <name>       PDF from the one-file HTML
+;         make serve            preview build/
+
+[serve]
+port = 8000

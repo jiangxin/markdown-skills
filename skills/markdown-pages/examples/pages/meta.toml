@@ -1,0 +1,6 @@
+type = "pages"
+name = "markdown-pages-examples"
+title = "Markdown Pages Examples"
+
+[book]
+order = "auto"

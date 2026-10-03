@@ -14,3 +14,8 @@ skills/markdown-slides/node_modules/
 skills/markdown-slides/.cache/
 skills/markdown-slides/.ruff_cache/
 skills/markdown-slides/**/__pycache__/
+skills/markdown-pages/build/
+skills/markdown-pages/node_modules/
+skills/markdown-pages/.cache/
+skills/markdown-pages/.ruff_cache/
+skills/markdown-pages/**/__pycache__/
