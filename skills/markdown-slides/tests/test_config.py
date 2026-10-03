@@ -335,11 +335,19 @@ class TestConfig(unittest.TestCase):
     def test_build_scripts_relative_inside_deck(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
-            scripts = deck / "scripts"
-            scripts.mkdir()
+            scripts = deck / "scripts" / "markdown-slides"
+            scripts.mkdir(parents=True)
             (scripts / "build-slides.py").write_text("# marker\n")
             loaded = config_module.load_build_scripts(deck)
             self.assertEqual(loaded, scripts.resolve())
+
+    def test_build_scripts_skill_layout_at_deck_root_is_not_local(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            scripts = deck / "scripts"
+            scripts.mkdir()
+            (scripts / "build-slides.py").write_text("# marker\n")
+            self.assertIsNone(config_module.load_build_scripts(deck))
 
     def test_build_scripts_missing_is_none(self):
         with tempfile.TemporaryDirectory() as raw:

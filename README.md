@@ -54,7 +54,7 @@ Path: [`skills/markdown-slides/`](skills/markdown-slides/).
 
 It turns Markdown pages into a single-file HTML deck (PPTX and PDF as well). Dialect: [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md). Agent workflow: [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md).
 
-The engine (`scripts/`, theme directories under `templates/`) stays in the skill by default. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs. Optional: copy a look into deck `themes/`; copy `scripts/` only after confirmation.
+The engine (`scripts/` in the skill, theme directories under `templates/`) stays in the skill by default. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs. Optional: copy a look into deck `themes/`; copy `scripts/` into `scripts/markdown-slides/` only after confirmation.
 
 ## Themes
 

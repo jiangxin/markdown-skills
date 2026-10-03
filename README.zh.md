@@ -54,7 +54,7 @@
 
 用 Markdown 页面生成单文件 HTML 演示稿（也可出 PPTX / PDF）。语法见 [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md)。Agent 用法见 [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md)。
 
-引擎（`scripts/`、`templates/` 下的主题目录）默认留在 skill 里。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。可选：把外观拷到稿的 `themes/`；拷 `scripts/` 前必须确认。
+引擎（skill 里的 `scripts/`、`templates/` 下的主题目录）默认留在 skill 里。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。可选：把外观拷到稿的 `themes/`；拷 `scripts/` 到 `scripts/markdown-slides/` 前必须确认。
 
 ## 主题
 

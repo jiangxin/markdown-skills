@@ -2,7 +2,7 @@
 
 This repo is two things in one git tree: the **markdown-slides** skill under `skills/markdown-slides/`, and a **demo deck** at the repo root (`slides/`, `config.ini`, `Makefile`, `build.py`).
 
-Deck authoring follows `skills/markdown-slides/SKILL.md` and `skills/markdown-slides/references/design.md`. This demo keeps the engine in the skill: do not copy `scripts/` or theme templates into the publisher deck. Other projects may vendor a look into `themes/` or, after confirmation, copy `scripts/`. Do not restyle by editing generated HTML. Do not re-initialize this deck or overwrite `slides/` with the English example template. Keep identity in `slides/meta.toml`.
+Deck authoring follows `skills/markdown-slides/SKILL.md` and `skills/markdown-slides/references/design.md`. This demo keeps the engine in the skill: do not copy `scripts/` or theme templates into the publisher deck. Other projects may vendor a look into `themes/` or, after confirmation, copy `scripts/` into `scripts/markdown-slides/`. Do not restyle by editing generated HTML. Do not re-initialize this deck or overwrite `slides/` with the English example template. Keep identity in `slides/meta.toml`.
 
 ## Quality
 

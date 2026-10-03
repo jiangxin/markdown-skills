@@ -1,6 +1,6 @@
 ---
 name: markdown-slides
-description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use for /markdown-slides with no args, or create, edit, theme, and scripts. Infer whether to scaffold a deck or edit copy. Confirm the slides directory and git before first write. Do not re-initialize a deck or overwrite existing slides with the example template. Optional theme copies go in themes/. Copy scripts/ only after the user confirms.
+description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use for /markdown-slides with no args, or create, edit, theme, and scripts. Infer whether to scaffold a deck or edit copy. Confirm the slides directory and git before first write. Do not re-initialize a deck or overwrite existing slides with the example template. Optional theme copies go in themes/. Copy scripts/markdown-slides/ only after the user confirms.
 argument-hint: "[create | edit | theme | scripts]"
 ---
 
@@ -21,7 +21,7 @@ Read the extra words after `/markdown-slides`, or the user intent. If there is n
 | `create` / `init` | Scaffold trampoline files and, if the slides dir has no pages, copy the example template |
 | `edit` | Change Markdown copy or page order only |
 | `theme` | Copy a chosen look into the deck `themes/` directory |
-| `scripts` | Copy `scripts/` into the deck so the user can patch the engine. **Ask the user to confirm before copying scripts.** |
+| `scripts` | Copy the engine into the deck `scripts/markdown-slides/` so the user can patch it. **Ask the user to confirm before copying scripts.** |
 
 The bundled example already lives in this repository. Skip git init when building it. Its pages are `examples/slides` (`type = "slides"`). Build that example from the skill directory with `make html` (it selects the only `type = "slides"` directory). Do not write a skill path into `config.ini`.
 
@@ -78,16 +78,16 @@ Use when the user wants a custom look, picked a bundled name, or finished `/fron
 
 By default do not copy `scripts/`. Use this command only when the user wants to patch the generator in the project.
 
-1. State what will be copied (`scripts/` from this skill into the deck `scripts/`). Keep the skill on `SKILL` / `MARKDOWN_SLIDES_HOME` or under `skills/` so PPTX, PDF, fonts, and tests still resolve bundled templates and `node_modules`.
+1. State what will be copied (`scripts/` from this skill into the deck `scripts/markdown-slides/`). That nested path leaves `scripts/` free for other tools. Keep the skill on `SKILL` / `MARKDOWN_SLIDES_HOME` or under `skills/` so PPTX, PDF, fonts, and tests still resolve bundled templates and `node_modules`.
 2. Ask the user to confirm before copying scripts. If they refuse, stop. Do not copy.
-3. If the deck already has `scripts/build-slides.py`, ask before replacing those files.
+3. If the deck already has `scripts/markdown-slides/build-slides.py`, ask before replacing those files.
 4. After a yes: copy. The trampoline runs local html and serve from that copy. Do not copy `tests/` or `templates/` unless a `theme` command also ran.
 
 ## Config and build
 
 `config.ini` in the deck root holds `[serve]`. Each page directory has `meta.toml`: `type` must be `slides` for this skill (other types such as a future ebook are not built here), `name` is the output basename and the storage key `markdown-slides:<name>`, `title` is the HTML document title (defaults to `name`), and `theme =` names a look under deck `themes/` or skill `templates/`. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[deck]`). Set `sort = <file.md>` relative to that slides directory to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together.
 
-The engine is this skill directory, a nested `skills/markdown-slides`, or `SKILL` / `MARKDOWN_SLIDES_HOME`. A deck-local `scripts/` copy (must contain `build-slides.py`) runs html and serve when present. Optional `meta.toml` `[cover]` `presenter` and `presented_at` override those fields on `010-cover.md`.
+The engine is this skill directory, a nested `skills/markdown-slides`, or `SKILL` / `MARKDOWN_SLIDES_HOME`. A deck-local `scripts/markdown-slides/` copy (must contain `build-slides.py`) runs html and serve when present. Optional `meta.toml` `[cover]` `presenter` and `presented_at` override those fields on `010-cover.md`.
 
 The generator inlines Google Fonts into the HTML at build time (cache under the engine `.cache/fonts/`). Viewing the deck does not request fonts.googleapis.com or fonts.gstatic.com.
 
@@ -95,7 +95,7 @@ The generator inlines Google Fonts into the HTML at build time (cache under the 
 
 Write one Markdown file per slide under the recorded slides directory, named `NNN-slug.md`. Page order is that filename sort unless `meta.toml` `[deck] sort` points at an index file.
 
-A project may hold more than one slides directory. Each has its own `meta.toml`. This skill builds only `type = "slides"`. Artifacts go under `build/<slides>/` as `<name>.html` / `.pptx` / `.pdf`. From the deck root, `make slides` builds HTML for `slides/`. PPTX and PDF need the directory: `make ppt slides` and `make pdf slides`. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck. Commit the slide markdown, `meta.toml`, `config.ini`, `Makefile`, `build.py`, and any vendored `themes/` or `scripts/`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
+A project may hold more than one slides directory. Each has its own `meta.toml`. This skill builds only `type = "slides"`. Artifacts go under `build/<slides>/` as `<name>.html` / `.pptx` / `.pdf`. From the deck root, `make slides` builds HTML for `slides/`. PPTX and PDF need the directory: `make ppt slides` and `make pdf slides`. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck. Commit the slide markdown, `meta.toml`, `config.ini`, `Makefile`, `build.py`, and any vendored `themes/` or `scripts/markdown-slides/`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
 
 Later edits change Markdown, then commit, then rebuild. Do not hand-edit HTML. Do not rerun frontend-slides to change copy.
 

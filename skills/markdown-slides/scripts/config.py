@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Read presentation configuration from meta.toml and optional config.ini.
 
-The skill root is the directory that contains ``scripts/``. The deck root is
-``--deck-root``, else the ``DECK_ROOT`` environment variable, else the skill
-root. ``config.ini`` holds ``[serve]``. Page directories are selected by
+The skill root is the directory that contains ``scripts/build-slides.py``.
+The deck root is ``--deck-root``, else the ``DECK_ROOT`` environment
+variable, else the skill root. ``config.ini`` holds ``[serve]``. Page
+directories are selected by
 ``--slides`` / ``SLIDES``, or by scanning for ``meta.toml`` with
 ``type = "slides"``.
 """
@@ -26,6 +27,7 @@ DEFAULT_THEME = "swiss-modern"
 DOC_TYPE_SLIDES = "slides"
 META_FILE = "meta.toml"
 ENGINE_MARKER = Path("scripts") / "build-slides.py"
+LOCAL_ENGINE = Path("scripts") / "markdown-slides" / "build-slides.py"
 THEME_MARKERS = (
     Path("deck.css"),
     Path("deck.js"),
@@ -76,8 +78,15 @@ class Outputs:
 
 
 def skill_root() -> Path:
-    """Return the directory that contains ``scripts/``."""
-    return Path(__file__).resolve().parent.parent
+    """Return the skill directory, or the deck when this file is vendored.
+
+    In the skill, this file lives in ``scripts/``. A deck-local copy lives in
+    ``scripts/markdown-slides/`` so sibling tools can share ``scripts/``.
+    """
+    here = Path(__file__).resolve().parent
+    if here.name == "markdown-slides":
+        return here.parent.parent
+    return here.parent
 
 
 def deck_root(argv: list[str] | None = None) -> Path:
@@ -149,7 +158,8 @@ def load_build_skill(deck_root: Path, environ: dict[str, str] | None = None) -> 
 
     Override order: ``SKILL``, then ``MARKDOWN_SLIDES_HOME``, then this
     directory if it is the skill, then ``skills/<name>/`` under the deck
-    that contains ``scripts/build-slides.py``.
+    that contains ``scripts/build-slides.py`` (the skill layout, not a
+    deck-local ``scripts/markdown-slides/`` copy).
     """
     root = _existing_dir(deck_root)
     env = os.environ if environ is None else environ
@@ -164,13 +174,15 @@ def load_build_skill(deck_root: Path, environ: dict[str, str] | None = None) -> 
 def load_build_scripts(deck_root: Path) -> Path | None:
     """Return a deck-local scripts directory, or None.
 
-    When the deck is not the skill itself and ``scripts/build-slides.py``
-    exists under the deck root, html and serve run from that copy.
+    When the deck is not the skill itself and
+    ``scripts/markdown-slides/build-slides.py`` exists, html and serve run
+    from that copy. A file at ``scripts/build-slides.py`` is the skill
+    layout, not a vendored deck copy.
     """
     root = _existing_dir(deck_root)
     if _is_engine(root):
         return None
-    marker = root / "scripts" / "build-slides.py"
+    marker = root / LOCAL_ENGINE
     if not marker.is_file():
         return None
     return marker.parent.resolve()

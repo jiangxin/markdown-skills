@@ -223,7 +223,7 @@ class TestBuildSlides(unittest.TestCase):
             self._write_deck(deck, name="local-scripts", title="Local Scripts")
             shutil.copytree(
                 SKILL / "scripts",
-                deck / "scripts",
+                deck / "scripts" / "markdown-slides",
                 ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
             )
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
@@ -240,6 +240,28 @@ class TestBuildSlides(unittest.TestCase):
             self.assertTrue(html_path.is_file())
             html = html_path.read_text(encoding="utf-8")
             self.assertIn("<title>Local Scripts</title>", html)
+
+    def test_deck_makefile_ignores_build_slides_at_scripts_root(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write_deck(deck, name="shared-scripts", title="Shared Scripts")
+            (deck / "scripts").mkdir()
+            (deck / "scripts" / "build-slides.py").write_text(
+                "#!/usr/bin/env python3\nraise SystemExit('wrong scripts dir')\n"
+            )
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "pages"],
+                env=isolated_env.isolated({"SKILL": str(SKILL)}),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            html_path = deck / "build" / "pages" / "shared-scripts.html"
+            self.assertTrue(html_path.is_file())
+            self.assertIn("<title>Shared Scripts</title>", html_path.read_text(encoding="utf-8"))
 
     def test_make_directory_builds_html_into_build(self):
         with tempfile.TemporaryDirectory() as raw:

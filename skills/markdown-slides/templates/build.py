@@ -21,6 +21,7 @@ LOCAL_PY = {
     "serve": "serve.py",
 }
 ENGINE = Path("scripts") / "build-slides.py"
+LOCAL_ENGINE = Path("scripts") / "markdown-slides" / "build-slides.py"
 
 
 def deck_root() -> Path:
@@ -61,7 +62,7 @@ def resolve_skill(root: Path) -> Path:
 def resolve_scripts(root: Path) -> Path | None:
     if _is_engine(root):
         return None
-    marker = root / "scripts" / "build-slides.py"
+    marker = root / LOCAL_ENGINE
     if not marker.is_file():
         return None
     return marker.parent.resolve()
@@ -82,7 +83,7 @@ def help_text() -> str:
         "  make fonts       vendor Google Fonts into the skill cache\n"
         "  python3 build.py <target> [dir]  same as make\n"
         "Set SKILL or MARKDOWN_SLIDES_HOME, or nest the skill under skills/.\n"
-        "A deck-local scripts/ copy runs html and serve when present.\n"
+        "A deck-local scripts/markdown-slides/ copy runs html and serve when present.\n"
     )
 
 
