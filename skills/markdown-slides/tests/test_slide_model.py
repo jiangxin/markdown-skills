@@ -32,14 +32,9 @@ class TestSlideIndex(unittest.TestCase):
         if index is not None:
             (slides / "index.md").write_text(index, encoding="utf-8")
             if config_text is None:
-                config_text = (
-                    f"[deck]\nslides = {slides_rel}\n"
-                    f"sort = {slides_rel}/index.md\n"
-                )
+                config_text = f"[deck]\nslides = {slides_rel}\n" f"sort = {slides_rel}/index.md\n"
             elif "sort =" not in config_text and "sort=" not in config_text:
-                config_text = (
-                    config_text.rstrip() + f"\nsort = {slides_rel}/index.md\n"
-                )
+                config_text = config_text.rstrip() + f"\nsort = {slides_rel}/index.md\n"
         if config_text is not None:
             (deck / "config.ini").write_text(config_text, encoding="utf-8")
         for name, text in pages.items():
@@ -363,7 +358,7 @@ class TestSlideIndex(unittest.TestCase):
 
 class TestParseFrontmatter(unittest.TestCase):
     def test_strips_one_matching_quote_pair(self):
-        text = "---\ntitle: \"engineers'\"\nquote: \"'hello'\"\n---\n"
+        text = '---\ntitle: "engineers\'"\nquote: "\'hello\'"\n---\n'
         meta, _body = slide_model.parse_frontmatter(text)
         self.assertEqual(meta["title"], "engineers'")
         self.assertEqual(meta["quote"], "'hello'")

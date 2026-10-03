@@ -75,10 +75,7 @@ def favicon_link(root: Path) -> str:
         if not path.is_file():
             continue
         mime = _FAVICON_TYPES.get(path.suffix.lower(), "image/png")
-        return (
-            f'    <link rel="icon" href="{html.escape(href, quote=True)}"'
-            f' type="{mime}">\n'
-        )
+        return f'    <link rel="icon" href="{html.escape(href, quote=True)}"' f' type="{mime}">\n'
     return ""
 
 
@@ -108,7 +105,7 @@ def render_note(note: str) -> str:
         for marker in ("- ", "* "):
             if stripped.startswith(marker):
                 indent = len(line) - len(stripped)
-                return (indent, stripped[len(marker):])
+                return (indent, stripped[len(marker) :])
         return None
 
     while i < n:
@@ -350,10 +347,7 @@ def render_foot(
     else:
         left = f"<span>{inline(linkify_footer(meta.get('footer', '')))}</span>"
     stamp = html.escape(page_stamp(index, total, version))
-    return (
-        f'<div class="foot reveal">{left}'
-        f'<span class="stamp">{stamp}</span></div>'
-    )
+    return f'<div class="foot reveal">{left}' f'<span class="stamp">{stamp}</span></div>'
 
 
 def foot_from_body(meta: dict, body: str, index: int, total: int) -> str:
@@ -410,33 +404,39 @@ def render_title(meta: dict, body: str, index: int, total: int, first: bool) -> 
                 "</div>"
             )
         cover_session = '<div class="cover-session reveal">' + "".join(lines) + "</div>"
-    inner = indent_inner([
-        '<div class="meta-row reveal">',
-        f'    <span class="cn">{inline(meta.get("meta_left", ""))}</span>',
-        f'    <span>{inline(meta.get("meta_right", ""))}</span>',
-        "</div>",
-        wk,
-        f"<h1 class=\"reveal\"{h1_attr}>{inline(title)}</h1>",
-        f'<p class="sub reveal">{inline(meta.get("subtitle", ""))}</p>',
-        f'<div class="{badge_cls}"{badge_attr}><div class="badge-pair"><span class="label">{inline(meta.get("badge_label", ""))}</span><span class="{en_cls}">{inline(badge_text)}</span></div></div>',
-        cover_session,
-        foot_from_body(meta, body, index, total),
-    ])
+    inner = indent_inner(
+        [
+            '<div class="meta-row reveal">',
+            f'    <span class="cn">{inline(meta.get("meta_left", ""))}</span>',
+            f'    <span>{inline(meta.get("meta_right", ""))}</span>',
+            "</div>",
+            wk,
+            f'<h1 class="reveal"{h1_attr}>{inline(title)}</h1>',
+            f'<p class="sub reveal">{inline(meta.get("subtitle", ""))}</p>',
+            f'<div class="{badge_cls}"{badge_attr}><div class="badge-pair"><span class="label">{inline(meta.get("badge_label", ""))}</span><span class="{en_cls}">{inline(badge_text)}</span></div></div>',
+            cover_session,
+            foot_from_body(meta, body, index, total),
+        ]
+    )
     return wrap_slide(inner, "title-slide grid-bg", first, meta)
 
 
 def render_section(meta: dict, body: str, index: int, total: int, first: bool) -> str:
-    inner = indent_inner([
-        f'<div class="big reveal">{inline(meta.get("number", ""))}</div>',
-        f'<h2 class="reveal">{inline(meta.get("title", "").replace("\\n", "<br>"))}</h2>',
-        render_summary(meta).strip(),
-        foot_from_body(meta, body, index, total),
-    ])
+    inner = indent_inner(
+        [
+            f'<div class="big reveal">{inline(meta.get("number", ""))}</div>',
+            f'<h2 class="reveal">{inline(meta.get("title", "").replace("\\n", "<br>"))}</h2>',
+            render_summary(meta).strip(),
+            foot_from_body(meta, body, index, total),
+        ]
+    )
     return wrap_slide(inner, "section-slide grid-bg", first, meta)
 
 
 def grid_class(columns: str) -> str:
-    return {"1": "grid-1", "2": "grid-2", "3": "grid-3", "4": "grid-4", "23": "grid-23"}.get(columns, "grid-2")
+    return {"1": "grid-1", "2": "grid-2", "3": "grid-3", "4": "grid-4", "23": "grid-23"}.get(
+        columns, "grid-2"
+    )
 
 
 def warn(message: str) -> None:
@@ -490,14 +490,18 @@ def render_cards(meta: dict, body: str, index: int, total: int, first: bool) -> 
     elif images_inline:
         grid_style = "flex:1; align-content:start;"
     else:
-        grid_style = "flex:0 0 auto;" if (images_fill or band_images) else "flex:1; align-content:start;"
+        grid_style = (
+            "flex:0 0 auto;" if (images_fill or band_images) else "flex:1; align-content:start;"
+        )
     tracks = width_tracks(meta)
     if tracks:
         # widths 只能描述一行：列数对不上就说不清第二行该怎么分。
         if len(tracks) >= 2 and len(tracks) == len(grid_cards):
             grid_style += f" grid-template-columns:{' '.join(tracks)};"
         else:
-            warn(f"cards 页 widths 有 {len(tracks)} 列，网格里是 {len(grid_cards)} 张卡，已忽略 widths")
+            warn(
+                f"cards 页 widths 有 {len(tracks)} 列，网格里是 {len(grid_cards)} 张卡，已忽略 widths"
+            )
     parts = [
         render_overline(meta),
         f'<h2 class="reveal">{inline(meta.get("title", "").replace("\\n", "<br>"))}</h2>',
@@ -622,7 +626,9 @@ def render_table(meta: dict, body: str, index: int, total: int, first: bool) -> 
         f'<h2 class="reveal">{inline(meta.get("title", "").replace("\\n", "<br>"))}</h2>',
         render_summary(meta) if not summary_after else "",
         table_html(meta, headers, rows),
-        f'<p class="summary reveal" style="margin:22px 0 0;">{inline(summary_after)}</p>' if summary_after else "",
+        f'<p class="summary reveal" style="margin:22px 0 0;">{inline(summary_after)}</p>'
+        if summary_after
+        else "",
         render_foot(meta, index, total, foot_note=foot_note).strip(),
     ]
     return wrap_slide(indent_inner([p for p in parts if p]), "", first, meta)
@@ -704,15 +710,12 @@ def build(output: Path | None = None) -> None:
     version = git_describe(root)
     _state = _RenderState(root=root, version=version)
     try:
-        slides = "\n\n".join(
-            render_page(path, i, total) for i, path in enumerate(pages, start=1)
-        )
+        slides = "\n\n".join(render_page(path, i, total) for i, path in enumerate(pages, start=1))
         css = (deck.theme_dir / "deck.css").read_text(encoding="utf-8")
         js = (deck.theme_dir / "deck.js").read_text(encoding="utf-8")
         if _DECK_PLACEHOLDER not in js:
             sys.exit(
-                f"{deck.theme_dir / 'deck.js'} is missing the "
-                f"{_DECK_PLACEHOLDER} placeholder"
+                f"{deck.theme_dir / 'deck.js'} is missing the " f"{_DECK_PLACEHOLDER} placeholder"
             )
         js = js.replace(_DECK_PLACEHOLDER, _js_string(deck.name))
         rev = html.escape(version, quote=True)

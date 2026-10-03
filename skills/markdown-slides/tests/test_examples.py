@@ -1,12 +1,13 @@
 """The English example deck builds nine layouts and a git describe cover stamp."""
 
 import html
-import os
 import re
 import subprocess
 import sys
 import unittest
 from pathlib import Path
+
+import isolated_env
 
 SKILL = Path(__file__).resolve().parent.parent
 SLIDES = SKILL / "examples" / "slides"
@@ -58,20 +59,17 @@ def size_tokens() -> list[str]:
 class TestExamples(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        env = os.environ.copy()
-        env.pop("DECK_ROOT", None)
         result = subprocess.run(
             ["make", "html"],
             cwd=SKILL,
-            env=env,
+            env=isolated_env.isolated(),
             capture_output=True,
             text=True,
             check=False,
         )
         if result.returncode != 0:
             raise AssertionError(
-                f"make html failed ({result.returncode})\n"
-                f"{result.stdout}\n{result.stderr}"
+                f"make html failed ({result.returncode})\n" f"{result.stdout}\n{result.stderr}"
             )
         if not HTML_PATH.is_file():
             raise AssertionError(f"missing {HTML_PATH}")
@@ -118,12 +116,7 @@ class TestExamples(unittest.TestCase):
 
     def test_highlight_band_note_and_cover_foot(self):
         table = next(slide for slide in self.deck["slides"] if slide["layout"] == "table")
-        highlighted = [
-            cell
-            for row in table["table"]["rows"]
-            for cell in row
-            if cell["hl"]
-        ]
+        highlighted = [cell for row in table["table"]["rows"] for cell in row if cell["hl"]]
         self.assertTrue(highlighted)
         self.assertIn('class="hl"', self.html)
         self.assertIn(">Highlighted<", self.html)

@@ -33,7 +33,13 @@ JPEG_QUALITY_MIN = 20
 
 def parse_size(text: str) -> int:
     raw = text.strip().upper().replace(" ", "")
-    for suffix, mul in (("KB", 1024), ("K", 1024), ("MB", 1024 * 1024), ("M", 1024 * 1024), ("B", 1)):
+    for suffix, mul in (
+        ("KB", 1024),
+        ("K", 1024),
+        ("MB", 1024 * 1024),
+        ("M", 1024 * 1024),
+        ("B", 1),
+    ):
         if raw.endswith(suffix):
             return int(float(raw[: -len(suffix)]) * mul)
     return int(raw)
@@ -158,7 +164,9 @@ def encode_under_limit(image: Image.Image, fmt: str, max_bytes: int) -> bytes:
     raise ValueError(f"unsupported format: {fmt}")
 
 
-def compress_image(image: Image.Image, fmt: str, max_side: int, max_bytes: int) -> tuple[bytes, tuple[int, int]]:
+def compress_image(
+    image: Image.Image, fmt: str, max_side: int, max_bytes: int
+) -> tuple[bytes, tuple[int, int]]:
     orig_w, orig_h = image.size
     longest = max(orig_w, orig_h)
     side = min(longest, max_side)
@@ -191,7 +199,9 @@ def collect_inputs(paths: list[Path], recursive: bool) -> list[Path]:
         if not path.is_dir():
             raise FileNotFoundError(path)
         globber = path.rglob if recursive else path.glob
-        found.extend(sorted(p for p in globber("*") if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES))
+        found.extend(
+            sorted(p for p in globber("*") if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES)
+        )
     return found
 
 
@@ -203,7 +213,9 @@ def output_path_for(src: Path, output_dir: Path | None) -> Path:
 
 def atomic_write(dest: Path, data: bytes) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(dir=dest.parent, prefix=f".{dest.name}.", suffix=dest.suffix, delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(
+        dir=dest.parent, prefix=f".{dest.name}.", suffix=dest.suffix, delete=False
+    ) as tmp:
         tmp.write(data)
         tmp_path = Path(tmp.name)
     tmp_path.replace(dest)
@@ -259,7 +271,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--deck-root",
         help="deck directory (--deck-root, else DECK_ROOT, else the skill root)",
     )
-    parser.add_argument("--max-side", type=int, default=DEFAULT_MAX_SIDE, help="longest side in pixels")
+    parser.add_argument(
+        "--max-side", type=int, default=DEFAULT_MAX_SIDE, help="longest side in pixels"
+    )
     parser.add_argument(
         "--max-bytes",
         type=parse_size,

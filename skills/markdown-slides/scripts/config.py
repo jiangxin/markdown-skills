@@ -116,9 +116,7 @@ def output_paths(root: Path | None = None) -> Outputs:
     )
 
 
-def load_build_skill(
-    deck_root: Path, environ: dict[str, str] | None = None
-) -> Path | None:
+def load_build_skill(deck_root: Path, environ: dict[str, str] | None = None) -> Path | None:
     """Return the engine directory for a deck, or None if unset.
 
     Override order: ``SKILL``, then ``MARKDOWN_SLIDES_HOME``, then
@@ -155,10 +153,7 @@ def _engine_dir(deck_root: Path, raw: str) -> Path:
         sys.exit(f"markdown-slides skill is not a directory: {raw}")
     marker = resolved / ENGINE_MARKER
     if not marker.is_file():
-        sys.exit(
-            "not a markdown-slides skill "
-            f"(missing {ENGINE_MARKER}): {raw}"
-        )
+        sys.exit("not a markdown-slides skill " f"(missing {ENGINE_MARKER}): {raw}")
     return resolved
 
 
@@ -171,9 +166,7 @@ def serve_port(deck_root: Path) -> int:
     return _parse_port(raw)
 
 
-def cover_overrides(
-    deck_root: Path, path: Path, meta: dict[str, str]
-) -> dict[str, str]:
+def cover_overrides(deck_root: Path, path: Path, meta: dict[str, str]) -> dict[str, str]:
     """Return a copy of ``meta`` with optional ``[cover]`` overrides.
 
     Only a file named ``010-cover.md`` is updated. Empty values do not override.
@@ -239,16 +232,11 @@ def _deck_name(parser: configparser.ConfigParser, root: Path) -> str:
     return raw
 
 
-def _deck_order(
-    parser: configparser.ConfigParser, root: Path
-) -> tuple[str, Path | None, str]:
+def _deck_order(parser: configparser.ConfigParser, root: Path) -> tuple[str, Path | None, str]:
     order = parser.get("deck", "order", fallback="").strip()
     sort_rel = parser.get("deck", "sort", fallback="").strip()
     if order and order != DEFAULT_ORDER:
-        sys.exit(
-            "config.ini [deck] order must be auto, "
-            f"got: {order!r}"
-        )
+        sys.exit("config.ini [deck] order must be auto, " f"got: {order!r}")
     if order == DEFAULT_ORDER and sort_rel:
         sys.exit("config.ini [deck] order and sort cannot both be set")
     if sort_rel:
@@ -268,10 +256,7 @@ def _deck_theme(parser: configparser.ConfigParser) -> tuple[str, Path]:
         sys.exit(f"config.ini [build] theme is not a template directory: {raw}")
     missing = [str(marker) for marker in THEME_MARKERS if not (theme_dir / marker).is_file()]
     if missing:
-        sys.exit(
-            "config.ini [build] theme is incomplete "
-            f"(missing {', '.join(missing)}): {raw}"
-        )
+        sys.exit("config.ini [build] theme is incomplete " f"(missing {', '.join(missing)}): {raw}")
     return raw, theme_dir.resolve()
 
 
@@ -279,17 +264,13 @@ def _relative_path(root: Path, raw: str, key: str) -> Path:
     relative = Path(raw)
     if relative.is_absolute():
         sys.exit(
-            f"config.ini [deck] {key} must be a path relative to the deck "
-            f"root, got: {raw!r}"
+            f"config.ini [deck] {key} must be a path relative to the deck " f"root, got: {raw!r}"
         )
     resolved = (root / relative).resolve()
     try:
         resolved.relative_to(root)
     except ValueError:
-        sys.exit(
-            f"config.ini [deck] {key} escapes the deck root, "
-            f"got: {raw!r}"
-        )
+        sys.exit(f"config.ini [deck] {key} escapes the deck root, " f"got: {raw!r}")
     return resolved
 
 
@@ -336,10 +317,7 @@ def main(argv: list[str] | None = None) -> None:
         finally:
             sys.argv = saved
         if engine is None:
-            sys.exit(
-                "set SKILL= or MARKDOWN_SLIDES_HOME, or [build] skill in "
-                "config.ini"
-            )
+            sys.exit("set SKILL= or MARKDOWN_SLIDES_HOME, or [build] skill in " "config.ini")
         sys.stdout.write(str(engine) + "\n")
         return
     flag = "--print-output"
@@ -353,10 +331,7 @@ def main(argv: list[str] | None = None) -> None:
     if index + 1 < len(args) and not args[index + 1].startswith("-"):
         kind = args[index + 1]
     if kind not in _OUTPUT_KINDS:
-        sys.exit(
-            "--print-output must be one of "
-            f"{', '.join(_OUTPUT_KINDS)}, got: {kind}"
-        )
+        sys.exit("--print-output must be one of " f"{', '.join(_OUTPUT_KINDS)}, got: {kind}")
     saved = sys.argv
     try:
         if argv is not None:

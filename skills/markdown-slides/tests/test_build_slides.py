@@ -9,6 +9,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import isolated_env
+
 SKILL = Path(__file__).resolve().parent.parent
 SCRIPT = SKILL / "scripts" / "build-slides.py"
 DECK_JS = SKILL / "templates" / "swiss-modern" / "deck.js"
@@ -19,6 +21,7 @@ layout: title
 title: Hello
 ---
 """
+
 
 class TestBuildSlides(unittest.TestCase):
     def _write_deck(
@@ -33,10 +36,7 @@ class TestBuildSlides(unittest.TestCase):
         slides = deck / "pages"
         slides.mkdir(parents=True)
         (deck / "config.ini").write_text(
-            "[deck]\n"
-            f"name = {name}\n"
-            f"title = {title}\n"
-            "slides = pages\n",
+            "[deck]\n" f"name = {name}\n" f"title = {title}\n" "slides = pages\n",
             encoding="utf-8",
         )
         (slides / "010-hello.md").write_text(page, encoding="utf-8")
@@ -167,8 +167,8 @@ class TestBuildSlides(unittest.TestCase):
         template = SKILL / "templates" / "Makefile.deck"
         self.assertTrue(template.is_file())
         text = template.read_text(encoding="utf-8")
-        self.assertIn("$(MAKE) -C \"$(SKILL)\" $@ DECK_ROOT=\"$(DECK_ROOT)\"", text)
-        self.assertNotIn("\ntest:", text)
+        self.assertIn('$(MAKE) -C "$(SKILL)" $@ DECK_ROOT="$(DECK_ROOT)"', text)
+        self.assertIn("html ppt pdf serve lint fmt test:", text)
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             self._write_deck(deck, name="tramp-deck", title="Trampoline Title")
@@ -181,13 +181,9 @@ class TestBuildSlides(unittest.TestCase):
                 encoding="utf-8",
             )
             shutil.copy(template, deck / "Makefile")
-            env = os.environ.copy()
-            env.pop("SKILL", None)
-            env.pop("MARKDOWN_SLIDES_HOME", None)
-            env.pop("DECK_ROOT", None)
             result = subprocess.run(
                 ["make", "-C", str(deck), "html"],
-                env=env,
+                env=isolated_env.isolated(),
                 capture_output=True,
                 text=True,
                 check=False,
@@ -207,13 +203,9 @@ class TestBuildSlides(unittest.TestCase):
             deck = Path(raw)
             self._write_deck(deck, name="no-skill", title="No Skill")
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
-            env = os.environ.copy()
-            env.pop("SKILL", None)
-            env.pop("MARKDOWN_SLIDES_HOME", None)
-            env.pop("DECK_ROOT", None)
             result = subprocess.run(
                 ["make", "-C", str(deck), "html"],
-                env=env,
+                env=isolated_env.isolated(),
                 capture_output=True,
                 text=True,
                 check=False,

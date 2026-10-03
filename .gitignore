@@ -9,4 +9,5 @@ skills/markdown-slides/*.pptx
 skills/markdown-slides/*.pdf
 skills/markdown-slides/node_modules/
 skills/markdown-slides/.cache/
+skills/markdown-slides/.ruff_cache/
 skills/markdown-slides/**/__pycache__/

@@ -114,14 +114,10 @@ class TestConfig(unittest.TestCase):
                 "[cover]\npresenter = Ada\npresented_at = 2026-10-03\n",
             )
             meta = {"presenter": "A", "presented_at": "B", "title": "T"}
-            other = config_module.cover_overrides(
-                deck, Path("slides/020-section.md"), meta
-            )
+            other = config_module.cover_overrides(deck, Path("slides/020-section.md"), meta)
             self.assertEqual(other, meta)
             self.assertIsNot(other, meta)
-            cover = config_module.cover_overrides(
-                deck, Path("slides/010-cover.md"), meta
-            )
+            cover = config_module.cover_overrides(deck, Path("slides/010-cover.md"), meta)
             self.assertEqual(cover["presenter"], "Ada")
             self.assertEqual(cover["presented_at"], "2026-10-03")
             self.assertEqual(cover["title"], "T")
@@ -135,9 +131,7 @@ class TestConfig(unittest.TestCase):
                 "[cover]\npresenter =\npresented_at = 2026-10-03\n",
             )
             meta = {"presenter": "A", "presented_at": "B"}
-            result = config_module.cover_overrides(
-                deck, Path("010-cover.md"), meta
-            )
+            result = config_module.cover_overrides(deck, Path("010-cover.md"), meta)
             self.assertEqual(result["presenter"], "A")
             self.assertEqual(result["presented_at"], "2026-10-03")
 
@@ -146,9 +140,7 @@ class TestConfig(unittest.TestCase):
             deck = Path(raw)
             self._write(deck, "[cover]\npresenter =   \npresented_at =\n")
             meta = {"presenter": "A", "presented_at": "B"}
-            result = config_module.cover_overrides(
-                deck, Path("010-cover.md"), meta
-            )
+            result = config_module.cover_overrides(deck, Path("010-cover.md"), meta)
             self.assertEqual(result, meta)
 
     def test_serve_port_default(self):
@@ -211,15 +203,11 @@ class TestConfig(unittest.TestCase):
                 chosen = Path(raw_argv).resolve()
                 with patch.dict(os.environ, {"DECK_ROOT": str(other)}):
                     self.assertEqual(
-                        config_module.deck_root(
-                            argv=["prog", "--deck-root", str(chosen)]
-                        ),
+                        config_module.deck_root(argv=["prog", "--deck-root", str(chosen)]),
                         chosen,
                     )
             with self.assertRaises(SystemExit):
-                config_module.deck_root(
-                    argv=["prog", "--deck-root", str(deck / "missing")]
-                )
+                config_module.deck_root(argv=["prog", "--deck-root", str(deck / "missing")])
 
     def test_sort_path_is_relative_to_deck_root(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -349,9 +337,7 @@ class TestConfig(unittest.TestCase):
             deck = parent / "deck"
             deck.mkdir()
             self._write(deck, "[build]\nskill = ../ini-engine\n")
-            loaded = config_module.load_build_skill(
-                deck, environ={"SKILL": str(env_engine)}
-            )
+            loaded = config_module.load_build_skill(deck, environ={"SKILL": str(env_engine)})
             self.assertEqual(loaded, env_engine.resolve())
             loaded = config_module.load_build_skill(
                 deck, environ={"MARKDOWN_SLIDES_HOME": str(env_engine)}
@@ -391,9 +377,7 @@ class TestConfig(unittest.TestCase):
             buf = io.StringIO()
             try:
                 sys.argv = ["config.py", "--print-skill", "--deck-root", str(deck)]
-                with patch.dict(
-                    os.environ, {"SKILL": "", "MARKDOWN_SLIDES_HOME": ""}, clear=False
-                ):
+                with patch.dict(os.environ, {"SKILL": "", "MARKDOWN_SLIDES_HOME": ""}, clear=False):
                     with contextlib.redirect_stdout(buf):
                         config_module.main()
             finally:

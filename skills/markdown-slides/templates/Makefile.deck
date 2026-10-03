@@ -32,7 +32,7 @@ SKILL := $(shell MARKDOWN_SLIDES_HOME="$(MARKDOWN_SLIDES_HOME)" printf '%s\n' \
 	| python3 - "$(DECK_ROOT)")
 endif
 
-.PHONY: help html ppt pdf serve
+.PHONY: help html ppt pdf serve lint fmt test
 
 help:
 	@echo "Targets (run from the deck root):"
@@ -40,9 +40,12 @@ help:
 	@echo "  make ppt     build PPTX"
 	@echo "  make pdf     export PDF"
 	@echo "  make serve   serve the deck locally"
+	@echo "  make fmt     format Python in the skill"
+	@echo "  make lint    ruff + markdownlint (skill, plus this deck's Markdown)"
+	@echo "  make test    run the skill unit tests"
 	@echo "Set SKILL or MARKDOWN_SLIDES_HOME, or [build] skill in config.ini."
 
-html ppt pdf serve:
+html ppt pdf serve lint fmt test:
 	@if [ -z "$(SKILL)" ]; then \
 		echo "set SKILL= or MARKDOWN_SLIDES_HOME, or [build] skill in config.ini" >&2; \
 		exit 1; \

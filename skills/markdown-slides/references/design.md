@@ -167,7 +167,7 @@ A band under the cards.
 :::
 ```
 
-`:::note foot` replaces `footer`. The note supports paragraphs and lists marked with `- ` or `* `.
+`:::note foot` replaces `footer`. The note supports paragraphs and lists marked with a leading `-` or `*` and a space.
 
 ```markdown
 :::note foot
@@ -203,7 +203,7 @@ Flags are extra words on the opening line. The same fact can be written as a fie
 | `num` | Eyebrow or index |
 | `title` | Card title |
 | `body` | Paragraph text; several `body` lines become several paragraphs |
-| `- ` item | A list item; a deeper indent nests it; a nested item uses a hollow mark |
+| `-` item | A list item (hyphen, then space); a deeper indent nests it; a nested item uses a hollow mark |
 | `tone` | `filled` or `red` |
 | `slot` | `left`, `mid`, or `right` (`stack-split`) |
 | `size` | `s`, `l`, `xl`, or `xxl` |

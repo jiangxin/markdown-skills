@@ -87,7 +87,9 @@ def render_markdown(text: str) -> str:
             for row in rows:
                 cells = list(row) + [""] * max(0, len(headers) - len(row))
                 body_rows.append(
-                    "<tr>" + "".join(f"<td>{inline_md(c)}</td>" for c in cells[: len(headers)]) + "</tr>"
+                    "<tr>"
+                    + "".join(f"<td>{inline_md(c)}</td>" for c in cells[: len(headers)])
+                    + "</tr>"
                 )
             out.append(
                 f'<table class="md-table"><thead><tr>{thead}</tr></thead>'
