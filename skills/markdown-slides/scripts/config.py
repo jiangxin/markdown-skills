@@ -9,6 +9,7 @@ root. ``config.ini`` is read from the deck root.
 from __future__ import annotations
 
 import configparser
+import json
 import os
 import re
 import sys
@@ -27,6 +28,18 @@ class Deck:
     title: str
     slides: Path
     slides_rel: str
+
+
+@dataclass(frozen=True)
+class Outputs:
+    """Default artifact paths for one deck. All of them live in ``root``."""
+
+    root: Path
+    name: str
+    title: str
+    html: Path
+    pptx: Path
+    pdf: Path
 
 
 def skill_root() -> Path:
@@ -53,6 +66,25 @@ def load_deck(deck_root: Path) -> Deck:
     title = parser.get("deck", "title", fallback="").strip() or name
     slides_rel = parser.get("deck", "slides", fallback="").strip() or DEFAULT_SLIDES
     return Deck(name, title, _slides_dir(root, slides_rel), slides_rel)
+
+
+def output_paths(root: Path | None = None) -> Outputs:
+    """Return ``<root>/<name>.html``, ``.pptx``, and ``.pdf``.
+
+    ``name`` comes from ``[deck] name``. When ``root`` is omitted, the deck
+    root is ``deck_root()`` (``--deck-root``, else ``DECK_ROOT``, else the
+    skill root).
+    """
+    resolved = deck_root() if root is None else _existing_dir(root)
+    deck = load_deck(resolved)
+    return Outputs(
+        root=resolved,
+        name=deck.name,
+        title=deck.title,
+        html=resolved / f"{deck.name}.html",
+        pptx=resolved / f"{deck.name}.pptx",
+        pdf=resolved / f"{deck.name}.pdf",
+    )
 
 
 def serve_port(deck_root: Path) -> int:
@@ -150,6 +182,61 @@ def _slides_dir(root: Path, slides_rel: str) -> Path:
     return resolved
 
 
+_OUTPUT_KINDS = ("html", "pptx", "pdf", "json")
+
+
+def _print_output(kind: str, paths: Outputs) -> None:
+    if kind == "json":
+        json.dump(
+            {
+                "root": str(paths.root),
+                "skillRoot": str(skill_root()),
+                "name": paths.name,
+                "title": paths.title,
+                "html": str(paths.html),
+                "pptx": str(paths.pptx),
+                "pdf": str(paths.pdf),
+            },
+            sys.stdout,
+            ensure_ascii=False,
+        )
+        sys.stdout.write("\n")
+        return
+    sys.stdout.write(str(getattr(paths, kind)) + "\n")
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Print a default artifact path without building it.
+
+    ``python3 scripts/config.py --print-output pptx`` prints the PPTX path.
+    ``pdf``, ``html``, and ``json`` are the other kinds. ``--deck-root`` and
+    ``DECK_ROOT`` are read by ``deck_root()``.
+    """
+    args = list(sys.argv[1:] if argv is None else argv)
+    flag = "--print-output"
+    if flag not in args:
+        sys.exit(
+            "usage: python3 scripts/config.py --print-output {html,pptx,pdf,json}"
+        )
+    index = args.index(flag)
+    kind = "json"
+    if index + 1 < len(args) and not args[index + 1].startswith("-"):
+        kind = args[index + 1]
+    if kind not in _OUTPUT_KINDS:
+        sys.exit(
+            "--print-output must be one of "
+            f"{', '.join(_OUTPUT_KINDS)}, got: {kind}"
+        )
+    saved = sys.argv
+    try:
+        if argv is not None:
+            sys.argv = ["config.py", *args]
+        paths = output_paths()
+    finally:
+        sys.argv = saved
+    _print_output(kind, paths)
+
+
 def _parse_port(raw: str) -> int:
     try:
         port = int(raw)
@@ -158,3 +245,7 @@ def _parse_port(raw: str) -> int:
     if not 1 <= port <= 65535:
         sys.exit(f"config.ini [serve] port must be in 1..65535, got: {port}")
     return port
+
+
+if __name__ == "__main__":
+    main()
