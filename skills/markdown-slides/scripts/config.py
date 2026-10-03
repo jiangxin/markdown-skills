@@ -45,11 +45,12 @@ class Deck:
 
 @dataclass(frozen=True)
 class Outputs:
-    """Default artifact paths for one deck. All of them live in ``root``."""
+    """Artifact paths under ``root/build/<slides>/``."""
 
     root: Path
     name: str
     title: str
+    slides_rel: str
     html: Path
     pptx: Path
     pdf: Path
@@ -74,12 +75,30 @@ def deck_root(argv: list[str] | None = None) -> Path:
 
 
 def load_deck(deck_root: Path) -> Deck:
-    """Load ``[deck]`` name, title, slides, and page-order keys for ``deck_root``."""
+    """Load ``[deck]`` name, title, slides, and page-order keys for ``deck_root``.
+
+    ``--slides`` or ``SLIDES`` selects another page directory in the same
+    project. When it matches ``[deck] slides``, name and title stay as
+    configured. Otherwise the last path component is the basename.
+    """
     root = _existing_dir(deck_root)
     parser = _load_parser(root)
-    name = _deck_name(parser, root)
-    title = parser.get("deck", "title", fallback="").strip() or name
-    slides_rel = parser.get("deck", "slides", fallback="").strip() or DEFAULT_SLIDES
+    configured = _norm_slides_rel(
+        parser.get("deck", "slides", fallback="").strip() or DEFAULT_SLIDES
+    )
+    requested = _requested_slides_rel()
+    slides_rel = requested or configured
+    if requested is not None and requested != configured:
+        name = Path(slides_rel).name
+        if _NAME_RE.fullmatch(name) is None:
+            sys.exit(
+                "slides directory name must contain only letters, digits, and "
+                f"hyphens, got: {name!r}"
+            )
+        title = name
+    else:
+        name = _deck_name(parser, root)
+        title = parser.get("deck", "title", fallback="").strip() or name
     order, sort, sort_rel = _deck_order(parser, root)
     theme, theme_dir = _deck_theme(parser, root)
     return Deck(
@@ -96,21 +115,24 @@ def load_deck(deck_root: Path) -> Deck:
 
 
 def output_paths(root: Path | None = None) -> Outputs:
-    """Return ``<root>/<name>.html``, ``.pptx``, and ``.pdf``.
+    """Return ``<root>/build/<slides>/<name>.html``, ``.pptx``, and ``.pdf``.
 
-    ``name`` comes from ``[deck] name``. When ``root`` is omitted, the deck
-    root is ``deck_root()`` (``--deck-root``, else ``DECK_ROOT``, else the
-    skill root).
+    ``name`` comes from ``[deck] name`` for the configured slides directory,
+    else the directory name. When ``root`` is omitted, the deck root is
+    ``deck_root()`` (``--deck-root``, else ``DECK_ROOT``, else the skill
+    root). ``--slides`` and ``SLIDES`` select the page directory.
     """
     resolved = deck_root() if root is None else _existing_dir(root)
     deck = load_deck(resolved)
+    out_dir = resolved / "build" / Path(deck.slides_rel)
     return Outputs(
         root=resolved,
         name=deck.name,
         title=deck.title,
-        html=resolved / f"{deck.name}.html",
-        pptx=resolved / f"{deck.name}.pptx",
-        pdf=resolved / f"{deck.name}.pdf",
+        slides_rel=deck.slides_rel,
+        html=out_dir / f"{deck.name}.html",
+        pptx=out_dir / f"{deck.name}.pptx",
+        pdf=out_dir / f"{deck.name}.pdf",
         theme=deck.theme,
         theme_dir=deck.theme_dir,
     )
@@ -229,6 +251,25 @@ def _option_value(argv: list[str], flag: str) -> str | None:
     return None
 
 
+def _norm_slides_rel(raw: str) -> str:
+    text = raw.strip().replace("\\", "/")
+    if not text or text in {".", ".."}:
+        sys.exit(f"slides directory is empty or invalid: {raw!r}")
+    relative = Path(text)
+    if relative.is_absolute():
+        sys.exit(f"slides directory must be relative to the deck root, got: {raw!r}")
+    return relative.as_posix().strip("/")
+
+
+def _requested_slides_rel() -> str | None:
+    chosen = _option_value(list(sys.argv), "--slides")
+    if chosen is None:
+        chosen = os.environ.get("SLIDES", "").strip() or None
+    if chosen is None:
+        return None
+    return _norm_slides_rel(chosen)
+
+
 def _load_parser(root: Path) -> configparser.ConfigParser:
     parser = configparser.ConfigParser(interpolation=None)
     path = root / "config.ini"
@@ -329,6 +370,7 @@ def _print_output(kind: str, paths: Outputs) -> None:
                 "skillRoot": str(skill_root()),
                 "name": paths.name,
                 "title": paths.title,
+                "slides": paths.slides_rel,
                 "html": str(paths.html),
                 "pptx": str(paths.pptx),
                 "pdf": str(paths.pdf),

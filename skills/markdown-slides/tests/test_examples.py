@@ -11,7 +11,7 @@ import isolated_env
 
 SKILL = Path(__file__).resolve().parent.parent
 SLIDES = SKILL / "examples" / "slides"
-HTML_PATH = SKILL / "markdown-slides-examples.html"
+HTML_PATH = SKILL / "build" / "examples" / "slides" / "markdown-slides-examples.html"
 SCRIPTS = SKILL / "scripts"
 
 SIZE_FIELD = re.compile(r"^(?:text_size|note_size|size):\s*(s|l|xl|xxl)\s*$")

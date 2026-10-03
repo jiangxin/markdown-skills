@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Build a single-file HTML deck into the deck root."""
+"""Build a single-file HTML deck under build/<slides>/."""
 
 from __future__ import annotations
 
 import html
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -45,6 +46,7 @@ class _RenderState:
     root: Path
     version: str | None = None
     slide: Path | None = None
+    asset_prefix: str = ""
 
 
 _state: _RenderState | None = None
@@ -79,19 +81,36 @@ def theme_font_href(theme_dir: Path) -> str:
     return _DEFAULT_FONT_HREF
 
 
+def _asset_prefix(root: Path, dest: Path) -> str:
+    """Prefix that walks from the HTML file back to the deck root."""
+    rel = Path(os.path.relpath(root.resolve(), dest.parent.resolve())).as_posix()
+    if rel in {".", ""}:
+        return ""
+    return rel + "/"
+
+
+def deck_href(src: str) -> str:
+    if not src or src.startswith(("http://", "https://", "data:", "#", "/")):
+        return src
+    prefix = _state.asset_prefix if _state is not None else ""
+    return prefix + src
+
+
 def favicon_link(root: Path) -> str:
     """Return an icon ``<link>`` when the deck root has a favicon file."""
     base = root.resolve()
+    prefix = _state.asset_prefix if _state is not None else ""
     for name in _FAVICON_FILES:
         path = (base / name).resolve()
         try:
-            href = path.relative_to(base).as_posix()
+            path.relative_to(base)
         except ValueError:
             continue
         if not path.is_file():
             continue
         mime = _FAVICON_TYPES.get(path.suffix.lower(), "image/png")
-        return f'    <link rel="icon" href="{html.escape(href, quote=True)}"' f' type="{mime}">\n'
+        href = html.escape(prefix + name, quote=True)
+        return f'    <link rel="icon" href="{href}" type="{mime}">\n'
     return ""
 
 
@@ -250,7 +269,7 @@ def card_html(card: dict, extra_style: str = "") -> str:
     if card.get("image"):
         img = card["image"]
         alt = html.escape(card.get("alt") or "")
-        src = html.escape(img["src"])
+        src = html.escape(deck_href(img["src"]))
         has_caption = bool(card["num"] or card["title"])
         if not has_caption:
             classes.append("card-image")
@@ -720,11 +739,12 @@ def build(output: Path | None = None) -> None:
     global _state
     root = config.deck_root()
     deck = config.load_deck(root)
-    dest = root / f"{deck.name}.html" if output is None else Path(output)
+    dest = config.output_paths(root).html if output is None else Path(output)
+    dest.parent.mkdir(parents=True, exist_ok=True)
     pages = ordered_pages(deck)
     total = len(pages)
     version = git_describe(root)
-    _state = _RenderState(root=root, version=version)
+    _state = _RenderState(root=root, version=version, asset_prefix=_asset_prefix(root, dest))
     try:
         slides = "\n\n".join(render_page(path, i, total) for i, path in enumerate(pages, start=1))
         css = (deck.theme_dir / "deck.css").read_text(encoding="utf-8")

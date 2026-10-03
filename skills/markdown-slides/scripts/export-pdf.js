@@ -303,6 +303,7 @@ async function main() {
     }
     await browser.close();
 
+    fs.mkdirSync(path.dirname(opts.out), { recursive: true });
     fs.writeFileSync(opts.out, await mergePdfPages(pages));
     const size = fs.statSync(opts.out).size;
     const mb = (size / (1024 * 1024)).toFixed(1);

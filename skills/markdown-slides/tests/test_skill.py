@@ -31,6 +31,8 @@ REQUIRED = (
     "overwrite existing slides",
     "themes/",
     "Ask the user to confirm before copying scripts.",
+    "make slides",
+    "build/",
 )
 
 

@@ -8,6 +8,7 @@ MAKE_LEAK = (
     "SKILL",
     "MARKDOWN_SLIDES_HOME",
     "DECK_ROOT",
+    "SLIDES",
     "MAKEFLAGS",
     "MAKELEVEL",
     "MFLAGS",

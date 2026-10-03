@@ -35,31 +35,39 @@ class TestOutputPaths(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             deck = self._deck(raw)
             paths = config_module.output_paths(deck)
-            self.assertEqual(paths.pptx, deck / "sample-deck.pptx")
-            self.assertEqual(paths.pdf, deck / "sample-deck.pdf")
-            self.assertEqual(paths.html, deck / "sample-deck.html")
+            self.assertEqual(paths.pptx, deck / "build" / "slides" / "sample-deck.pptx")
+            self.assertEqual(paths.pdf, deck / "build" / "slides" / "sample-deck.pdf")
+            self.assertEqual(paths.html, deck / "build" / "slides" / "sample-deck.html")
+            self.assertEqual(paths.slides_rel, "slides")
             self.assertEqual(paths.theme, "swiss-modern")
             self.assertEqual(
                 paths.theme_dir,
                 (SKILL / "templates" / "swiss-modern").resolve(),
             )
-            self.assertEqual(paths.pptx.parent, deck)
-            self.assertEqual(paths.pdf.parent, deck)
+            self.assertEqual(paths.pptx.parent, deck / "build" / "slides")
+            self.assertEqual(paths.pdf.parent, deck / "build" / "slides")
             self.assertFalse(paths.pptx.exists())
             self.assertFalse(paths.pdf.exists())
 
     def test_example_deck_names(self):
         paths = config_module.output_paths(SKILL)
         self.assertEqual(paths.name, "markdown-slides-examples")
-        self.assertEqual(paths.pptx, SKILL / "markdown-slides-examples.pptx")
-        self.assertEqual(paths.pdf, SKILL / "markdown-slides-examples.pdf")
-        self.assertEqual(paths.html, SKILL / "markdown-slides-examples.html")
+        self.assertEqual(
+            paths.pptx, SKILL / "build" / "examples" / "slides" / "markdown-slides-examples.pptx"
+        )
+        self.assertEqual(
+            paths.pdf, SKILL / "build" / "examples" / "slides" / "markdown-slides-examples.pdf"
+        )
+        self.assertEqual(
+            paths.html, SKILL / "build" / "examples" / "slides" / "markdown-slides-examples.html"
+        )
 
     def test_print_output_flag(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = self._deck(raw, name="print-deck")
             env = os.environ.copy()
             env["DECK_ROOT"] = str(deck)
+            env.pop("SLIDES", None)
             script = SCRIPTS / "config.py"
             for kind in ("pptx", "pdf"):
                 result = subprocess.run(
@@ -70,7 +78,10 @@ class TestOutputPaths(unittest.TestCase):
                     check=False,
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(result.stdout.strip(), str(deck / f"print-deck.{kind}"))
+                self.assertEqual(
+                    result.stdout.strip(),
+                    str(deck / "build" / "slides" / f"print-deck.{kind}"),
+                )
                 self.assertFalse((deck / f"print-deck.{kind}").exists())
 
     def test_node_print_output_does_not_build(self):
@@ -78,6 +89,7 @@ class TestOutputPaths(unittest.TestCase):
             deck = self._deck(raw, name="node-deck")
             env = os.environ.copy()
             env["DECK_ROOT"] = str(SKILL)
+            env.pop("SLIDES", None)
             for script, suffix in (("build-pptx.js", ".pptx"), ("export-pdf.js", ".pdf")):
                 result = subprocess.run(
                     [
@@ -93,7 +105,10 @@ class TestOutputPaths(unittest.TestCase):
                     check=False,
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(result.stdout.strip(), str(deck / f"node-deck{suffix}"))
+                self.assertEqual(
+                    result.stdout.strip(),
+                    str(deck / "build" / "slides" / f"node-deck{suffix}"),
+                )
                 self.assertFalse((deck / f"node-deck{suffix}").exists())
                 lowered = (result.stderr or "").lower()
                 self.assertNotIn("chromium", lowered)

@@ -105,6 +105,7 @@ async function main() {
     render(slide, pres, theme, page);
   }
 
+  await fs.promises.mkdir(path.dirname(out), { recursive: true });
   await pres.writeFile({ fileName: out });
   const ver = deck.version ? `, ${deck.version}` : "";
   process.stdout.write(`wrote ${shown(outputs.root, out)} (${deck.total} slides${ver})\n`);

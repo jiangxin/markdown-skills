@@ -61,6 +61,29 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.order, "auto")
             self.assertIsNone(loaded.sort)
 
+    def test_slides_env_selects_other_directory(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[deck]\nname = main-deck\nslides = slides\n")
+            with patch.dict(os.environ, {"SLIDES": "talk"}, clear=False):
+                loaded = config_module.load_deck(deck)
+                paths = config_module.output_paths(deck)
+            self.assertEqual(loaded.slides_rel, "talk")
+            self.assertEqual(loaded.name, "talk")
+            self.assertEqual(loaded.title, "talk")
+            self.assertEqual(loaded.slides, (deck / "talk").resolve())
+            self.assertEqual(paths.html, deck.resolve() / "build" / "talk" / "talk.html")
+
+    def test_slides_env_matching_config_keeps_name(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[deck]\nname = main-deck\ntitle = Main\nslides = slides\n")
+            with patch.dict(os.environ, {"SLIDES": "slides"}, clear=False):
+                loaded = config_module.load_deck(deck)
+            self.assertEqual(loaded.name, "main-deck")
+            self.assertEqual(loaded.title, "Main")
+            self.assertEqual(loaded.slides_rel, "slides")
+
     def test_empty_title_defaults_to_name(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)

@@ -1,10 +1,12 @@
 .plan/
 .frontend-slides/
+/build/
 
 /markdown-publisher.html
 /markdown-publisher.pptx
 /markdown-publisher.pdf
 
+skills/markdown-slides/build/
 skills/markdown-slides/*.html
 skills/markdown-slides/*.pptx
 skills/markdown-slides/*.pdf

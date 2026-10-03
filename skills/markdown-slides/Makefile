@@ -15,22 +15,23 @@ help:
 	@echo "  make test    run unit tests"
 	@echo "  make fonts   download Google Fonts into .cache (once per theme)"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
+	@echo "Pass SLIDES to select a page directory (build/<dir>/). Default is [deck] slides."
 	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and slides/*.md."
 
 fonts:
 	python3 scripts/embed_fonts.py
 
 html:
-	DECK_ROOT="$(DECK_ROOT)" python3 scripts/build-slides.py
+	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/build-slides.py
 
 ppt:
-	DECK_ROOT="$(DECK_ROOT)" node scripts/build-pptx.js
+	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" node scripts/build-pptx.js
 
 pdf:
-	DECK_ROOT="$(DECK_ROOT)" node scripts/export-pdf.js
+	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" node scripts/export-pdf.js
 
 serve:
-	DECK_ROOT="$(DECK_ROOT)" python3 scripts/serve.py
+	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/serve.py
 
 fmt:
 	@command -v ruff >/dev/null || { echo "ruff is required: https://docs.astral.sh/ruff/" >&2; exit 1; }

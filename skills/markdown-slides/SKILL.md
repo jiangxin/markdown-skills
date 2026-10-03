@@ -49,7 +49,7 @@ Read references/design.md before creating slides. That file is the grammar: layo
 
 If the prompt does not name a directory, ask in English and offer slides/ as the default. Store the choice in [deck] slides. Do not write slides until that choice is recorded. A path the prompt already names is the choice; record that path and do not ask again.
 
-If the deck root is not a git work tree, ask in English before git init. If the user agrees, git init, ignore <name>.html, <name>.pptx, <name>.pdf, node_modules/, and .cache/, then commit the slide markdown, config.ini, Makefile, and build.py. If the user refuses, do not write slides and do not git init.
+If the deck root is not a git work tree, ask in English before git init. If the user agrees, git init, ignore build/, node_modules/, and .cache/, then commit the slide markdown, config.ini, Makefile, and build.py. If the user refuses, do not write slides and do not git init.
 
 Stop if the deck is already initialized (see above). Say that it is already a markdown-slides deck and switch to edit.
 
@@ -63,7 +63,7 @@ Otherwise write only what is missing:
 
 ## edit
 
-Read references/design.md. Change Markdown under the recorded slides directory. Do not run create. Do not copy example pages onto existing files. Commit, then `make html` from the deck root.
+Read references/design.md. Change Markdown under the recorded slides directory. Do not run create. Do not copy example pages onto existing files. Commit, then `make slides` from the deck root.
 
 ## theme
 
@@ -95,7 +95,7 @@ The generator inlines Google Fonts into the HTML at build time (cache under the 
 
 Write one Markdown file per slide under the recorded slides directory, named `NNN-slug.md`. Page order is that filename sort unless `[deck] sort` points at an index file.
 
-Commit the sources before the build. Then run `make html` from the deck root so the cover stamp is not unknown. That Makefile runs `python3 build.py`, which reads `[build] skill` (and optional `[build] scripts`) and forwards with `DECK_ROOT` set to the deck. The same targets are `make ppt` and `make pdf`. Commit the slide markdown, `config.ini`, `Makefile`, `build.py`, and any vendored `themes/` or `scripts/`. Leave `<name>.html`, `<name>.pptx`, `<name>.pdf`, `node_modules/`, and `.cache/` untracked.
+A project may hold more than one slides directory. Artifacts go under `build/<slides>/` as `<name>.html` / `.pptx` / `.pdf`. From the deck root, `make slides` builds HTML for `slides/`. PPTX and PDF need the directory: `make ppt slides` and `make pdf slides`. `make html` uses `[deck] slides`. That Makefile runs `python3 build.py`, which reads `[build] skill` (and optional `[build] scripts`) and forwards with `DECK_ROOT` set to the deck. Commit the slide markdown, `config.ini`, `Makefile`, `build.py`, and any vendored `themes/` or `scripts/`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
 
 Later edits change Markdown, then commit, then rebuild. Do not hand-edit HTML. Do not rerun frontend-slides to change copy.
 

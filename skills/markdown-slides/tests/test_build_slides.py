@@ -1,4 +1,4 @@
-"""HTML build writes <name>.html into the deck root from config.ini."""
+"""HTML build writes <name>.html under build/<slides>/ from config.ini."""
 
 import os
 import re
@@ -66,9 +66,9 @@ class TestBuildSlides(unittest.TestCase):
             self._write_deck(deck, name="fixture-deck", title="Fixture Title")
             result = self._run(deck)
             self.assertEqual(result.returncode, 0, result.stderr)
-            html_path = deck / "fixture-deck.html"
+            html_path = deck / "build" / "pages" / "fixture-deck.html"
             self.assertTrue(html_path.is_file())
-            self.assertEqual(html_path.parent.resolve(), deck.resolve())
+            self.assertEqual(html_path.parent.resolve(), (deck / "build" / "pages").resolve())
             html = html_path.read_text(encoding="utf-8")
             self.assertNotIn("fonts.googleapis.com", html)
             self.assertNotIn("fonts.gstatic.com", html)
@@ -92,9 +92,9 @@ class TestBuildSlides(unittest.TestCase):
             )
             result = self._run(deck, use_flag=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            html = (deck / "with-icon.html").read_text(encoding="utf-8")
+            html = (deck / "build" / "pages" / "with-icon.html").read_text(encoding="utf-8")
             self.assertIn(
-                '<link rel="icon" href="favicon.svg" type="image/svg+xml">',
+                '<link rel="icon" href="../../favicon.svg" type="image/svg+xml">',
                 html,
             )
             self.assertNotIn("ai-era-programmer", html)
@@ -112,7 +112,7 @@ class TestBuildSlides(unittest.TestCase):
             result = self._run(deck)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("010-hello.md", result.stderr)
-            self.assertFalse((deck / "bad-layout.html").exists())
+            self.assertFalse((deck / "build" / "pages" / "bad-layout.html").exists())
 
     def test_deck_js_keeps_navigation_zoom_and_edit(self):
         js = DECK_JS.read_text(encoding="utf-8")
@@ -162,7 +162,7 @@ class TestBuildSlides(unittest.TestCase):
     def test_makefile_html_passes_deck_root(self):
         text = (SKILL / "Makefile").read_text(encoding="utf-8")
         self.assertIn(
-            'html:\n\tDECK_ROOT="$(DECK_ROOT)" python3 scripts/build-slides.py\n',
+            'html:\n\tDECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/build-slides.py\n',
             text,
         )
 
@@ -170,7 +170,8 @@ class TestBuildSlides(unittest.TestCase):
         template = SKILL / "templates" / "Makefile.deck"
         self.assertTrue(template.is_file())
         text = template.read_text(encoding="utf-8")
-        self.assertIn("python3 build.py $@", text)
+        self.assertIn("python3 build.py html $@", text)
+        self.assertIn("python3 build.py $@ $(EXTRA)", text)
         builder = SKILL / "templates" / "build.py"
         self.assertTrue(builder.is_file())
         self.assertIn('"-C"', builder.read_text(encoding="utf-8"))
@@ -196,7 +197,7 @@ class TestBuildSlides(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-            html_path = deck / "tramp-deck.html"
+            html_path = deck / "build" / "pages" / "tramp-deck.html"
             self.assertTrue(html_path.is_file())
             html = html_path.read_text(encoding="utf-8")
             self.assertIn("<title>Trampoline Title</title>", html)
@@ -219,7 +220,7 @@ class TestBuildSlides(unittest.TestCase):
                 check=False,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertFalse((deck / "no-skill.html").exists())
+            self.assertFalse((deck / "build" / "pages" / "no-skill.html").exists())
             combined = result.stderr + result.stdout
             self.assertTrue(
                 "[build] skill" in combined or "SKILL" in combined,
@@ -253,10 +254,84 @@ class TestBuildSlides(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-            html_path = deck / "local-scripts.html"
+            html_path = deck / "build" / "pages" / "local-scripts.html"
             self.assertTrue(html_path.is_file())
             html = html_path.read_text(encoding="utf-8")
             self.assertIn("<title>Local Scripts</title>", html)
+
+    def test_make_directory_builds_html_into_build(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            slides = deck / "slides"
+            slides.mkdir()
+            (slides / "010-hello.md").write_text(PAGE, encoding="utf-8")
+            (deck / "config.ini").write_text(
+                "[deck]\nname = demo-deck\ntitle = Demo\nslides = slides\n"
+                f"[build]\nskill = {SKILL}\n",
+                encoding="utf-8",
+            )
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "slides"],
+                env=isolated_env.isolated(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            html_path = deck / "build" / "slides" / "demo-deck.html"
+            self.assertTrue(html_path.is_file(), result.stdout)
+            self.assertFalse((deck / "demo-deck.html").exists())
+
+    def test_second_slides_dir_uses_folder_name(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            for folder in ("slides", "talk"):
+                path = deck / folder
+                path.mkdir()
+                (path / "010-hello.md").write_text(PAGE, encoding="utf-8")
+            (deck / "config.ini").write_text(
+                "[deck]\nname = demo-deck\ntitle = Demo\nslides = slides\n"
+                f"[build]\nskill = {SKILL}\n",
+                encoding="utf-8",
+            )
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "talk"],
+                env=isolated_env.isolated(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            html_path = deck / "build" / "talk" / "talk.html"
+            self.assertTrue(html_path.is_file(), result.stdout)
+            html = html_path.read_text(encoding="utf-8")
+            self.assertIn("<title>talk</title>", html)
+
+    def test_ppt_requires_slides_directory(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write_deck(deck, name="need-dir", title="Need Dir")
+            (deck / "config.ini").write_text(
+                "[deck]\nname = need-dir\ntitle = Need Dir\nslides = pages\n"
+                f"[build]\nskill = {SKILL}\n",
+                encoding="utf-8",
+            )
+            shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
+            shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
+            result = subprocess.run(
+                ["make", "-C", str(deck), "ppt"],
+                env=isolated_env.isolated(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            combined = result.stderr + result.stdout
+            self.assertIn("slides directory", combined)
 
 
 if __name__ == "__main__":

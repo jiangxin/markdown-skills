@@ -81,7 +81,7 @@ class TestBundledThemes(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            html = (deck / "theme-deck.html").read_text(encoding="utf-8")
+            html = (deck / "build" / "slides" / "theme-deck.html").read_text(encoding="utf-8")
             self.assertNotIn("fonts.googleapis.com", html)
             self.assertNotIn("fonts.gstatic.com", html)
             self.assertIn("JetBrains Mono", html)
