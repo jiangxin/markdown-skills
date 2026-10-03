@@ -83,7 +83,7 @@ def _scan_kinds(root: Path) -> set[str]:
 
 
 def choose_kind(root: Path, target: str, directory: str | None) -> str:
-    if target in QUALITY or target == "serve":
+    if target == "serve" or target == "fonts":
         return "slides"
     if directory:
         kind = _kind_type(root / directory)
@@ -105,12 +105,17 @@ def choose_kind(root: Path, target: str, directory: str | None) -> str:
     return "slides"
 
 
-def resolve_skill(root: Path, kind: str) -> Path:
+def _skill_hint(kind: str) -> str:
+    if kind == "pages":
+        return "set MARKDOWN_PAGES_HOME, or put the skill under skills/\n"
+    return "set SKILL= or MARKDOWN_SLIDES_HOME, or put the skill under skills/\n"
+
+
+def try_resolve_skill(root: Path, kind: str) -> Path | None:
     if kind == "pages":
         raw = os.environ.get("MARKDOWN_PAGES_HOME", "").strip()
         marker = PAGES_MARKER
         named = "markdown-pages"
-        hint = "set MARKDOWN_PAGES_HOME, or put the skill under skills/\n"
         missing = f"not a markdown-pages skill (missing {marker}): {{raw}}\n"
     else:
         raw = (
@@ -119,7 +124,6 @@ def resolve_skill(root: Path, kind: str) -> Path:
         )
         marker = SLIDES_MARKER
         named = "markdown-slides"
-        hint = "set SKILL= or MARKDOWN_SLIDES_HOME, or put the skill under skills/\n"
         missing = f"not a markdown-slides skill (missing {marker}): {{raw}}\n"
     if raw:
         path = Path(raw).expanduser()
@@ -142,8 +146,40 @@ def resolve_skill(root: Path, kind: str) -> Path:
         return named_hits[0]
     if len(found) == 1:
         return found[0]
-    sys.stderr.write(hint)
-    sys.exit(1)
+    return None
+
+
+def resolve_skill(root: Path, kind: str) -> Path:
+    path = try_resolve_skill(root, kind)
+    if path is None:
+        sys.stderr.write(_skill_hint(kind))
+        sys.exit(1)
+    return path
+
+
+def iter_quality_skills(root: Path, target: str) -> list[tuple[str, Path]]:
+    kinds = ("slides",) if target == "fonts" else ("slides", "pages")
+    found: list[tuple[str, Path]] = []
+    for kind in kinds:
+        path = try_resolve_skill(root, kind)
+        if path is not None:
+            found.append((kind, path))
+    return found
+
+
+def run_quality(root: Path, target: str) -> int:
+    found = iter_quality_skills(root, target)
+    if not found:
+        sys.stderr.write(
+            "set SKILL or MARKDOWN_SLIDES_HOME for slides, MARKDOWN_PAGES_HOME for\n"
+            "pages, or nest the skills under skills/\n"
+        )
+        sys.exit(1)
+    for kind, _path in found:
+        code = run_engine(root, target, None, kind)
+        if code:
+            return code
+    return 0
 
 
 def resolve_scripts(root: Path, kind: str) -> Path | None:
@@ -164,9 +200,9 @@ def help_text() -> str:
         "  make ppt <dir>   build PPTX for a type=slides directory\n"
         "  make pdf <dir>   export PDF for that directory\n"
         "  make serve       serve build/ locally\n"
-        "  make fmt         format Python in the skill\n"
-        "  make lint        ruff + markdownlint (skill, plus this deck's Markdown)\n"
-        "  make test        run the skill unit tests\n"
+        "  make fmt         format Python in each nested skill\n"
+        "  make lint        ruff + markdownlint in each nested skill (plus this deck)\n"
+        "  make test        run unit tests in each nested skill\n"
         "  make fonts       vendor Google Fonts into the skill cache\n"
         "  python3 build.py <target> [dir]  same as make\n"
         "Set SKILL or MARKDOWN_SLIDES_HOME for slides, MARKDOWN_PAGES_HOME for\n"
@@ -226,6 +262,8 @@ def main(argv: list[str] | None = None) -> None:
     if target == "help":
         sys.stdout.write(help_text())
         return
+    if target in ("fmt", "lint", "test"):
+        raise SystemExit(run_quality(root, target))
     kind = choose_kind(root, target, slides)
     raise SystemExit(run_engine(root, target, slides, kind))
 

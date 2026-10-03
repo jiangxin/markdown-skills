@@ -1,17 +1,18 @@
 # markdown-publisher
 
-This repository holds both the **markdown-slides** Agent Skill and a demo deck built with that skill in this same repo.
+This repository holds the **markdown-slides** and **markdown-pages** Agent Skills, plus a demo slide deck built with markdown-slides in this same repo. The publisher demo does not vendor either engine.
 
 [中文](README.zh.md)
 
 ## Requirements
 
-To run the skill (HTML build and `make` trampoline):
+To run the skills (HTML build and `make` trampoline):
 
 - **Python 3** (3.11 or newer)
 - **Make** (GNU Make)
+- **Python package `markdown`** for markdown-pages HTML
 
-`make slides` and `make serve` use only Python. `make ppt` and `make pdf` also need **Node.js**. Quality targets (`make fmt`, `make lint`, `make test`) need `ruff` on PATH and `npm install` in `skills/markdown-slides/` (for markdownlint).
+`make slides` and `make serve` use only Python. `make ppt` and `make pdf` also need **Node.js** (pages PDF uses Playwright Chromium or system Chrome). Quality targets (`make fmt`, `make lint`, `make test`) need `ruff` on PATH and `npm install` in both `skills/markdown-slides/` and `skills/markdown-pages/` (for markdownlint). Those quality targets run for **both** nested skills.
 
 ## Create slides with `/markdown-slides`
 
@@ -56,6 +57,21 @@ It turns Markdown pages into a single-file HTML deck (PPTX and PDF as well). Dia
 
 The engine (`scripts/` in the skill, theme directories under `templates/`) stays in the skill by default. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs. Optional: copy a look into deck `themes/`; copy `scripts/` into `scripts/markdown-slides/` only after confirmation.
 
+## Create a book with `/markdown-pages`
+
+Install or attach the skill from [`skills/markdown-pages/`](skills/markdown-pages/) (see [`SKILL.md`](skills/markdown-pages/SKILL.md)). Commands: no extra words (infer create vs edit), `create`, `edit`, `scripts`. There is no `theme` command in v1.
+
+Create (only when missing):
+
+1. Choose a book directory (default `pages/` if you do not name one).
+2. Reuse the same trampoline `Makefile` / `build.py` as slides. Write `meta.toml` (`type = "pages"`, `name`, optional `title`, `[book] order`) in that directory. Seed chapters from `examples/pages/` only when the directory has no `README.md` and no numbered chapters.
+3. Nest this skill under `skills/markdown-pages` or set `MARKDOWN_PAGES_HOME`.
+4. Commit those sources, then `make html pages` from the **deck root** (multi-page site and one-file ebook under `build/pages/`). Use `make pdf pages` for PDF. `make ppt pages` is an error.
+
+The `scripts` command copies the engine into `scripts/markdown-pages/` **only after confirmation**. This publisher demo does not vendor that copy.
+
+`examples/pages/` inside the skill is the English engine self-test book. `make html` in the skill directory builds that set. This repo’s root demo has no `pages/` book.
+
 ## Themes
 
 Looks live in [`skills/markdown-slides/templates/`](skills/markdown-slides/templates/). They are **ports of frontend-slides presets** onto this Markdown dialect (same layouts and `:::card` grammar). They are not a copy of the frontend-slides HTML generator.
@@ -82,7 +98,7 @@ Root [`slides/`](slides/) **is** the skill’s example deck: generated here with
 | [`slides/`](slides/) | Page sources, `NNN-slug.md`, ordered by filename |
 | [`config.ini`](config.ini) | `[serve]` port; document root is `build/` |
 | [`Makefile`](Makefile) | Thin wrapper: `python3 build.py <target>` |
-| [`build.py`](build.py) | Finds the nested skill and forwards `make` with `DECK_ROOT` |
+| [`build.py`](build.py) | Finds nested skills by `meta.toml` `type` and forwards `make` with `DECK_ROOT` |
 
 Build from the repo root:
 

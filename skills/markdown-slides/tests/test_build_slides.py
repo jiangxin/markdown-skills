@@ -362,6 +362,7 @@ class TestBuildSlides(unittest.TestCase):
             self.assertIn("MARKDOWN_PAGES_HOME", text)
             self.assertIn("type=slides", text)
             self.assertIn("scripts/markdown-pages/", text)
+            self.assertIn("each nested skill", text)
 
     def test_nested_pages_skill_does_not_break_slides_html(self):
         pages_skill = SKILL.parent / "markdown-pages"

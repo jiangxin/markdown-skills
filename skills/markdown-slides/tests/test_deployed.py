@@ -63,3 +63,11 @@ class TestPublisherDeck(unittest.TestCase):
         examples = _page_layouts(SKILL / "examples" / "slides")
         demo = _page_layouts(REPO / "slides")
         self.assertEqual(examples, demo)
+
+    def test_agents_describes_pages_and_identical_trampoline(self):
+        text = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("markdown-pages", text)
+        self.assertIn("scripts/markdown-pages/", text)
+        self.assertIn("vendors **no** engine", text)
+        self.assertIn("stays identical to `skills/markdown-slides/templates/build.py`", text)
+        self.assertIn("**both** nested skills", text)

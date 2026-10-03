@@ -90,6 +90,7 @@ class TestTrampolineDispatch(unittest.TestCase):
             self.assertIn("type=slides", text)
             self.assertIn("scripts/markdown-pages/", text)
             self.assertIn("scripts/markdown-slides/", text)
+            self.assertIn("each nested skill", text)
 
     def test_html_pages_does_not_clobber_slides_build(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -232,6 +233,33 @@ class TestTrampolineDispatch(unittest.TestCase):
             combined = result.stderr + result.stdout
             self.assertIn("MARKDOWN_PAGES_HOME", combined)
             self.assertFalse((deck / "build" / "pages" / "index.html").exists())
+
+    def test_fmt_runs_both_nested_skill_makefiles(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            _copy_trampoline(deck)
+            for kind, marker in (
+                ("markdown-slides", "build-slides.py"),
+                ("markdown-pages", "build-pages.py"),
+            ):
+                skill = deck / "skills" / kind
+                (skill / "scripts").mkdir(parents=True)
+                (skill / "templates").mkdir()
+                (skill / "scripts" / marker).write_text("# marker\n", encoding="utf-8")
+                (skill / "Makefile").write_text(
+                    f"fmt:\n\ttouch $(DECK_ROOT)/{kind}.txt\n",
+                    encoding="utf-8",
+                )
+            result = subprocess.run(
+                ["make", "-C", str(deck), "fmt"],
+                env=isolated(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            self.assertTrue((deck / "markdown-slides.txt").is_file(), result.stdout)
+            self.assertTrue((deck / "markdown-pages.txt").is_file(), result.stdout)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # markdown-publisher
 
-本仓库既放 **markdown-slides** Agent Skill，也放一套用该 skill 在本仓库里生成的演示稿。
+本仓库放 **markdown-slides** 和 **markdown-pages** 两套 Agent Skill，以及一套用 markdown-slides 在本仓库里生成的演示稿。publisher 演示稿不内嵌任何引擎拷贝。
 
 [English](README.md)
 
@@ -10,8 +10,9 @@
 
 - **Python 3**（3.11 或更新）
 - **Make**（GNU Make）
+- markdown-pages 的 HTML 还需要 Python 包 **`markdown`**
 
-`make slides` 和 `make serve` 只用 Python。`make ppt` 和 `make pdf` 还需要 **Node.js**。质量检查（`make fmt`、`make lint`、`make test`）需要 PATH 上的 `ruff`，以及在 `skills/markdown-slides/` 里执行过 `npm install`（markdownlint）。
+`make slides` 和 `make serve` 只用 Python。`make ppt` 和 `make pdf` 还需要 **Node.js**（pages 的 PDF 用 Playwright Chromium 或本机 Chrome）。质量检查（`make fmt`、`make lint`、`make test`）需要 PATH 上的 `ruff`，以及在 `skills/markdown-slides/` 和 `skills/markdown-pages/` 里都执行过 `npm install`（markdownlint）。这些质量目标会对**两个**嵌套 skill 各跑一遍。
 
 ## 用 `/markdown-slides` 生成幻灯片
 
@@ -56,6 +57,21 @@
 
 引擎（skill 里的 `scripts/`、`templates/` 下的主题目录）默认留在 skill 里。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。可选：把外观拷到稿的 `themes/`；拷 `scripts/` 到 `scripts/markdown-slides/` 前必须确认。
 
+## 用 `/markdown-pages` 生成电子书
+
+从 [`skills/markdown-pages/`](skills/markdown-pages/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-pages/SKILL.md)）。命令：不加参数（推断创建或编辑）、`create`、`edit`、`scripts`。第一版没有 `theme`。
+
+创建（只补缺的文件）：
+
+1. 选定书目录（未指定时默认 `pages/`）。
+2. 复用与 slides 相同的 trampoline `Makefile` / `build.py`。在该书目录写下 `meta.toml`（`type = "pages"`、`name`、可选 `title`、`[book] order`）。仅当目录里还没有 `README.md` 和带编号的章节时，才从 `examples/pages/` 播种。
+3. 把本 skill 放在 `skills/markdown-pages`，或设置 `MARKDOWN_PAGES_HOME`。
+4. 提交这些源文件，再在**稿根目录**执行 `make html pages`（多页站点和单文件 HTML 在 `build/pages/`）。PDF 用 `make pdf pages`。`make ppt pages` 会失败。
+
+`scripts` 命令仅在确认后把引擎拷到 `scripts/markdown-pages/`。本仓库演示稿不内嵌这份拷贝。
+
+Skill 目录里的 `examples/pages/` 是引擎自测用的英文小书。在 skill 目录执行 `make html` 会构建那一套。本仓库根目录没有 `pages/` 演示书。
+
 ## 主题
 
 版式在 [`skills/markdown-slides/templates/`](skills/markdown-slides/templates/)。它们是把 **frontend-slides 的 preset** 迁到本 Markdown 方言（同一套 layout 和 `:::card`），不是拷贝 frontend-slides 的 HTML 生成器。
@@ -82,7 +98,7 @@ Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill
 | [`slides/`](slides/) | 页面源文件，`NNN-slug.md`，顺序按文件名 |
 | [`config.ini`](config.ini) | `[serve]` 端口；文档根是 `build/` |
 | [`Makefile`](Makefile) | 薄封装：`python3 build.py <target>` |
-| [`build.py`](build.py) | 找到嵌套 skill，再带 `DECK_ROOT` 转发到 skill 的 `make` |
+| [`build.py`](build.py) | 按 `meta.toml` 的 `type` 找到嵌套 skill，再带 `DECK_ROOT` 转发 |
 
 在仓库根目录构建：
 
