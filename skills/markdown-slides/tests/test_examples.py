@@ -1,4 +1,4 @@
-"""The English example deck builds nine layouts and a git describe cover stamp."""
+"""The English example deck builds the layout tour, usage pages, and a git describe cover stamp."""
 
 import html
 import re
@@ -17,7 +17,7 @@ SCRIPTS = SKILL / "scripts"
 SIZE_FIELD = re.compile(r"^(?:text_size|note_size|size):\s*(s|l|xl|xxl)\s*$")
 CARD_OPEN = re.compile(r"^:::card\b(.*)$")
 SIZE_STEPS = ("s", "l", "xl", "xxl")
-STAMP_SUFFIX = " · 01 / 09"
+STAMP_SUFFIX = " · 01 / 13"
 
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
@@ -86,7 +86,7 @@ class TestExamples(unittest.TestCase):
         self.assertTrue(expected.endswith(STAMP_SUFFIX))
         self.assertEqual(self.deck["slides"][0]["stamp"], expected)
 
-    def test_nine_layouts(self):
+    def test_layout_tour_and_usage_pages(self):
         layouts = [slide["layout"] for slide in self.deck["slides"]]
         self.assertEqual(
             layouts,
@@ -99,15 +99,22 @@ class TestExamples(unittest.TestCase):
                 "stack-split",
                 "table",
                 "table-cards",
+                "section",
+                "table",
+                "table",
+                "cards",
                 "title",
             ],
         )
         self.assertEqual(layouts.count("title"), 2)
-        for name in ("section", "cards", "split", "table", "table-cards"):
-            self.assertEqual(layouts.count(name), 1)
+        self.assertEqual(layouts.count("section"), 2)
+        self.assertEqual(layouts.count("cards"), 2)
+        self.assertEqual(layouts.count("split"), 1)
+        self.assertEqual(layouts.count("table"), 3)
+        self.assertEqual(layouts.count("table-cards"), 1)
         self.assertEqual(layouts.count("stack-split"), 2)
         self.assertEqual(self.html.count('class="slide title-slide'), 2)
-        self.assertEqual(self.html.count('class="slide section-slide'), 1)
+        self.assertEqual(self.html.count('class="slide section-slide'), 2)
         self.assertIn('class="grid-23"', self.html)
         self.assertIn(
             "grid-template-columns:minmax(0, 35fr) minmax(0, 35fr) minmax(0, 30fr)",
