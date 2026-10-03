@@ -18,6 +18,8 @@ REQUIRED = (
     "Read references/design.md before creating slides.",
     "The engine stays in the skill.",
     "Skip git init when building it.",
+    "order = auto",
+    "sort = <file.md>",
 )
 
 

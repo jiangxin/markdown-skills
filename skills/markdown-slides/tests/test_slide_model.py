@@ -1,4 +1,4 @@
-"""Tests for slide order loaded from <deck-root>/<slides>/index.md."""
+"""Tests for slide order: filename auto, or [deck] sort index."""
 
 import contextlib
 import io
@@ -23,12 +23,23 @@ class TestSlideIndex(unittest.TestCase):
         root: Path,
         slides_rel: str,
         pages: dict[str, str | bytes],
-        index: str,
+        index: str | None = None,
         config_text: str | None = None,
     ) -> Path:
         deck = Path(root)
         slides = deck / slides_rel
         slides.mkdir(parents=True, exist_ok=True)
+        if index is not None:
+            (slides / "index.md").write_text(index, encoding="utf-8")
+            if config_text is None:
+                config_text = (
+                    f"[deck]\nslides = {slides_rel}\n"
+                    f"sort = {slides_rel}/index.md\n"
+                )
+            elif "sort =" not in config_text and "sort=" not in config_text:
+                config_text = (
+                    config_text.rstrip() + f"\nsort = {slides_rel}/index.md\n"
+                )
         if config_text is not None:
             (deck / "config.ini").write_text(config_text, encoding="utf-8")
         for name, text in pages.items():
@@ -38,7 +49,6 @@ class TestSlideIndex(unittest.TestCase):
                 target.write_bytes(text)
             else:
                 target.write_text(text, encoding="utf-8")
-        (slides / "index.md").write_text(index, encoding="utf-8")
         return slides
 
     def _expect_fail(self, deck: Path, *needles: str) -> str:
@@ -65,6 +75,44 @@ class TestSlideIndex(unittest.TestCase):
             return "unknown"
         text = (result.stdout or "").strip()
         return text if result.returncode == 0 and text else "unknown"
+
+    def test_pages_load_in_filename_order_by_default(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._deck(
+                deck,
+                "slides",
+                {
+                    "020-beta.md": PAGE,
+                    "010-alpha.md": "---\nlayout: title\n---\n",
+                    "index.md": "## Slides\n\n- [Beta](020-beta.md)\n",
+                },
+            )
+            loaded = slide_model.load_deck(deck)
+            self.assertEqual(
+                [slide["file"] for slide in loaded["slides"]],
+                ["010-alpha.md", "020-beta.md"],
+            )
+            self.assertEqual(loaded["total"], 2)
+
+    def test_order_auto_matches_filename_sort(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._deck(
+                deck,
+                "slides",
+                {
+                    "030-gamma.md": PAGE,
+                    "010-alpha.md": PAGE,
+                    "020-beta.md": PAGE,
+                },
+                config_text="[deck]\norder = auto\nslides = slides\n",
+            )
+            loaded = slide_model.load_deck(deck)
+            self.assertEqual(
+                [slide["slug"] for slide in loaded["slides"]],
+                ["alpha", "beta", "gamma"],
+            )
 
     def test_pages_load_in_listed_order(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -305,6 +353,12 @@ class TestSlideIndex(unittest.TestCase):
             (deck / "slides" / "010-cards.md").write_text(body, encoding="utf-8")
             err = self._expect_fail(deck, absolute, str(secret.resolve()))
             self.assertNotIn("ABSOLUTE", err)
+
+    def test_empty_slides_dir_fails_in_auto(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            slides = self._deck(deck, "slides", {})
+            self._expect_fail(deck, str(slides), "no numbered slide")
 
 
 class TestParseFrontmatter(unittest.TestCase):

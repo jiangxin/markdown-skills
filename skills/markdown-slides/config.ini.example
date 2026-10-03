@@ -4,11 +4,16 @@
 ; title: HTML document title. Defaults to name when empty.
 ; slides: slide directory relative to the deck root. Defaults to slides.
 ;         Absolute paths, and ".." that escapes the deck root, are rejected.
+; order: auto (default) sorts NNN-slug.md files in slides/ by filename.
+; sort: optional Markdown file, relative to the deck root, whose ## Slides
+;       links set the page order. Do not set order and sort together.
+;       Example: sort = examples/slides/index.md
 
 [deck]
 name = markdown-slides-examples
 title = Markdown Slides Examples
 slides = examples/slides
+order = auto
 
 [cover]
 presenter =

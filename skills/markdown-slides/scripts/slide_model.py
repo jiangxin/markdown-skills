@@ -4,8 +4,9 @@
 Shared by the HTML builder and the PPTX builder. Do not put presentation
 markup here — only page data.
 
-Slide order comes from ``<deck-root>/<slides>/index.md`` under ``## Slides``.
-The slides directory is ``[deck] slides`` from the deck-root ``config.ini``.
+Slide order defaults to filename order of ``NNN-slug.md`` in ``[deck] slides``.
+Set ``[deck] sort`` to a Markdown file whose ``## Slides`` links list the
+pages. ``[deck] order = auto`` is the explicit filename mode.
 """
 
 from __future__ import annotations
@@ -416,9 +417,27 @@ def resolve_page(slug: str, slides_dir: Path) -> Path:
     return pages[slug]
 
 
-def index_pages(slides_dir: Path) -> list[Path]:
+def ordered_pages(deck: config.Deck) -> list[Path]:
+    """Return slide files in config order: filename auto, or ``[deck] sort``."""
+    if deck.sort is not None:
+        return pages_from_index(deck.slides, deck.sort)
+    return auto_pages(deck.slides)
+
+
+def auto_pages(slides_dir: Path) -> list[Path]:
+    """Return ``NNN-slug.md`` files in ``slides_dir``, sorted by filename."""
+    try:
+        catalog = numbered_pages(slides_dir)
+    except PageSlugError as exc:
+        _fail(str(exc))
+    paths = list(catalog.values())
+    if not paths:
+        _fail(f"no numbered slide files in {slides_dir}")
+    return paths
+
+
+def pages_from_index(slides_dir: Path, index: Path) -> list[Path]:
     """Load ``NNN-slug.md`` paths in the order listed under ``## Slides``."""
-    index = slides_dir / "index.md"
     if not index.is_file():
         _fail(f"missing slide index: {index}")
     text = index.read_text(encoding="utf-8")
@@ -483,7 +502,7 @@ def load_deck(root: Path | None = None) -> dict:
     """Load the deck at ``root`` (or the configured deck root)."""
     root_resolved = config.deck_root() if root is None else Path(root).expanduser().resolve()
     deck = config.load_deck(root_resolved)
-    paths = index_pages(deck.slides)
+    paths = ordered_pages(deck)
     total = len(paths)
     version = git_describe(root_resolved)
     slides = []

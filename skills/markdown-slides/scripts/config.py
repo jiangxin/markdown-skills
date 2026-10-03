@@ -18,6 +18,7 @@ from pathlib import Path
 
 DEFAULT_PORT = 8000
 DEFAULT_SLIDES = "slides"
+DEFAULT_ORDER = "auto"
 COVER_FIELDS = ("presenter", "presented_at")
 _NAME_RE = re.compile(r"^[A-Za-z0-9-]+$")
 
@@ -28,6 +29,9 @@ class Deck:
     title: str
     slides: Path
     slides_rel: str
+    order: str
+    sort: Path | None
+    sort_rel: str
 
 
 @dataclass(frozen=True)
@@ -59,13 +63,22 @@ def deck_root(argv: list[str] | None = None) -> Path:
 
 
 def load_deck(deck_root: Path) -> Deck:
-    """Load ``[deck]`` name, title, and slides for ``deck_root``."""
+    """Load ``[deck]`` name, title, slides, and page-order keys for ``deck_root``."""
     root = _existing_dir(deck_root)
     parser = _load_parser(root)
     name = _deck_name(parser, root)
     title = parser.get("deck", "title", fallback="").strip() or name
     slides_rel = parser.get("deck", "slides", fallback="").strip() or DEFAULT_SLIDES
-    return Deck(name, title, _slides_dir(root, slides_rel), slides_rel)
+    order, sort, sort_rel = _deck_order(parser, root)
+    return Deck(
+        name,
+        title,
+        _relative_path(root, slides_rel, "slides"),
+        slides_rel,
+        order,
+        sort,
+        sort_rel,
+    )
 
 
 def output_paths(root: Path | None = None) -> Outputs:
@@ -164,20 +177,37 @@ def _deck_name(parser: configparser.ConfigParser, root: Path) -> str:
     return raw
 
 
-def _slides_dir(root: Path, slides_rel: str) -> Path:
-    relative = Path(slides_rel)
+def _deck_order(
+    parser: configparser.ConfigParser, root: Path
+) -> tuple[str, Path | None, str]:
+    order = parser.get("deck", "order", fallback="").strip()
+    sort_rel = parser.get("deck", "sort", fallback="").strip()
+    if order and order != DEFAULT_ORDER:
+        sys.exit(
+            "config.ini [deck] order must be auto, "
+            f"got: {order!r}"
+        )
+    if order == DEFAULT_ORDER and sort_rel:
+        sys.exit("config.ini [deck] order and sort cannot both be set")
+    if sort_rel:
+        return "", _relative_path(root, sort_rel, "sort"), sort_rel
+    return DEFAULT_ORDER, None, ""
+
+
+def _relative_path(root: Path, raw: str, key: str) -> Path:
+    relative = Path(raw)
     if relative.is_absolute():
         sys.exit(
-            "config.ini [deck] slides must be a path relative to the deck "
-            f"root, got: {slides_rel!r}"
+            f"config.ini [deck] {key} must be a path relative to the deck "
+            f"root, got: {raw!r}"
         )
     resolved = (root / relative).resolve()
     try:
         resolved.relative_to(root)
     except ValueError:
         sys.exit(
-            "config.ini [deck] slides escapes the deck root, "
-            f"got: {slides_rel!r}"
+            f"config.ini [deck] {key} escapes the deck root, "
+            f"got: {raw!r}"
         )
     return resolved
 

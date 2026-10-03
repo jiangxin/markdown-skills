@@ -14,7 +14,7 @@ import config
 from md_html import render_markdown
 from slide_model import (
     git_describe,
-    index_pages,
+    ordered_pages,
     linkify_footer,
     normalize_image_fit,
     note_parts,
@@ -699,7 +699,7 @@ def build(output: Path | None = None) -> None:
     root = config.deck_root()
     deck = config.load_deck(root)
     dest = root / f"{deck.name}.html" if output is None else Path(output)
-    pages = index_pages(deck.slides)
+    pages = ordered_pages(deck)
     total = len(pages)
     version = git_describe(root)
     _state = _RenderState(root=root, version=version)

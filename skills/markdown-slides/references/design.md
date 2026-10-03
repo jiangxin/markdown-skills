@@ -29,9 +29,9 @@ Title and section pages paint an 80px grid. The left red bar is on every page.
 
 The slides directory is the `[deck] slides` path in the deck-root `config.ini`, relative to the deck root. When the key is omitted, that directory is `slides`.
 
-Page order lives in `<slides>/index.md` under the heading `## Slides`. The generator walks Markdown links in that section from top to bottom. The numeric prefix on a filename does not set the order.
+Page order defaults to the filename sort of `NNN-slug.md` files in that directory. `index.md` and other files that do not match `NNN-slug.md` are not slides. Set `[deck] order = auto` to name that mode. Set `[deck] sort` to a Markdown file relative to the deck root (for example `examples/slides/index.md`) to use a link list instead. Do not set `order` and `sort` together.
 
-A link target is a slug: an optional `NNN-` prefix, then lowercase letters, digits, and hyphens. The file on disk is `NNN-slug.md` in the slides directory, so a link written as `cover.md` resolves to `010-cover.md` when that file is the only `cover` slug. The link label is not read. A missing `## Slides` heading, an empty list, a missing file, or a duplicate slug is an error.
+When `sort` is set, the generator walks Markdown links under the heading `## Slides` from top to bottom. A link target is a slug: an optional `NNN-` prefix, then lowercase letters, digits, and hyphens. The file on disk is `NNN-slug.md` in the slides directory, so a link written as `cover.md` resolves to `010-cover.md` when that file is the only `cover` slug. The link label is not read. A missing `## Slides` heading, an empty list, a missing file, or a duplicate slug is an error. The numeric prefix does not set the order in this mode.
 
 Every footer ends with a stamp the generator writes from `git describe --always --dirty` in the deck root, plus the one-based index and the page total, each zero-padded to two digits. Do not author that stamp in the page. When git cannot describe the deck, the version text is `unknown`.
 

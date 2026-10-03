@@ -17,11 +17,11 @@ If the deck root is not a git work tree, ask in English before git init. If the 
 
 The bundled example already lives in this repository. Skip git init when building it. Its `[deck] slides` value is `examples/slides`.
 
-`config.ini` in the deck root holds `[deck] name`, `[deck] title`, and `[deck] slides`. `name` is the output basename and the storage key `markdown-slides:<name>`. `title` is the HTML document title. `slides` is the page directory relative to the deck root.
+`config.ini` in the deck root holds `[deck] name`, `[deck] title`, `[deck] slides`, and the page-order keys. `name` is the output basename and the storage key `markdown-slides:<name>`. `title` is the HTML document title. `slides` is the page directory relative to the deck root. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto`). Set `sort = <file.md>` to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together.
 
 ## Write, commit, then build
 
-Write `index.md` and one Markdown file per slide under the recorded slides directory. Page order is the link list in `index.md`.
+Write one Markdown file per slide under the recorded slides directory, named `NNN-slug.md`. Page order is that filename sort unless `[deck] sort` points at an index file.
 
 Commit the sources before the build. Then run make html DECK_ROOT=<deck-root> so the cover stamp is not unknown. Run `make` from `skills/markdown-slides`. The same `DECK_ROOT` selects `make ppt` and `make pdf` when those files are needed. Commit the slide markdown and `config.ini` only. Leave `<name>.html`, `<name>.pptx`, `<name>.pdf`, `node_modules/`, and `.cache/` untracked.
 

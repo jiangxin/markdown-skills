@@ -19,14 +19,6 @@ title: Hello
 ---
 """
 
-INDEX = """# Deck
-
-## Slides
-
-- [Hello](010-hello.md)
-"""
-
-
 class TestBuildSlides(unittest.TestCase):
     def _write_deck(
         self,
@@ -47,7 +39,6 @@ class TestBuildSlides(unittest.TestCase):
             encoding="utf-8",
         )
         (slides / "010-hello.md").write_text(page, encoding="utf-8")
-        (slides / "index.md").write_text(INDEX, encoding="utf-8")
         if favicon is not None:
             (deck / "favicon.svg").write_text(favicon, encoding="utf-8")
 

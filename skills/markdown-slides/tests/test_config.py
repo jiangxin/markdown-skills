@@ -25,6 +25,9 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.slides_rel, "slides")
             self.assertEqual(loaded.slides, (deck / "slides").resolve())
             self.assertTrue(loaded.slides.is_absolute())
+            self.assertEqual(loaded.order, "auto")
+            self.assertIsNone(loaded.sort)
+            self.assertEqual(loaded.sort_rel, "")
 
     def test_empty_fields_use_defaults(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -47,6 +50,8 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.title, "My Title")
             self.assertEqual(loaded.slides_rel, "custom/pages")
             self.assertEqual(loaded.slides, (deck / "custom" / "pages").resolve())
+            self.assertEqual(loaded.order, "auto")
+            self.assertIsNone(loaded.sort)
 
     def test_empty_title_defaults_to_name(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -172,6 +177,9 @@ class TestConfig(unittest.TestCase):
             loaded.slides,
             (config_module.skill_root() / "examples" / "slides").resolve(),
         )
+        self.assertEqual(loaded.order, "auto")
+        self.assertIsNone(loaded.sort)
+        self.assertEqual(loaded.sort_rel, "")
 
     def test_deck_root_resolution(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -200,6 +208,57 @@ class TestConfig(unittest.TestCase):
                 config_module.deck_root(
                     argv=["prog", "--deck-root", str(deck / "missing")]
                 )
+
+    def test_sort_path_is_relative_to_deck_root(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(
+                deck,
+                "[deck]\nslides = custom/pages\nsort = custom/pages/index.md\n",
+            )
+            loaded = config_module.load_deck(deck)
+            self.assertEqual(loaded.order, "")
+            self.assertEqual(loaded.sort_rel, "custom/pages/index.md")
+            self.assertEqual(
+                loaded.sort,
+                (deck / "custom" / "pages" / "index.md").resolve(),
+            )
+
+    def test_order_and_sort_together_rejected(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(
+                deck,
+                "[deck]\norder = auto\nsort = slides/index.md\n",
+            )
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_deck(deck)
+            self.assertIn("order and sort", str(caught.exception))
+
+    def test_invalid_order_rejected(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[deck]\norder = name\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_deck(deck)
+            self.assertIn("order", str(caught.exception))
+
+    def test_absolute_sort_rejected(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            absolute = deck / "slides" / "index.md"
+            self._write(deck, f"[deck]\nsort = {absolute}\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_deck(deck)
+            self.assertIn("sort", str(caught.exception))
+
+    def test_sort_parent_escape_rejected(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._write(deck, "[deck]\nsort = ../outside.md\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.load_deck(deck)
+            self.assertIn("escapes", str(caught.exception))
 
 
 if __name__ == "__main__":
