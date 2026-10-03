@@ -1,4 +1,4 @@
-"""SKILL.md states the English deck-creation workflow."""
+"""SKILL.md states the English deck workflow an agent must follow."""
 
 import unittest
 from pathlib import Path
@@ -15,10 +15,13 @@ REQUIRED = (
     "make html DECK_ROOT=",
     "examples/slides/010-cover.md",
     "Do not hand-edit HTML",
+    "Read references/design.md before creating slides.",
+    "The engine stays in the skill.",
+    "Skip git init when building it.",
 )
 
 
-class SkillDocTests(unittest.TestCase):
+class SkillDocTest(unittest.TestCase):
     def setUp(self):
         self.text = SKILL_MD.read_text(encoding="utf-8")
 
@@ -30,6 +33,7 @@ class SkillDocTests(unittest.TestCase):
     def test_english_body(self):
         self.assertNotIn("幻灯片", self.text)
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_frontmatter(self):
+        self.assertTrue(self.text.startswith("---\n"))
+        self.assertIn("name: markdown-slides\n", self.text)
+        self.assertIn("description:", self.text)
