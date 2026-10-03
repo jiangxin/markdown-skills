@@ -10,7 +10,7 @@ This file is the syntax source for a deck. The generator reads the layouts, fron
 
 ## Theme
 
-White ground, black ink, signal red. The grid is visible. Chinese text uses Noto Sans SC, display titles use Archivo, body text uses Nunito, and code uses IBM Plex Mono.
+The default `swiss-modern` look is white ground, black ink, signal red, with a visible grid. Chinese text uses Noto Sans SC, display titles use Archivo, body text uses Nunito, and code uses IBM Plex Mono. Other directories under `templates/` (for example `paper-ink`, `terminal-green`, `blue-professional`) keep this grammar and swap tokens in `deck.css`. Those looks are ports of frontend-slides presets, not copies of frontend-slides HTML.
 
 | Role | Value |
 |------|--------|

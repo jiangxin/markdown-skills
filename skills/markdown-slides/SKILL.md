@@ -1,11 +1,11 @@
 ---
 name: markdown-slides
-description: Create or edit a Markdown slide deck that builds onto the existing Swiss Modern HTML stage. Use when the user wants a new deck, wants to keep this Markdown page dialect, or wants to change copy and slide order. Confirm the slides directory and git before writing pages, then commit sources before the HTML build.
+description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use when the user wants a new deck, wants to keep this Markdown page dialect, or wants to change copy and slide order. Confirm the slides directory and git before writing pages, then commit sources before the HTML build.
 ---
 
 # Markdown Slides
 
-Build a deck from Markdown pages and the engine already in this skill. User project files are config.ini, Makefile, the slides directory, and build outputs. The engine stays in the skill. Do not copy scripts/ or templates/. Deck root resolution is --deck-root, else DECK_ROOT, else the skill root. Visual is the existing Swiss Modern stage; do not restyle.
+Build a deck from Markdown pages and the engine already in this skill. User project files are config.ini, Makefile, the slides directory, and build outputs. The engine stays in the skill. Do not copy scripts/ or templates/. Deck root resolution is --deck-root, else DECK_ROOT, else the skill root. Visual is `[build] theme` under `templates/` (default `templates/swiss-modern`). Do not restyle by editing HTML. Looks are frontend-slides presets ported into this skill. After the user picks a style with `/frontend-slides`, add `templates/<theme>` with `deck.css`, `deck.js`, and `pptx/`, then set `[build] theme`. Do not copy frontend-slides HTML into a deck.
 
 ## Before any page
 
@@ -21,7 +21,7 @@ The bundled example already lives in this repository. Skip git init when buildin
 
 `[build] skill` is the markdown-slides directory (the one that contains `scripts/build-slides.py`). If the deck and the skill share a git tree, store a path relative to the deck root. Otherwise store the absolute path of this skill. `SKILL` or `MARKDOWN_SLIDES_HOME` overrides the ini value. Copy `templates/Makefile.deck` to the deck root as `Makefile`.
 
-`[build] theme` selects a directory under `templates/` (default `templates/swiss-modern`). That directory holds `deck.css`, `deck.js`, and `pptx/`. Do not restyle by editing HTML. To add a later look, add another directory there and point `theme` at it.
+`[build] theme` selects a directory under `templates/` (default `templates/swiss-modern`). That directory holds `deck.css`, `deck.js`, and `pptx/`. Do not restyle by editing HTML. To add a later look, add another directory there (from a frontend-slides pick) and point `theme` at it.
 
 ## Write, commit, then build
 

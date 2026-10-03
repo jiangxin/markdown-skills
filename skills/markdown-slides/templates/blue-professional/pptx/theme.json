@@ -1,0 +1,91 @@
+{
+  "layoutName": "LAYOUT_WIDE",
+  "width": 13.333,
+  "height": 7.5,
+  "stagePx": [
+    1920,
+    1080
+  ],
+  "colors": {
+    "bg": "F4EFE6",
+    "ink": "0A1628",
+    "muted": "4A5568",
+    "faint": "E4DCCD",
+    "accent": "4361EE"
+  },
+  "fonts": {
+    "display": "Arial",
+    "body": "Microsoft YaHei",
+    "mono": "Courier New"
+  },
+  "barPx": 14,
+  "padPx": {
+    "top": 48,
+    "right": 72,
+    "bottom": 44,
+    "left": 86
+  },
+  "gapPx": 20,
+  "grid23": [
+    1.15,
+    0.85
+  ],
+  "cardPadPx": 22,
+  "footerHPx": 48,
+  "sizesPx": {
+    "overline": 18,
+    "h2": 48,
+    "summary": 26,
+    "foot": 18,
+    "cardNum": 22,
+    "cardTitle": 26,
+    "cardBody": 20,
+    "table": 22,
+    "tableHead": 20,
+    "sectionNum": 220,
+    "sectionTitle": 72,
+    "sectionLede": 30,
+    "coverTitle": 118,
+    "coverSub": 34,
+    "coverMeta": 22,
+    "badgeLabel": 72,
+    "badgeEn": 32
+  },
+  "textScalePx": {
+    "s": {
+      "num": 20,
+      "title": 22,
+      "body": 17,
+      "table": 19,
+      "tableHead": 17
+    },
+    "m": {
+      "num": 22,
+      "title": 26,
+      "body": 20,
+      "table": 22,
+      "tableHead": 20
+    },
+    "l": {
+      "num": 24,
+      "title": 32,
+      "body": 25,
+      "table": 27,
+      "tableHead": 24
+    },
+    "xl": {
+      "num": 26,
+      "title": 38,
+      "body": 30,
+      "table": 32,
+      "tableHead": 28
+    },
+    "xxl": {
+      "num": 28,
+      "title": 44,
+      "body": 34,
+      "table": 36,
+      "tableHead": 32
+    }
+  }
+}

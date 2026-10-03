@@ -38,7 +38,7 @@ Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config
 | `[deck]` | `order` | `auto` (default): sort `NNN-slug.md` by filename. Do not set together with `sort`. |
 | `[deck]` | `sort` | Optional Markdown file whose `## Slides` links list page order. |
 | `[build]` | `skill` | Path to the markdown-slides directory (the one with `scripts/build-slides.py`). In this repo: `skills/markdown-slides`. Override with `SKILL` or `MARKDOWN_SLIDES_HOME`. Omit when you `make` from the skill directory itself. |
-| `[build]` | `theme` | Directory under skill `templates/`. Default: `swiss-modern`. |
+| `[build]` | `theme` | Directory under skill `templates/`. Default: `swiss-modern`. Bundled also: `paper-ink`, `terminal-green`, `blue-professional`. |
 | `[cover]` | `presenter`, `presented_at` | Optional cover overrides when a page is `010-cover.md`. |
 | `[serve]` | `port` | `make serve` port. Default: `8000`. |
 
@@ -46,11 +46,22 @@ Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config
 
 Path: [`skills/markdown-slides/`](skills/markdown-slides/).
 
-It turns Markdown pages into a Swiss Modern single-file HTML deck (PPTX and PDF as well). Dialect: [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md). Agent workflow: [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md).
+It turns Markdown pages into a single-file HTML deck (PPTX and PDF as well). Dialect: [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md). Agent workflow: [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md).
 
 The engine (`scripts/`, `templates/`) stays in the skill. User decks keep `config.ini`, `Makefile`, slide Markdown, and build outputs.
 
-Themes live under `templates/`. The default is `swiss-modern`, set with `[build] theme`.
+## Themes
+
+Looks live in [`skills/markdown-slides/templates/`](skills/markdown-slides/templates/). They are **ports of frontend-slides presets** onto this Markdown dialect (same layouts and `:::card` grammar). They are not a copy of the frontend-slides HTML generator.
+
+| `[build] theme` | Use |
+|-----------------|-----|
+| `swiss-modern` | Teaching and engineering talks (default). White, black, signal red, visible grid. |
+| `paper-ink` | Reports, literary, async reading. Cream paper, crimson, serif. |
+| `terminal-green` | Developer / internal tech. Dark canvas, green, monospace. |
+| `blue-professional` | Consulting and B2B. Cream paper, cobalt. |
+
+Set the name in `[build] theme`. To add another look: run `/frontend-slides` for visual discovery, pick a style, then add `templates/<slug>/` with `deck.css`, `deck.js`, and `pptx/` (copy `swiss-modern` and restyle tokens). Point `[build] theme` at the new directory. Do not drop frontend-slides HTML into the deck.
 
 `examples/slides/` inside the skill is English engine self-test pages. `make html` in the skill directory builds that set.
 

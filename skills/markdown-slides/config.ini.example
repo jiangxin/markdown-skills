@@ -15,6 +15,8 @@
 ;         Example: skill = ../markdown-slides
 ; [build] theme: template directory under the skill templates/.
 ;         Defaults to swiss-modern. Letters, digits, and hyphens only.
+;         Bundled: swiss-modern, paper-ink, terminal-green,
+;         blue-professional. Add more from a frontend-slides pick.
 
 [deck]
 name = markdown-slides-examples

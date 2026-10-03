@@ -17,6 +17,7 @@ REQUIRED = (
     "[build] theme",
     "templates/swiss-modern",
     "templates/Makefile.deck",
+    "frontend-slides",
     "examples/slides/010-cover.md",
     "Do not hand-edit HTML",
     "Read references/design.md before creating slides.",

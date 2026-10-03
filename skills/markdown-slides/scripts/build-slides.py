@@ -26,6 +26,11 @@ from slide_model import (
 
 
 _DECK_PLACEHOLDER = "__DECK_NAME__"
+_DEFAULT_FONT_HREF = (
+    "https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800"
+    "&family=Noto+Sans+SC:wght@400;500;700&family=Nunito:wght@400;600;700"
+    "&family=IBM+Plex+Mono:wght@400;500&display=swap"
+)
 _FAVICON_FILES = ("favicon.svg", "favicon.ico", "favicon.png")
 _FAVICON_TYPES = {
     ".svg": "image/svg+xml",
@@ -61,6 +66,16 @@ def _js_string(value: str) -> str:
     """Escape ``value`` for placement inside a double-quoted JS string."""
     encoded = json.dumps(value, ensure_ascii=False)
     return encoded[1:-1]
+
+
+def theme_font_href(theme_dir: Path) -> str:
+    """Google Fonts stylesheet URL for a theme, or the Swiss Modern default."""
+    path = theme_dir / "fonts.url"
+    if path.is_file():
+        href = path.read_text(encoding="utf-8").strip()
+        if href:
+            return href
+    return _DEFAULT_FONT_HREF
 
 
 def favicon_link(root: Path) -> str:
@@ -721,6 +736,7 @@ def build(output: Path | None = None) -> None:
         rev = html.escape(version, quote=True)
         title = html.escape(deck.title)
         icon = favicon_link(root)
+        fonts = html.escape(theme_font_href(deck.theme_dir), quote=True)
         doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -747,7 +763,7 @@ def build(output: Path | None = None) -> None:
     <!-- git describe: {rev} -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Nunito:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="{fonts}" rel="stylesheet">
     <style>
 {css}
     </style>
