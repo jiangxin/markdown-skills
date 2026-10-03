@@ -17,7 +17,7 @@ help:
 	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and pages/*.md."
 
 html:
-	@echo "html: not implemented yet (later steps add scripts/build-pages.py)"
+	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/build-pages.py
 
 pdf:
 	@echo "pdf: not implemented yet (later steps add PDF export)"

@@ -5,3 +5,4 @@ src = ["scripts", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/test_config.py" = ["E402"]
+"tests/test_build.py" = ["E402"]

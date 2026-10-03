@@ -57,7 +57,7 @@ Stop if the deck is already initialized (see above). Say that it is already a ma
 Otherwise write only what is missing:
 
 1. `config.ini` if absent. Set `[serve] port` (default `8000`). Do not write `[book]` or `[build]` in that file.
-2. Copy `skills/markdown-slides/templates/Makefile.deck` to the deck root as `Makefile` and `skills/markdown-slides/templates/build.py` as `build.py` if they are absent. This skill has no `templates/` yet; do not copy trampoline files from this directory until it owns those files.
+2. Copy `skills/markdown-slides/templates/Makefile.deck` to the deck root as `Makefile` and `skills/markdown-slides/templates/build.py` as `build.py` if they are absent. This skill `templates/book.css` is engine CSS; do not copy it on create.
 3. Write `meta.toml` in the pages directory with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`. Seed chapters from `examples/pages/` into that directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter. Then replace the example copy with the user's topic.
 
 `SKILL` or `MARKDOWN_PAGES_HOME` selects an engine outside `skills/`. A nested `skills/markdown-pages` is discovered automatically.
