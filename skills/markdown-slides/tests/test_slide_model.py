@@ -307,5 +307,13 @@ class TestSlideIndex(unittest.TestCase):
             self.assertNotIn("ABSOLUTE", err)
 
 
+class TestParseFrontmatter(unittest.TestCase):
+    def test_strips_one_matching_quote_pair(self):
+        text = "---\ntitle: \"engineers'\"\nquote: \"'hello'\"\n---\n"
+        meta, _body = slide_model.parse_frontmatter(text)
+        self.assertEqual(meta["title"], "engineers'")
+        self.assertEqual(meta["quote"], "'hello'")
+
+
 if __name__ == "__main__":
     unittest.main()

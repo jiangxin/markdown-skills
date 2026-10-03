@@ -74,6 +74,18 @@ def linkify_footer(text: str) -> str:
     return "".join(chunks)
 
 
+def _strip_one_quote_pair(value: str) -> str:
+    """Strip whitespace, then exactly one matching quote pair.
+
+    ``"engineers'"`` stays ``engineers'``. ``"'hello'"`` stays ``'hello'``.
+    A value that is not wrapped in matching quotes is left unchanged.
+    """
+    text = value.strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'":
+        return text[1:-1]
+    return text
+
+
 def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     text = text.lstrip("\ufeff")
     if not text.startswith("---"):
@@ -87,7 +99,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
         if not line or line.startswith("#") or ":" not in line:
             continue
         key, value = line.split(":", 1)
-        meta[key.strip()] = value.strip().strip('"').strip("'")
+        meta[key.strip()] = _strip_one_quote_pair(value)
     if meta.get("footer"):
         meta["footer"] = linkify_footer(meta["footer"])
     return meta, parts[2].strip()
