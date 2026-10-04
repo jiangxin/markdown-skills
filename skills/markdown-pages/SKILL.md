@@ -34,7 +34,7 @@ Do not recopy `Makefile`, `build.py`, or `config.ini` unless the user asked to r
 
 ## Initialize
 
-Read references/design.md before writing pages. That file is the grammar: chapter names, home `README.md`, `meta.toml` keys, and link rewriting. Copy structure from the example chapters when a new book needs a starting set, then replace the copy with the user's topic.
+Read references/design.md before writing pages. That file is the grammar: chapter names, home `README.md`, `meta.toml` keys, and link rewriting.
 
 If the deck root is not a git work tree, confirm before git init in the user's preferred language (prefer AskQuestion when available). If the user agrees, git init, ignore build/, node_modules/, and .cache/, then commit the chapter markdown, config.ini, Makefile, and build.py. If the user refuses, do not write pages and do not git init.
 
@@ -42,7 +42,17 @@ Otherwise write only what is missing for this initialization:
 
 1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root` and `build_root` (default `build`). Do not write `[book]` in that file.
 2. Copy this skill `templates/Makefile.deck` to the deck root as `Makefile` and `templates/build.py` as `build.py` if they are absent. Those two files stay identical to the copies under `markdown-slides/templates/`; sync both skills after trampoline edits. This skill `templates/book.css` is engine CSS; do not copy it into the deck on init.
-3. Create the chosen book directory if needed. Write `meta.toml` with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`. Seed chapters from `examples/pages/` into that directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter. Then replace the example copy with the user's topic.
+3. Create the chosen book directory if needed. Write `meta.toml` with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`. Seed chapters from `examples/pages/` into that directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter.
+4. **Customize the seeded Markdown** (required whenever step 3 seeded files). Follow the SOP below before you treat init as done.
+
+### Customize seeded Markdown (required)
+
+`examples/pages/` is the English engine self-test. Deployed books must not ship that copy unchanged.
+
+1. Keep the example **structure**: home `README.md`, numbered `NN-slug.md` / `NNN-slug.md`, and the grammar from `references/design.md`.
+2. Rewrite **all visible copy** for the **user's topic** (this project, product, or the subject they named). Do not leave generic example marketing text.
+3. Write that copy in the **user's preferred language** (conversation language, user rules, or locale). Confirmations already use that language; chapter bodies must match it. If the user asked for English, keep English.
+4. Init is incomplete until every seeded chapter has been rewritten for topic and language. Do not stop after a byte-identical copy of `examples/pages/`.
 
 ## Config and build
 

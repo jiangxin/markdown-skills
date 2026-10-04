@@ -36,6 +36,11 @@ REQUIRED = (
     "build/",
     "meta.toml",
     'type = "slides"',
+    "Customize the seeded Markdown",
+    "user's preferred language",
+    "user's topic",
+    "Rewrite **all visible copy**",
+    "byte-identical copy of `examples/slides/`",
 )
 
 FORBIDDEN = (

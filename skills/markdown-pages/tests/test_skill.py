@@ -38,6 +38,10 @@ REQUIRED = (
     "build/",
     "meta.toml",
     'type = "pages"',
+    "Customize the seeded Markdown",
+    "user's topic",
+    "Rewrite **all visible copy**",
+    "byte-identical copy of `examples/pages/`",
 )
 
 FORBIDDEN_LANG = ("ask in English",)
