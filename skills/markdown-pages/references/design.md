@@ -1,0 +1,84 @@
+# Book design
+
+This file is the syntax source for a Markdown book. The generator reads the
+chapter names, home page, and `meta.toml` keys defined here. Visual tokens
+live with the engine templates in a later step; do not restyle by editing
+generated HTML.
+
+## Layout of sources
+
+Chapters sit in a **flat** book directory. There is **no `docs/`**
+subdirectory. The book directory is `--doc` / `DOC`, or the only
+`type = "pages"` directory under the deck root.
+
+Authoring notes may live under `<book>/references/` (for example
+`plan.md`). That tree is not chapters. `AGENTS.md` in the book
+directory is agent guidance (skill, format summary, build commands);
+it is not a chapter. Only flat `README.md` and numbered chapter files
+in the book directory are chapters.
+
+Do not scan `scripts/`, `skills/`, `build/`, `themes/`, or `.git` for
+chapters.
+
+## Home page
+
+`README.md` is the home chapter. The generator writes it as `index.html`.
+`index.md` is not the preferred home; use `README.md` so the source tree
+matches a typical GitHub book.
+
+`meta.toml` is not a chapter.
+
+## Chapter files
+
+A chapter filename is `NN-slug.md` (two digits) or `NNN-slug.md` (three
+digits): a numeric prefix, a hyphen, then a slug of lowercase letters,
+digits, and hyphens. Examples: `01-intro.md`, `010-cover.md`.
+
+Chapter Markdown is ordinary CommonMark (headings, lists, links, code
+fences). This skill does not use slide layouts, card fences, or
+frontmatter `layout:` keys.
+
+## meta.toml
+
+Each book directory has `meta.toml`:
+
+| Key | Meaning |
+| --- | --- |
+| `type` | Must be `"pages"`. The slides skill does not build this directory. |
+| `name` | Output basename under `build/<name>/`. Letters, digits, hyphens. |
+| `title` | Book title for HTML. Defaults to `name` when omitted. |
+| `[book] order` | `auto` sorts `NN-slug.md` and `NNN-slug.md` by filename. |
+| `[book] sort` | Optional Markdown file, relative to the book directory, whose heading links set chapter order. Do not set `order` and `sort` together. |
+
+`config.ini` at the deck root holds only `[serve]`. Book identity stays in
+`meta.toml`.
+
+## Page order
+
+Page order defaults to the filename sort of `NN-slug.md` / `NNN-slug.md`
+files. `README.md` is always the home page and is not ordered among those
+files. Set `[book] order = auto` to name that mode. Set `[book] sort` to a
+Markdown file relative to the book directory to use a link list instead.
+
+When `sort` is set, the generator walks Markdown links under a heading
+(details in a later step, aligned with slides `## Slides` lists). Do not
+set `order` and `sort` together.
+
+## Artifacts
+
+From the deck root, `make html <name>` writes a multi-page site and a
+one-file ebook under `build/<name>/`. `make pdf <name>` writes
+`build/<name>/<name>.pdf`. PPTX is not this skill.
+
+In the multi-page site, `.md` links rewrite to `.html`. In the one-file
+ebook, `.md` links rewrite to in-page anchors.
+
+## Engine
+
+The generator and templates live in this skill (`scripts/` and
+`templates/`). By default a user deck does not copy those files. The
+trampoline resolves this skill from document `meta.toml` `type`, then
+`[paths] skills_root`, `.agents/skills/markdown-pages`,
+`~/.agents/skills/markdown-pages`, or `MARKDOWN_PAGES_HOME`. Deck-root
+`Makefile` and `build.py` are identical copies from either skill's
+`templates/Makefile.deck` and `templates/build.py`.

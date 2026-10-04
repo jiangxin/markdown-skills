@@ -1,0 +1,7 @@
+{
+  "name": "markdown-pages",
+  "private": true,
+  "devDependencies": {
+    "markdownlint-cli2": "^0.18.1"
+  }
+}

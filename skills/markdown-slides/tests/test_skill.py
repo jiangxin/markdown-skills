@@ -20,7 +20,7 @@ REQUIRED = (
     "frontend-slides",
     "examples/slides/010-cover.md",
     "Do not hand-edit HTML",
-    "Read references/design.md before creating slides.",
+    "Read this skill's `references/design.md` before creating slides.",
     "The engine stays in the skill",
     "Skip git init when building it.",
     "order = auto",
@@ -28,22 +28,57 @@ REQUIRED = (
     "do not re-initialize",
     "overwrite existing slides",
     "themes/",
-    "Ask the user to confirm before copying scripts.",
+    "Deep customization of the generator",
+    ".agents/skills/markdown-slides",
+    "skills_root",
+    "build_root",
     "make slides",
     "build/",
     "meta.toml",
     'type = "slides"',
+    "Customize the seeded Markdown",
+    "user's preferred language",
+    "user's topic",
+    "Rewrite **all visible copy**",
+    "byte-identical copy of `examples/slides/`",
+    "Plan then generate",
+    "references/plan.md",
+    "Plan (required; stop before pages)",
+    "Generate after plan approval",
+    "Write `<slides>/AGENTS.md`",
+    "templates/AGENTS.md",
+)
+
+FORBIDDEN = (
+    "| `scripts`",
+    'argument-hint: "[create | edit | theme | scripts]"',
+    "## scripts",
+    "Ask the user to confirm before copying scripts.",
 )
 
 
 class SkillDocTest(unittest.TestCase):
     def setUp(self):
         self.text = SKILL_MD.read_text(encoding="utf-8")
+        self.skill_root = SKILL_MD.parent
 
     def test_required_phrases(self):
         for phrase in REQUIRED:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, self.text)
+
+    def test_agents_template_exists(self):
+        path = self.skill_root / "templates" / "AGENTS.md"
+        self.assertTrue(path.is_file())
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("markdown-slides", text)
+        self.assertIn("references/design.md", text)
+        self.assertIn("make html <dir>", text)
+
+    def test_no_scripts_command(self):
+        for phrase in FORBIDDEN:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, self.text)
 
     def test_english_body(self):
         self.assertNotIn("幻灯片", self.text)
@@ -52,3 +87,4 @@ class SkillDocTest(unittest.TestCase):
         self.assertTrue(self.text.startswith("---\n"))
         self.assertIn("name: markdown-slides\n", self.text)
         self.assertIn("description:", self.text)
+        self.assertIn('argument-hint: "[create | edit | theme]"', self.text)

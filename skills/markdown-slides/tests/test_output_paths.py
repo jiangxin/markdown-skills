@@ -66,7 +66,7 @@ class TestOutputPaths(unittest.TestCase):
             deck = self._deck(raw, name="print-deck")
             env = os.environ.copy()
             env["DECK_ROOT"] = str(deck)
-            env.pop("SLIDES", None)
+            env.pop("DOC", None)
             script = SCRIPTS / "config.py"
             for kind in ("pptx", "pdf"):
                 result = subprocess.run(
@@ -88,7 +88,7 @@ class TestOutputPaths(unittest.TestCase):
             deck = self._deck(raw, name="node-deck")
             env = os.environ.copy()
             env["DECK_ROOT"] = str(SKILL)
-            env.pop("SLIDES", None)
+            env.pop("DOC", None)
             for script, suffix in (("build-pptx.js", ".pptx"), ("export-pdf.js", ".pdf")):
                 result = subprocess.run(
                     [

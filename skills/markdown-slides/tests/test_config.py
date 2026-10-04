@@ -54,11 +54,11 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.order, "auto")
             self.assertIsNone(loaded.sort)
 
-    def test_slides_env_selects_other_directory(self):
+    def test_doc_env_selects_other_directory(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             isolated_env.write_meta(deck / "slides", "main-deck", "Main")
-            with patch.dict(os.environ, {"SLIDES": "talk"}, clear=False):
+            with patch.dict(os.environ, {"DOC": "talk"}, clear=False):
                 loaded = config_module.load_deck(deck)
                 paths = config_module.output_paths(deck)
             self.assertEqual(loaded.slides_rel, "talk")
@@ -66,12 +66,25 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.title, "talk")
             self.assertEqual(loaded.slides, (deck / "talk").resolve())
             self.assertEqual(paths.html, deck.resolve() / "build" / "talk" / "talk.html")
+            self.assertEqual(paths.build_root, deck.resolve() / "build")
 
-    def test_slides_env_matching_config_keeps_name(self):
+    def test_paths_build_root_overrides_artifact_dir(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            isolated_env.write_meta(deck / "slides", "alt-deck", "Alt")
+            (deck / "config.ini").write_text(
+                "[serve]\nport = 8000\n\n[paths]\nbuild_root = dist\n",
+                encoding="utf-8",
+            )
+            paths = config_module.output_paths(deck)
+            self.assertEqual(paths.build_root, (deck / "dist").resolve())
+            self.assertEqual(paths.html, (deck / "dist" / "slides" / "alt-deck.html").resolve())
+
+    def test_doc_env_matching_config_keeps_name(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             isolated_env.write_meta(deck / "slides", "main-deck", "Main")
-            with patch.dict(os.environ, {"SLIDES": "slides"}, clear=False):
+            with patch.dict(os.environ, {"DOC": "slides"}, clear=False):
                 loaded = config_module.load_deck(deck)
             self.assertEqual(loaded.name, "main-deck")
             self.assertEqual(loaded.title, "Main")
@@ -105,25 +118,25 @@ class TestConfig(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             isolated_env.write_meta(deck / "book", "my-book", kind="ebook")
-            with patch.dict(os.environ, {"SLIDES": "book"}, clear=False):
+            with patch.dict(os.environ, {"DOC": "book"}, clear=False):
                 with self.assertRaises(SystemExit) as caught:
                     config_module.load_deck(deck)
             self.assertIn("ebook", str(caught.exception))
             self.assertIn("slides", str(caught.exception))
 
-    def test_absolute_slides_rejected(self):
+    def test_absolute_doc_rejected(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             absolute = deck / "inside"
-            with patch.dict(os.environ, {"SLIDES": str(absolute)}, clear=False):
+            with patch.dict(os.environ, {"DOC": str(absolute)}, clear=False):
                 with self.assertRaises(SystemExit) as caught:
                     config_module.load_deck(deck)
-            self.assertIn("slides", str(caught.exception))
+            self.assertIn("doc", str(caught.exception))
 
     def test_slides_parent_escape_rejected(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
-            with patch.dict(os.environ, {"SLIDES": "../outside"}, clear=False):
+            with patch.dict(os.environ, {"DOC": "../outside"}, clear=False):
                 with self.assertRaises(SystemExit) as caught:
                     config_module.load_deck(deck)
             self.assertIn("escapes", str(caught.exception))
@@ -131,7 +144,7 @@ class TestConfig(unittest.TestCase):
     def test_dots_that_stay_inside_are_allowed(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
-            with patch.dict(os.environ, {"SLIDES": "custom/../custom/pages"}, clear=False):
+            with patch.dict(os.environ, {"DOC": "custom/../custom/pages"}, clear=False):
                 loaded = config_module.load_deck(deck)
             self.assertEqual(loaded.slides, (deck / "custom" / "pages").resolve())
 

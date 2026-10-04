@@ -1,5 +1,6 @@
 # Trampoline: python3 build.py (copied from templates/build.py).
 # Copy this file to the deck root as Makefile, with build.py beside it.
+# Keep identical in markdown-slides and markdown-pages templates/.
 #
 #   make slides          HTML for slides/ -> build/slides/
 #   make html slides     HTML for that directory

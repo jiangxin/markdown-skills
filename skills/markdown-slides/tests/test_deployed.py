@@ -20,7 +20,9 @@ def _publisher_deck() -> bool:
 def _page_layouts(directory: Path) -> dict[str, str]:
     layouts: dict[str, str] = {}
     for path in sorted(directory.glob("*.md")):
-        if path.name == "index.md":
+        if path.name in {"index.md", "AGENTS.md", "README.md"}:
+            continue
+        if not path.name[0:3].isdigit():
             continue
         match = LAYOUT.search(path.read_text(encoding="utf-8"))
         if match is None:
@@ -50,10 +52,17 @@ class TestPublisherDeck(unittest.TestCase):
             template.read_text(encoding="utf-8"),
         )
 
+    def test_trampoline_templates_match_pages_skill(self):
+        pages = SKILL.parent / "markdown-pages" / "templates"
+        for name in ("build.py", "Makefile.deck"):
+            slides_text = (SKILL / "templates" / name).read_text(encoding="utf-8")
+            pages_text = (pages / name).read_text(encoding="utf-8")
+            self.assertEqual(slides_text, pages_text, name)
+
     def test_example_and_demo_meta_are_slides(self):
         for directory, name in (
             (SKILL / "examples" / "slides", "markdown-slides-examples"),
-            (REPO / "slides", "markdown-publisher"),
+            (REPO / "example-slides", "markdown-publisher"),
         ):
             text = (directory / "meta.toml").read_text(encoding="utf-8")
             self.assertIn('type = "slides"', text)
@@ -61,5 +70,16 @@ class TestPublisherDeck(unittest.TestCase):
 
     def test_root_slides_match_example_names_and_layouts(self):
         examples = _page_layouts(SKILL / "examples" / "slides")
-        demo = _page_layouts(REPO / "slides")
+        demo = _page_layouts(REPO / "example-slides")
         self.assertEqual(examples, demo)
+
+    def test_agents_describes_pages_and_identical_trampoline(self):
+        text = (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("markdown-pages", text)
+        self.assertIn("vendors **no** engine", text)
+        self.assertIn("byte-identical", text)
+        self.assertIn("skills/markdown-pages/templates/build.py", text)
+        self.assertIn("skills/markdown-slides/templates/build.py", text)
+        self.assertIn("[paths] skills_root", text)
+        self.assertIn(".agents/skills/", text)
+        self.assertIn("**both** nested skills", text)
