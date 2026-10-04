@@ -22,7 +22,7 @@ REQUIRED = (
     "templates/build.py",
     "templates/Makefile.deck",
     "Do not hand-edit HTML",
-    "Read references/design.md before writing pages.",
+    "Read this skill's `references/design.md` before writing pages.",
     "The engine stays in the skill",
     "Skip git init when building it.",
     "order = auto",
@@ -42,6 +42,10 @@ REQUIRED = (
     "user's topic",
     "Rewrite **all visible copy**",
     "byte-identical copy of `examples/pages/`",
+    "Plan then generate",
+    "references/plan.md",
+    "Plan (required; stop before chapters)",
+    "Generate after plan approval",
 )
 
 FORBIDDEN_LANG = ("ask in English",)

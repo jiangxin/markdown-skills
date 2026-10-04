@@ -1,7 +1,7 @@
 ---
 name: markdown-pages
 disable-model-invocation: true
-description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-pages).
+description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. Plan in <book>/references/plan.md and wait for approval before seeding chapters. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-pages).
 argument-hint: "[directory]"
 ---
 
@@ -30,11 +30,17 @@ If the chosen directory already has `meta.toml` with `type = "pages"` and a home
 - do not overwrite existing chapters with `examples/pages/`
 - say the book already exists and stop (or only add trampoline / `config.ini` at the deck root if those are still missing)
 
+If the directory has `meta.toml` and `<book>/references/plan.md` but **no** home `README.md` and **no** numbered chapters yet:
+
+- do **not** seed or customize chapters yet
+- stay in the plan phase: refine `references/plan.md` with the user until they say the plan is ready
+- only then run **Generate after plan approval**
+
 Do not recopy `Makefile`, `build.py`, or `config.ini` unless the user asked to refresh those files.
 
 ## Initialize
 
-Read references/design.md before writing pages. That file is the grammar: chapter names, home `README.md`, `meta.toml` keys, and link rewriting.
+Read this skill's `references/design.md` before writing pages. That file is the grammar: chapter names, home `README.md`, `meta.toml` keys, and link rewriting. Do not confuse it with the book's own `references/plan.md`.
 
 If the deck root is not a git work tree, confirm before git init in the user's preferred language (prefer AskQuestion when available). If the user agrees, git init, ignore build/, node_modules/, and .cache/, then commit the chapter markdown, config.ini, Makefile, and build.py. If the user refuses, do not write pages and do not git init.
 
@@ -42,16 +48,28 @@ Otherwise write only what is missing for this initialization:
 
 1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root` and `build_root` (default `build`). Do not write `[book]` in that file.
 2. Copy this skill `templates/Makefile.deck` to the deck root as `Makefile` and `templates/build.py` as `build.py` if they are absent. Those two files stay identical to the copies under `markdown-slides/templates/`; sync both skills after trampoline edits. This skill `templates/book.css` is engine CSS; do not copy it into the deck on init.
-3. Create the chosen book directory if needed. Write `meta.toml` with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`. Seed chapters from `examples/pages/` into that directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter.
-4. **Customize the seeded Markdown** (required whenever step 3 seeded files). Follow the SOP below before you treat init as done.
+3. Create the chosen book directory if needed. Write `meta.toml` with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`.
+4. **Plan then generate.** Follow the SOP below. Do not seed chapters before the user approves the plan.
+
+### Plan (required; stop before chapters)
+
+1. Ask for the document topic plan in the **user's preferred language** (audience, goal, outline, chapter list). Prefer AskQuestion when available for short choices; accept free-form outline text for the rest.
+2. Create `<book>/references/` if needed and write `<book>/references/plan.md` in that language. Include at least: title, audience, goal, and an ordered chapter outline (proposed `README.md` home plus `NN-slug.md` / `NNN-slug.md` filenames with one-line intent each).
+3. **Stop.** Tell the user to edit `references/plan.md` until satisfied. Do **not** seed `examples/pages/`, do **not** write `README.md` or numbered chapters, and do **not** run customize yet.
+4. Resume only when the user clearly says the plan is ready (or pastes a final plan and asks you to generate).
+
+### Generate after plan approval
+
+1. Seed chapters from `examples/pages/` into the book directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter.
+2. **Customize the seeded Markdown** using `<book>/references/plan.md` as the outline source. Follow the customize SOP below before you treat init as done.
 
 ### Customize seeded Markdown (required)
 
 `examples/pages/` is the English engine self-test. Deployed books must not ship that copy unchanged.
 
-1. Keep the example **structure**: home `README.md`, numbered `NN-slug.md` / `NNN-slug.md`, and the grammar from `references/design.md`.
-2. Rewrite **all visible copy** for the **user's topic** (this project, product, or the subject they named). Do not leave generic example marketing text.
-3. Write that copy in the **user's preferred language** (conversation language, user rules, or locale). Confirmations already use that language; chapter bodies must match it. If the user asked for English, keep English.
+1. Keep the example **structure**: home `README.md`, numbered `NN-slug.md` / `NNN-slug.md`, and the grammar from this skill's `references/design.md`. Adjust the page set to match `references/plan.md` (add/remove/rename numbered files as the plan requires; keep valid filenames).
+2. Rewrite **all visible copy** for the **user's topic** from `references/plan.md` (and any later user notes). Do not leave generic example marketing text.
+3. Write that copy in the **user's preferred language** (conversation language, user rules, or locale). Confirmations and `plan.md` already use that language; chapter bodies must match it. If the user asked for English, keep English.
 4. Init is incomplete until every seeded chapter has been rewritten for topic and language. Do not stop after a byte-identical copy of `examples/pages/`.
 
 ## Config and build
@@ -62,7 +80,7 @@ The trampoline picks the engine from document `meta.toml` `type`, then `[paths] 
 
 ## After initialize
 
-Write `README.md` as the home page and one Markdown file per chapter under the book directory, named `NN-slug.md` or `NNN-slug.md`. Page order is that filename sort unless `meta.toml` `[book] sort` points at an index file.
+Write `README.md` as the home page and one Markdown file per chapter under the book directory, named `NN-slug.md` or `NNN-slug.md`. Page order is that filename sort unless `meta.toml` `[book] sort` points at an index file. Keep `<book>/references/plan.md` as the authoring plan; it is not a chapter.
 
 A project may hold more than one pages directory. Each has its own `meta.toml`. This skill builds only `type = "pages"`. Artifacts go under `build/<name>/` as a multi-page site (`index.html` and chapter pages), a one-file ebook `<name>.html`, and `<name>.pdf`. Build from the deck root: `make html <name>` builds HTML for that directory. `make pdf <name>` writes the PDF. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck. Commit the chapter markdown, `meta.toml`, `config.ini`, `Makefile`, and `build.py`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
 

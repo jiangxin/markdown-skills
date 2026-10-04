@@ -20,7 +20,7 @@ REQUIRED = (
     "frontend-slides",
     "examples/slides/010-cover.md",
     "Do not hand-edit HTML",
-    "Read references/design.md before creating slides.",
+    "Read this skill's `references/design.md` before creating slides.",
     "The engine stays in the skill",
     "Skip git init when building it.",
     "order = auto",
@@ -41,6 +41,10 @@ REQUIRED = (
     "user's topic",
     "Rewrite **all visible copy**",
     "byte-identical copy of `examples/slides/`",
+    "Plan then generate",
+    "references/plan.md",
+    "Plan (required; stop before pages)",
+    "Generate after plan approval",
 )
 
 FORBIDDEN = (

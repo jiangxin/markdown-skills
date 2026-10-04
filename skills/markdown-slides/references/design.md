@@ -31,6 +31,8 @@ The generator and bundled stage live in the skill (`scripts/` and `templates/<th
 
 The slides directory is `--doc` / `DOC`, or the only `type = "slides"` directory under the deck root.
 
+Authoring notes may live under `<slides>/references/` (for example `plan.md`). Those files are not slides. Only flat `NNN-slug.md` files in the slides directory are slides.
+
 Page order defaults to the filename sort of `NNN-slug.md` files in that directory. `index.md` and other files that do not match `NNN-slug.md` are not slides. Set `[deck] order = auto` in that directory's `meta.toml` to name that mode. Set `[deck] sort` to a Markdown file relative to the slides directory (for example `index.md`) to use a link list instead. Do not set `order` and `sort` together.
 
 When `sort` is set, the generator walks Markdown links under the heading `## Slides` from top to bottom. A link target is a slug: an optional `NNN-` prefix, then lowercase letters, digits, and hyphens. The file on disk is `NNN-slug.md` in the slides directory, so a link written as `cover.md` resolves to `010-cover.md` when that file is the only `cover` slug. The link label is not read. A missing `## Slides` heading, an empty list, a missing file, or a duplicate slug is an error. The numeric prefix does not set the order in this mode.

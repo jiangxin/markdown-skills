@@ -1,7 +1,7 @@
 ---
 name: markdown-slides
 disable-model-invocation: true
-description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use for /markdown-slides with no args, or create, edit, and theme. Infer whether to scaffold a deck or edit copy. Confirm the slides directory and git before first write. Do not re-initialize a deck or overwrite existing slides with the example template. Optional theme copies go in themes/. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-slides).
+description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use for /markdown-slides with no args, or create, edit, and theme. Infer whether to scaffold a deck or edit copy. Confirm the slides directory and git before first write. On create, plan in <slides>/references/plan.md and wait for approval before seeding pages. Do not re-initialize a deck or overwrite existing slides with the example template. Optional theme copies go in themes/. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-slides).
 argument-hint: "[create | edit | theme]"
 ---
 
@@ -20,7 +20,7 @@ Read the extra words after `/markdown-slides`, or the user intent. If there is n
 | Command | Intent |
 |---------|--------|
 | (none) | Infer create vs edit as above |
-| `create` / `init` | Scaffold trampoline files and, if the slides dir has no pages, seed then customize the example template |
+| `create` / `init` | Scaffold trampoline files, write `<slides>/references/plan.md`, wait for plan approval, then seed and customize |
 | `edit` | Change Markdown copy or page order only |
 | `theme` | Copy a chosen look into the deck `themes/` directory |
 
@@ -40,13 +40,15 @@ If it is initialized:
 - Do not overwrite existing slides with the example template. Never replace an existing `NNN-slug.md` with `examples/slides/`.
 - Empty `/markdown-slides` is **edit**, not create.
 
-If trampoline files exist but the slides directory has **no** `NNN-slug.md`, create may seed the template. If any `NNN-slug.md` exists, skip the template copy even when the user says create.
+If trampoline files exist, the slides directory has `meta.toml` and `<slides>/references/plan.md`, but **no** `NNN-slug.md` yet, stay in the plan phase: refine the plan until the user says it is ready, then run **Generate after plan approval**. Do not seed pages before that approval.
+
+If trampoline files exist but the slides directory has **no** `NNN-slug.md` and **no** `references/plan.md`, create may start the plan phase. If any `NNN-slug.md` exists, skip the template copy even when the user says create.
 
 If a `type = "slides"` directory already exists, that path is the choice; do not ask again unless the user named another directory.
 
 ## create
 
-Read references/design.md before creating slides. That file is the grammar: layouts, frontmatter, flags, card fields, and inline marks.
+Read this skill's `references/design.md` before creating slides. That file is the grammar: layouts, frontmatter, flags, card fields, and inline marks. Do not confuse it with the deck's own `references/plan.md`.
 
 If the prompt does not name a directory, ask in English and offer slides/ as the default. Do not write slides until that choice is recorded. A path the prompt already names is the choice; do not ask again.
 
@@ -58,16 +60,28 @@ Otherwise write only what is missing:
 
 1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root` and `build_root` (default `build`). Do not write `[deck]`.
 2. Copy `templates/Makefile.deck` to the deck root as `Makefile` and `templates/build.py` as `build.py` if they are absent. Those two files stay identical to the copies under `markdown-pages/templates/`; sync both skills after trampoline edits.
-3. Write `meta.toml` in the slides directory with `type = "slides"`, `name` (output basename), optional `title`, `theme =` (default `swiss-modern`), and `[deck] order = auto`. Seed pages from `examples/slides/` `NNN-slug.md` into that directory **only when it has no `NNN-slug.md`**. Do not copy a template file over an existing page.
-4. **Customize the seeded Markdown** (required whenever step 3 seeded files). Follow the SOP below before you treat create as done.
+3. Write `meta.toml` in the slides directory with `type = "slides"`, `name` (output basename), optional `title`, `theme =` (default `swiss-modern`), and `[deck] order = auto`.
+4. **Plan then generate.** Follow the SOP below. Do not seed pages before the user approves the plan.
+
+### Plan (required; stop before pages)
+
+1. Ask for the document topic plan in the **user's preferred language** (audience, goal, outline, page list). Prefer AskQuestion when available for short choices; accept free-form outline text for the rest. Directory and git prompts stay in English as above.
+2. Create `<slides>/references/` if needed and write `<slides>/references/plan.md` in that language. Include at least: title, audience, goal, and an ordered page outline (proposed `NNN-slug.md` filenames with `layout:` intent and one-line purpose each).
+3. **Stop.** Tell the user to edit `references/plan.md` until satisfied. Do **not** seed `examples/slides/`, do **not** write `NNN-slug.md` pages, and do **not** run customize yet.
+4. Resume only when the user clearly says the plan is ready (or pastes a final plan and asks you to generate).
+
+### Generate after plan approval
+
+1. Seed pages from `examples/slides/` `NNN-slug.md` into that directory **only when it has no `NNN-slug.md`**. Do not copy a template file over an existing page.
+2. **Customize the seeded Markdown** using `<slides>/references/plan.md` as the outline source. Follow the customize SOP below before you treat create as done.
 
 ### Customize seeded Markdown (required)
 
 `examples/slides/` is the English engine self-test. Deployed decks must not ship that copy unchanged.
 
-1. Keep the example **structure**: the same `NNN-slug.md` set, `layout:` values, frontmatter flags, and card/field shapes from `references/design.md`.
-2. Rewrite **all visible copy** for the **user's topic** (this project, product, or the subject they named). Do not leave generic example marketing text.
-3. Write that copy in the **user's preferred language** (conversation language, user rules, or locale). Directory and git prompts stay in English as above; slide bodies must match the user's language. If the user asked for English, keep English.
+1. Keep the example **structure**: valid `NNN-slug.md` names, `layout:` values, frontmatter flags, and card/field shapes from this skill's `references/design.md`. Adjust the page set to match `references/plan.md` (add/remove/rename pages as the plan requires).
+2. Rewrite **all visible copy** for the **user's topic** from `references/plan.md` (and any later user notes). Do not leave generic example marketing text.
+3. Write that copy in the **user's preferred language** (conversation language, user rules, or locale). Directory and git prompts stay in English as above; `plan.md` and slide bodies must match the user's language. If the user asked for English, keep English.
 4. Create is incomplete until every seeded page has been rewritten for topic and language. Do not stop after a byte-identical copy of `examples/slides/`.
 
 ## edit
