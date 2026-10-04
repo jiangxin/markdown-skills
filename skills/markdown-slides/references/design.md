@@ -31,7 +31,7 @@ The generator and bundled stage live in the skill (`scripts/` and `templates/<th
 
 The slides directory is `--doc` / `DOC`, or the only `type = "slides"` directory under the deck root.
 
-Authoring notes may live under `<slides>/references/` (for example `plan.md`). Those files are not slides. Only flat `NNN-slug.md` files in the slides directory are slides.
+Authoring notes may live under `<slides>/references/` (for example `plan.md`). Those files are not slides. `AGENTS.md` in the slides directory is agent guidance (skill, format summary, build commands); it is not a slide. Only flat `NNN-slug.md` files in the slides directory are slides.
 
 Page order defaults to the filename sort of `NNN-slug.md` files in that directory. `index.md` and other files that do not match `NNN-slug.md` are not slides. Set `[deck] order = auto` in that directory's `meta.toml` to name that mode. Set `[deck] sort` to a Markdown file relative to the slides directory (for example `index.md`) to use a link list instead. Do not set `order` and `sort` together.
 

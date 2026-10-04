@@ -1,7 +1,7 @@
 ---
 name: markdown-pages
 disable-model-invocation: true
-description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. Plan in <book>/references/plan.md and wait for approval before seeding chapters. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-pages).
+description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. Plan in <book>/references/plan.md and wait for approval before seeding chapters. After generate, write <book>/AGENTS.md with skill links, format summary, and build commands. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-pages).
 argument-hint: "[directory]"
 ---
 
@@ -62,6 +62,7 @@ Otherwise write only what is missing for this initialization:
 
 1. Seed chapters from `examples/pages/` into the book directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter.
 2. **Customize the seeded Markdown** using `<book>/references/plan.md` as the outline source. Follow the customize SOP below before you treat init as done.
+3. **Write `<book>/AGENTS.md`** (required). Start from this skill `templates/AGENTS.md`. It must name **markdown-pages**, summarize the Markdown dialect, link this skill `SKILL.md` and `references/design.md` (fix relative paths for how the skill is installed), and list deck-root build commands for **this directory** (`make html <dir>`, `make pdf <dir>`, `make serve`). Write it in the **user's preferred language**. `AGENTS.md` is not a chapter. Do not skip this file.
 
 ### Customize seeded Markdown (required)
 
@@ -80,7 +81,7 @@ The trampoline picks the engine from document `meta.toml` `type`, then `[paths] 
 
 ## After initialize
 
-Write `README.md` as the home page and one Markdown file per chapter under the book directory, named `NN-slug.md` or `NNN-slug.md`. Page order is that filename sort unless `meta.toml` `[book] sort` points at an index file. Keep `<book>/references/plan.md` as the authoring plan; it is not a chapter.
+Write `README.md` as the home page and one Markdown file per chapter under the book directory, named `NN-slug.md` or `NNN-slug.md`. Page order is that filename sort unless `meta.toml` `[book] sort` points at an index file. Keep `<book>/references/plan.md` as the authoring plan and `<book>/AGENTS.md` as agent guidance; neither is a chapter.
 
 A project may hold more than one pages directory. Each has its own `meta.toml`. This skill builds only `type = "pages"`. Artifacts go under `build/<name>/` as a multi-page site (`index.html` and chapter pages), a one-file ebook `<name>.html`, and `<name>.pdf`. Build from the deck root: `make html <name>` builds HTML for that directory. `make pdf <name>` writes the PDF. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck. Commit the chapter markdown, `meta.toml`, `config.ini`, `Makefile`, and `build.py`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
 

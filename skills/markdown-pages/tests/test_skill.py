@@ -46,6 +46,8 @@ REQUIRED = (
     "references/plan.md",
     "Plan (required; stop before chapters)",
     "Generate after plan approval",
+    "Write `<book>/AGENTS.md`",
+    "templates/AGENTS.md",
 )
 
 FORBIDDEN_LANG = ("ask in English",)
@@ -93,6 +95,14 @@ class SkillDocTest(unittest.TestCase):
 
     def test_design_exists(self):
         self.assertTrue(DESIGN_MD.is_file())
+
+    def test_agents_template_exists(self):
+        path = SKILL_ROOT / "templates" / "AGENTS.md"
+        self.assertTrue(path.is_file())
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("markdown-pages", text)
+        self.assertIn("references/design.md", text)
+        self.assertIn("make html <dir>", text)
 
     def test_example_pages(self):
         self.assertTrue(EXAMPLES.is_dir())

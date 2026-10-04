@@ -1,7 +1,7 @@
 ---
 name: markdown-slides
 disable-model-invocation: true
-description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use for /markdown-slides with no args, or create, edit, and theme. Infer whether to scaffold a deck or edit copy. Confirm the slides directory and git before first write. On create, plan in <slides>/references/plan.md and wait for approval before seeding pages. Do not re-initialize a deck or overwrite existing slides with the example template. Optional theme copies go in themes/. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-slides).
+description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use for /markdown-slides with no args, or create, edit, and theme. Infer whether to scaffold a deck or edit copy. Confirm the slides directory and git before first write. On create, plan in <slides>/references/plan.md and wait for approval before seeding pages. After generate, write <slides>/AGENTS.md with skill links, format summary, and build commands. Do not re-initialize a deck or overwrite existing slides with the example template. Optional theme copies go in themes/. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-slides).
 argument-hint: "[create | edit | theme]"
 ---
 
@@ -74,6 +74,7 @@ Otherwise write only what is missing:
 
 1. Seed pages from `examples/slides/` `NNN-slug.md` into that directory **only when it has no `NNN-slug.md`**. Do not copy a template file over an existing page.
 2. **Customize the seeded Markdown** using `<slides>/references/plan.md` as the outline source. Follow the customize SOP below before you treat create as done.
+3. **Write `<slides>/AGENTS.md`** (required). Start from this skill `templates/AGENTS.md`. It must name **markdown-slides**, summarize the Markdown dialect, link this skill `SKILL.md` and `references/design.md` (fix relative paths for how the skill is installed), and list deck-root build commands for **this directory** (`make html <dir>`, `make ppt <dir>`, `make pdf <dir>`, `make serve`). Write it in the **user's preferred language**. `AGENTS.md` is not a slide. Do not skip this file.
 
 ### Customize seeded Markdown (required)
 

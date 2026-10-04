@@ -40,7 +40,7 @@ fmt:
 EXTRA_MD :=
 ifneq ($(DECK_ROOT),)
 ifneq ($(abspath $(DECK_ROOT)),$(SKILL_ROOT))
-EXTRA_MD := $(wildcard $(DECK_ROOT)/README.md) $(wildcard $(DECK_ROOT)/README.zh.md) $(wildcard $(DECK_ROOT)/AGENTS.md) $(wildcard $(DECK_ROOT)/slides/*.md) $(wildcard $(DECK_ROOT)/example-slides/*.md)
+EXTRA_MD := $(wildcard $(DECK_ROOT)/README.md) $(wildcard $(DECK_ROOT)/README.zh.md) $(wildcard $(DECK_ROOT)/AGENTS.md) $(wildcard $(DECK_ROOT)/slides/*.md) $(wildcard $(DECK_ROOT)/example-slides/*.md) $(wildcard $(DECK_ROOT)/*/AGENTS.md)
 endif
 endif
 

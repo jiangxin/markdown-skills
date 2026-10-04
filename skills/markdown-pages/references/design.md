@@ -12,8 +12,10 @@ subdirectory. The book directory is `--doc` / `DOC`, or the only
 `type = "pages"` directory under the deck root.
 
 Authoring notes may live under `<book>/references/` (for example
-`plan.md`). That tree is not chapters. Only flat `README.md` and
-numbered chapter files in the book directory are chapters.
+`plan.md`). That tree is not chapters. `AGENTS.md` in the book
+directory is agent guidance (skill, format summary, build commands);
+it is not a chapter. Only flat `README.md` and numbered chapter files
+in the book directory are chapters.
 
 Do not scan `scripts/`, `skills/`, `build/`, `themes/`, or `.git` for
 chapters.

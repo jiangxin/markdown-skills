@@ -20,7 +20,9 @@ def _publisher_deck() -> bool:
 def _page_layouts(directory: Path) -> dict[str, str]:
     layouts: dict[str, str] = {}
     for path in sorted(directory.glob("*.md")):
-        if path.name == "index.md":
+        if path.name in {"index.md", "AGENTS.md", "README.md"}:
+            continue
+        if not path.name[0:3].isdigit():
             continue
         match = LAYOUT.search(path.read_text(encoding="utf-8"))
         if match is None:

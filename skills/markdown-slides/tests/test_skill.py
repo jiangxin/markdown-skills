@@ -45,6 +45,8 @@ REQUIRED = (
     "references/plan.md",
     "Plan (required; stop before pages)",
     "Generate after plan approval",
+    "Write `<slides>/AGENTS.md`",
+    "templates/AGENTS.md",
 )
 
 FORBIDDEN = (
@@ -58,11 +60,20 @@ FORBIDDEN = (
 class SkillDocTest(unittest.TestCase):
     def setUp(self):
         self.text = SKILL_MD.read_text(encoding="utf-8")
+        self.skill_root = SKILL_MD.parent
 
     def test_required_phrases(self):
         for phrase in REQUIRED:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, self.text)
+
+    def test_agents_template_exists(self):
+        path = self.skill_root / "templates" / "AGENTS.md"
+        self.assertTrue(path.is_file())
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("markdown-slides", text)
+        self.assertIn("references/design.md", text)
+        self.assertIn("make html <dir>", text)
 
     def test_no_scripts_command(self):
         for phrase in FORBIDDEN:
