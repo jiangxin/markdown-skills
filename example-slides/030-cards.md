@@ -11,13 +11,13 @@ note_size: xxl
 :::card
 num: "01"
 title: 源文件
-body: `config.ini`、`Makefile`、`build.py`、以及 `slides/` 下的 `NNN-slug.md`。行内可用 `code`、==强调==、**粗体**。
+body: `config.ini`、`Makefile`、`build.py`、以及 `example-slides/` 下的 `NNN-slug.md`。行内可用 `code`、==强调==、**粗体**。
 :::
 
 :::card
 num: "02"
 title: 构建
-body: 嵌套的 `skills/markdown-slides` 即引擎。主题写在 `meta.toml` 的 `theme`。在稿根运行 `make slides`。
+body: 嵌套的 `skills/markdown-slides` 即引擎。主题写在 `meta.toml` 的 `theme`。在稿根运行 `make example-slides`。
 :::
 
 :::note

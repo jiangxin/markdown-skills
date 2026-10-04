@@ -8,8 +8,8 @@ summary_after: slides / serve 只需 Python。ppt / pdf 还要 Node.js。产物�
 
 | 命令 | 产物 | 依赖 |
 | --- | --- | --- |
-| `make slides` | `build/slides/name.html` | Python |
-| `make ppt slides` | `build/slides/name.pptx` | Node.js |
-| `make pdf slides` | `build/slides/name.pdf` | Node.js |
+| `make example-slides` | `build/example-slides/name.html` | Python |
+| `make ppt example-slides` | `build/example-slides/name.pptx` | Node.js |
+| `make pdf example-slides` | `build/example-slides/name.pdf` | Node.js |
 | `make serve` | 本地预览 | Python |
 | `make fonts` | 预热字体缓存 | 可选联网 |

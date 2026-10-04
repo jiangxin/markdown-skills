@@ -31,7 +31,7 @@
 
 ## `config.ini` 与 `meta.toml`
 
-可复制 [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config.ini.example)，或让 skill 生成。每套页面目录有 [`slides/meta.toml`](slides/meta.toml)。本 skill 只构建 `type = "slides"`。
+可复制 [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config.ini.example)，或让 skill 生成。每套页面目录有 `meta.toml`（本仓库：[`example-slides/meta.toml`](example-slides/meta.toml)）。本 skill 只构建 `type = "slides"`。
 
 `config.ini` 里的工程级键：
 
@@ -72,7 +72,7 @@
 
 本仓库演示稿不内嵌 `scripts/markdown-pages/`。之后改章节就是改 Markdown，不要为改文案再跑一遍本 skill。
 
-Skill 目录里的 `examples/pages/` 是引擎自测用的英文小书。在 skill 目录执行 `make html` 会构建那一套。本仓库根目录没有 `pages/` 演示书。
+Skill 目录里的 `examples/pages/` 是引擎自测用的英文小书。在 skill 目录执行 `make html` 会构建那一套。本仓库中文演示书在 [`example-pages/`](example-pages/)。
 
 ## 主题
 
@@ -93,11 +93,12 @@ Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill
 
 ## 本仓库的演示稿
 
-根目录的 [`slides/`](slides/) 就是 skill 的示例演示稿：用 markdown-slides 在本项目里生成，稿和 skill 同处一个 git 仓库。
+根目录的 [`example-slides/`](example-slides/) 就是 skill 的中文演示稿：用 markdown-slides 在本项目里生成，稿和 skill 同处一个 git 仓库。[`example-pages/`](example-pages/) 是 markdown-pages 的中文演示电子书。
 
 | 文件 | 作用 |
 |------|------|
-| [`slides/`](slides/) | 页面源文件，`NNN-slug.md`，顺序按文件名 |
+| [`example-slides/`](example-slides/) | 幻灯片源文件，`NNN-slug.md`，顺序按文件名 |
+| [`example-pages/`](example-pages/) | 电子书源文件，`README.md` + 带编号章节 |
 | [`config.ini`](config.ini) | `[serve]` 端口；`[paths] skills_root` / 可选 `build_root` |
 | [`Makefile`](Makefile) | 薄封装：`python3 build.py <target>` |
 | [`build.py`](build.py) | 按 `meta.toml` 的 `type` 找到嵌套 skill，再带 `DECK_ROOT` 转发 |
@@ -105,7 +106,8 @@ Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill
 在仓库根目录构建：
 
 ```bash
-make slides
+make example-slides
+make html example-pages
 ```
 
-得到 `build/slides/markdown-publisher.html`（不入库）。`make ppt slides`、`make pdf slides`、`make serve` 同样可用。改文案只改 Markdown，提交后再构建，不要手改 HTML。
+得到 `build/example-slides/markdown-publisher.html`，以及 `build/example-pages/` 下的站点（不入库）。`make ppt example-slides`、`make pdf example-slides`、`make pdf example-pages`、`make serve` 同样可用。改文案只改 Markdown，提交后再构建，不要手改 HTML。

@@ -31,7 +31,7 @@ Later edits: change Markdown, commit, rebuild. Do not hand-edit the HTML.
 
 ## `config.ini` and `meta.toml`
 
-Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config.ini.example) or let the skill write the file. Each page directory has [`slides/meta.toml`](slides/meta.toml). `type` must be `slides` for this skill.
+Copy [`skills/markdown-slides/config.ini.example`](skills/markdown-slides/config.ini.example) or let the skill write the file. Each page directory has `meta.toml` (this repo: [`example-slides/meta.toml`](example-slides/meta.toml)). `type` must be `slides` for this skill.
 
 Project keys in `config.ini`:
 
@@ -72,7 +72,7 @@ Initialize (only when that directory is still empty of book sources):
 
 This publisher demo does not vendor `scripts/markdown-pages/`. Later chapter edits are ordinary Markdown work; do not re-run the skill to change copy in an existing book.
 
-`examples/pages/` inside the skill is the English engine self-test book. `make html` in the skill directory builds that set. This repo’s root demo has no `pages/` book.
+`examples/pages/` inside the skill is the English engine self-test book. `make html` in the skill directory builds that set. This repo’s Chinese demo book is [`example-pages/`](example-pages/).
 
 ## Themes
 
@@ -93,11 +93,12 @@ The built HTML inlines webfonts. `make slides` may download Google Fonts once in
 
 ## Demo deck in this repo
 
-Root [`slides/`](slides/) **is** the skill’s example deck: generated here with markdown-slides, with the deck and the skill in one git repository.
+Root [`example-slides/`](example-slides/) **is** the skill’s Chinese demo deck: generated here with markdown-slides, with the deck and the skill in one git repository. [`example-pages/`](example-pages/) is the Chinese demo ebook from markdown-pages.
 
 | File | Role |
 |------|------|
-| [`slides/`](slides/) | Page sources, `NNN-slug.md`, ordered by filename |
+| [`example-slides/`](example-slides/) | Slide sources, `NNN-slug.md`, ordered by filename |
+| [`example-pages/`](example-pages/) | Ebook sources, `README.md` + numbered chapters |
 | [`config.ini`](config.ini) | `[serve]` port; `[paths] skills_root` / optional `build_root` |
 | [`Makefile`](Makefile) | Thin wrapper: `python3 build.py <target>` |
 | [`build.py`](build.py) | Finds nested skills by `meta.toml` `type` and forwards `make` with `DECK_ROOT` |
@@ -105,7 +106,8 @@ Root [`slides/`](slides/) **is** the skill’s example deck: generated here with
 Build from the repo root:
 
 ```bash
-make slides
+make example-slides
+make html example-pages
 ```
 
-That writes `build/slides/markdown-publisher.html` (not committed). `make ppt slides`, `make pdf slides`, and `make serve` work the same way. Edit Markdown only, commit, then rebuild. Do not hand-edit the HTML.
+That writes `build/example-slides/markdown-publisher.html` and the pages site under `build/example-pages/` (not committed). `make ppt example-slides`, `make pdf example-slides`, `make pdf example-pages`, and `make serve` work the same way. Edit Markdown only, commit, then rebuild. Do not hand-edit the HTML.

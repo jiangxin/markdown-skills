@@ -16,7 +16,7 @@ help:
 	@echo "  make fonts   download Google Fonts into .cache (once per theme)"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
 	@echo "Pass DOC to select a document directory (build/<dir>/)."
-	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and slides/*.md."
+	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and slides/*.md / example-slides/*.md."
 
 fonts:
 	python3 scripts/embed_fonts.py
@@ -40,7 +40,7 @@ fmt:
 EXTRA_MD :=
 ifneq ($(DECK_ROOT),)
 ifneq ($(abspath $(DECK_ROOT)),$(SKILL_ROOT))
-EXTRA_MD := $(wildcard $(DECK_ROOT)/README.md) $(wildcard $(DECK_ROOT)/README.zh.md) $(wildcard $(DECK_ROOT)/AGENTS.md) $(wildcard $(DECK_ROOT)/slides/*.md)
+EXTRA_MD := $(wildcard $(DECK_ROOT)/README.md) $(wildcard $(DECK_ROOT)/README.zh.md) $(wildcard $(DECK_ROOT)/AGENTS.md) $(wildcard $(DECK_ROOT)/slides/*.md) $(wildcard $(DECK_ROOT)/example-slides/*.md)
 endif
 endif
 

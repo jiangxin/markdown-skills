@@ -60,7 +60,7 @@ class TestPublisherDeck(unittest.TestCase):
     def test_example_and_demo_meta_are_slides(self):
         for directory, name in (
             (SKILL / "examples" / "slides", "markdown-slides-examples"),
-            (REPO / "slides", "markdown-publisher"),
+            (REPO / "example-slides", "markdown-publisher"),
         ):
             text = (directory / "meta.toml").read_text(encoding="utf-8")
             self.assertIn('type = "slides"', text)
@@ -68,7 +68,7 @@ class TestPublisherDeck(unittest.TestCase):
 
     def test_root_slides_match_example_names_and_layouts(self):
         examples = _page_layouts(SKILL / "examples" / "slides")
-        demo = _page_layouts(REPO / "slides")
+        demo = _page_layouts(REPO / "example-slides")
         self.assertEqual(examples, demo)
 
     def test_agents_describes_pages_and_identical_trampoline(self):
