@@ -28,11 +28,19 @@ REQUIRED = (
     "do not re-initialize",
     "overwrite existing slides",
     "themes/",
-    "Ask the user to confirm before copying scripts.",
+    "Deep customization of the generator",
+    ".agents/skills/markdown-slides",
     "make slides",
     "build/",
     "meta.toml",
     'type = "slides"',
+)
+
+FORBIDDEN = (
+    "| `scripts`",
+    'argument-hint: "[create | edit | theme | scripts]"',
+    "## scripts",
+    "Ask the user to confirm before copying scripts.",
 )
 
 
@@ -45,6 +53,11 @@ class SkillDocTest(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, self.text)
 
+    def test_no_scripts_command(self):
+        for phrase in FORBIDDEN:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, self.text)
+
     def test_english_body(self):
         self.assertNotIn("幻灯片", self.text)
 
@@ -52,3 +65,4 @@ class SkillDocTest(unittest.TestCase):
         self.assertTrue(self.text.startswith("---\n"))
         self.assertIn("name: markdown-slides\n", self.text)
         self.assertIn("description:", self.text)
+        self.assertIn('argument-hint: "[create | edit | theme]"', self.text)

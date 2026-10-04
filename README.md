@@ -16,7 +16,7 @@ To run the skills (HTML build and `make` trampoline):
 
 ## Create slides with `/markdown-slides`
 
-Install or attach the skill from [`skills/markdown-slides/`](skills/markdown-slides/) (see [`SKILL.md`](skills/markdown-slides/SKILL.md)). Commands: no extra words (infer create vs edit), `create`, `edit`, `theme`, `scripts`.
+Install or attach the skill from [`skills/markdown-slides/`](skills/markdown-slides/) (see [`SKILL.md`](skills/markdown-slides/SKILL.md)). Commands: no extra words (infer create vs edit), `create`, `edit`, `theme`. For deep generator customization, install the skill in the project (typically `.agents/skills/markdown-slides`).
 
 With **no extra words**, the skill inspects the project. If `config.ini`, the trampoline `Makefile` / `build.py`, and `NNN-slug.md` pages already exist, it **edits** and does not re-initialize or copy example pages over existing slides. If the project is not a deck yet, it **creates**.
 
@@ -55,11 +55,11 @@ Path: [`skills/markdown-slides/`](skills/markdown-slides/).
 
 It turns Markdown pages into a single-file HTML deck (PPTX and PDF as well). Dialect: [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md). Agent workflow: [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md).
 
-The engine (`scripts/` in the skill, theme directories under `templates/`) stays in the skill by default. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs. Optional: copy a look into deck `themes/`; copy `scripts/` into `scripts/markdown-slides/` only after confirmation.
+The engine (`scripts/` in the skill, theme directories under `templates/`) stays in the skill by default. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs. Optional: copy a look into deck `themes/`. Deep generator changes edit a project install (typically `.agents/skills/markdown-slides`) and point `SKILL` / `MARKDOWN_SLIDES_HOME` at it when needed.
 
 ## Initialize a book with `/markdown-pages`
 
-Install or attach the skill from [`skills/markdown-pages/`](skills/markdown-pages/) (see [`SKILL.md`](skills/markdown-pages/SKILL.md)). The skill **only initializes** an ebook directory. Pass an optional directory name (default `pages/`). A project may hold several `type = "pages"` books. There are no `create` / `edit` / `scripts` subcommands.
+Install or attach the skill from [`skills/markdown-pages/`](skills/markdown-pages/) (see [`SKILL.md`](skills/markdown-pages/SKILL.md)). The skill **only initializes** an ebook directory. Pass an optional directory name (default `pages/`). A project may hold several `type = "pages"` books. There are no `create` / `edit` / `scripts` subcommands. For deep generator customization, install the skill in the project (typically `.agents/skills/markdown-pages`).
 
 Initialize (only when that directory is still empty of book sources):
 

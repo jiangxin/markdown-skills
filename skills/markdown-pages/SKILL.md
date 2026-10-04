@@ -1,7 +1,7 @@
 ---
 name: markdown-pages
 disable-model-invocation: true
-description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template.
+description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-pages).
 argument-hint: "[directory]"
 ---
 
@@ -11,13 +11,14 @@ Initialize a book directory of Markdown chapters. The engine already in this ski
 
 ## What this skill does
 
-This skill **only initializes** an ebook directory. Later chapter edits are ordinary Markdown work outside this skill. Vendoring the engine into the deck is optional and is not done by this skill.
+This skill **only initializes** an ebook directory. Later chapter edits are ordinary Markdown work outside this skill. This skill does not copy the engine into the deck.
 
 Read the extra words after `/markdown-pages`, or the user intent:
 
 - A path the prompt already names is the book directory.
 - If the prompt does not name a directory, confirm in the user's preferred language before writing. Prefer AskQuestion when available: accept **`pages/`** as the default, or let the user name another directory. Do not write until that choice is recorded.
 - A project may hold **more than one** ebook. Each book is its own directory with its own `meta.toml` (`type = "pages"`). Naming a new directory initializes another book; do not treat an existing book elsewhere as a reason to skip.
+- Deep customization of the generator → install this skill in the project (typically `.agents/skills/markdown-pages`). Edit that tree; point `MARKDOWN_PAGES_HOME` at it when the trampoline should use that checkout.
 
 The bundled example already lives in this repository. Skip git init when building it. Its chapters are `examples/pages` (`type = "pages"`). Build that example from the skill directory with `make html` (it selects the only `type = "pages"` directory).
 
@@ -49,7 +50,7 @@ Otherwise write only what is missing for this initialization:
 
 `config.ini` in the deck root holds `[serve]`. Each book directory has `meta.toml`: `type` must be `pages` for this skill (other types such as slides are not built here), `name` is the output basename, `title` is the HTML document title (defaults to `name`). Chapter order defaults to filename order of `NN-slug.md` / `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[book]`). Set `sort = <file.md>` relative to that pages directory to a Markdown file whose heading links list the chapters. Do not set `order` and `sort` together.
 
-The engine is this skill directory, a nested `skills/markdown-pages`, or `MARKDOWN_PAGES_HOME`. A deck-local `scripts/markdown-pages/` copy (must contain `build-pages.py`) runs html when present; that path is optional and is not created by this skill. PDF still uses skill-bundled browser tooling.
+The engine is this skill directory, a nested `skills/markdown-pages`, or `MARKDOWN_PAGES_HOME`. For deep generator customization, install and edit the skill in the project (typically `.agents/skills/markdown-pages`) and point `MARKDOWN_PAGES_HOME` at that checkout when needed. PDF still uses skill-bundled browser tooling.
 
 ## After initialize
 

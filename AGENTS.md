@@ -6,7 +6,7 @@ This repo holds two Agent Skills and a **demo slide deck** in one git tree:
 - **markdown-pages** under `skills/markdown-pages/`
 - the publisher demo at the repo root (`slides/`, `config.ini`, `Makefile`, `build.py`)
 
-This demo vendors **no** engine: do not copy `scripts/` or theme templates into the publisher deck. Other projects may vendor a look into `themes/` (slides) or, after confirmation, copy an engine into `scripts/markdown-slides/` or `scripts/markdown-pages/`. Do not restyle by editing generated HTML.
+This demo vendors **no** engine: do not copy `scripts/` or theme templates into the publisher deck. Other projects may vendor a look into `themes/` (slides). For deep generator customization, install the skill in that project (typically `.agents/skills/markdown-slides` or `.agents/skills/markdown-pages`). Do not restyle by editing generated HTML.
 
 Deck authoring follows `skills/markdown-slides/SKILL.md` and `skills/markdown-slides/references/design.md`. Do not re-initialize this deck or overwrite `slides/` with the English example template. Keep identity in `slides/meta.toml`. There is no required Chinese `pages/` demo book at the publisher root; the pages engine self-test is `skills/markdown-pages/examples/pages/`.
 

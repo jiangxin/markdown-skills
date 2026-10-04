@@ -27,6 +27,8 @@ REQUIRED = (
     "overwrite existing chapters",
     "more than one",
     "only initializes",
+    "Deep customization of the generator",
+    ".agents/skills/markdown-pages",
     "make html",
     "make pdf",
     "build/",

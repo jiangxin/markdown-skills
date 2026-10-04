@@ -16,7 +16,7 @@
 
 ## 用 `/markdown-slides` 生成幻灯片
 
-从 [`skills/markdown-slides/`](skills/markdown-slides/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-slides/SKILL.md)）。命令：不加参数（推断创建或编辑）、`create`、`edit`、`theme`、`scripts`。
+从 [`skills/markdown-slides/`](skills/markdown-slides/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-slides/SKILL.md)）。命令：不加参数（推断创建或编辑）、`create`、`edit`、`theme`。若要深度定制生成器，把 skill 安装到工程里（通常是 `.agents/skills/markdown-slides`）。
 
 **不加参数**时先看工程：已有 `config.ini`、trampoline 的 `Makefile` / `build.py`、以及 `NNN-slug.md`，则只 **编辑**，不重复初始化，也不用示例页覆盖已有 slides。还不是一套稿时才 **创建**。
 
@@ -55,11 +55,11 @@
 
 用 Markdown 页面生成单文件 HTML 演示稿（也可出 PPTX / PDF）。语法见 [`skills/markdown-slides/references/design.md`](skills/markdown-slides/references/design.md)。Agent 用法见 [`skills/markdown-slides/SKILL.md`](skills/markdown-slides/SKILL.md)。
 
-引擎（skill 里的 `scripts/`、`templates/` 下的主题目录）默认留在 skill 里。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。可选：把外观拷到稿的 `themes/`；拷 `scripts/` 到 `scripts/markdown-slides/` 前必须确认。
+引擎（skill 里的 `scripts/`、`templates/` 下的主题目录）默认留在 skill 里。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。可选：把外观拷到稿的 `themes/`。深度改生成器时，改工程内的安装（通常是 `.agents/skills/markdown-slides`），需要时用 `SKILL` / `MARKDOWN_SLIDES_HOME` 指向它。
 
 ## 用 `/markdown-pages` 初始化电子书
 
-从 [`skills/markdown-pages/`](skills/markdown-pages/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-pages/SKILL.md)）。该 skill **只负责初始化**电子书目录。可传目录名（默认 `pages/`）。同一项目里可以有多本 `type = "pages"` 的书。没有 `create` / `edit` / `scripts` 子命令。
+从 [`skills/markdown-pages/`](skills/markdown-pages/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-pages/SKILL.md)）。该 skill **只负责初始化**电子书目录。可传目录名（默认 `pages/`）。同一项目里可以有多本 `type = "pages"` 的书。没有 `create` / `edit` / `scripts` 子命令。若要深度定制生成器，把 skill 安装到工程里（通常是 `.agents/skills/markdown-pages`）。
 
 初始化（该书目录尚无书源时才写）：
 
