@@ -1,0 +1,6 @@
+type = "pages"
+name = "markdown-publisher"
+title = "Markdown 电子书"
+
+[book]
+order = "auto"
