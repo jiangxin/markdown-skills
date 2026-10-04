@@ -1,5 +1,6 @@
 ---
 name: markdown-slides
+disable-model-invocation: true
 description: Create or edit a Markdown slide deck that builds onto a named HTML theme (default Swiss Modern). Use for /markdown-slides with no args, or create, edit, theme, and scripts. Infer whether to scaffold a deck or edit copy. Confirm the slides directory and git before first write. Do not re-initialize a deck or overwrite existing slides with the example template. Optional theme copies go in themes/. Copy scripts/markdown-slides/ only after the user confirms.
 argument-hint: "[create | edit | theme | scripts]"
 ---

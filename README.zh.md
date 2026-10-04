@@ -57,18 +57,18 @@
 
 引擎（skill 里的 `scripts/`、`templates/` 下的主题目录）默认留在 skill 里。用户稿只有 `config.ini`、`Makefile`、`build.py`、幻灯片 Markdown，以及构建产物。可选：把外观拷到稿的 `themes/`；拷 `scripts/` 到 `scripts/markdown-slides/` 前必须确认。
 
-## 用 `/markdown-pages` 生成电子书
+## 用 `/markdown-pages` 初始化电子书
 
-从 [`skills/markdown-pages/`](skills/markdown-pages/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-pages/SKILL.md)）。命令：不加参数（推断创建或编辑）、`create`、`edit`、`scripts`。第一版没有 `theme`。
+从 [`skills/markdown-pages/`](skills/markdown-pages/) 安装或挂上 skill（见 [`SKILL.md`](skills/markdown-pages/SKILL.md)）。该 skill **只负责初始化**电子书目录。可传目录名（默认 `pages/`）。同一项目里可以有多本 `type = "pages"` 的书。没有 `create` / `edit` / `scripts` 子命令。
 
-创建（只补缺的文件）：
+初始化（该书目录尚无书源时才写）：
 
-1. 选定书目录（未指定时默认 `pages/`）。
+1. 选定书目录（未指定时默认 `pages/`）。换一个目录名即可再开一本。
 2. 复用与 slides 相同的 trampoline `Makefile` / `build.py`。在该书目录写下 `meta.toml`（`type = "pages"`、`name`、可选 `title`、`[book] order`）。仅当目录里还没有 `README.md` 和带编号的章节时，才从 `examples/pages/` 播种。
 3. 把本 skill 放在 `skills/markdown-pages`，或设置 `MARKDOWN_PAGES_HOME`。
 4. 提交这些源文件，再在**稿根目录**执行 `make html pages`（多页站点和单文件 HTML 在 `build/pages/`）。PDF 用 `make pdf pages`。`make ppt pages` 会失败。
 
-`scripts` 命令仅在确认后把引擎拷到 `scripts/markdown-pages/`。本仓库演示稿不内嵌这份拷贝。
+本仓库演示稿不内嵌 `scripts/markdown-pages/`。之后改章节就是改 Markdown，不要为改文案再跑一遍本 skill。
 
 Skill 目录里的 `examples/pages/` 是引擎自测用的英文小书。在 skill 目录执行 `make html` 会构建那一套。本仓库根目录没有 `pages/` 演示书。
 

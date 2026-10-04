@@ -57,18 +57,18 @@ It turns Markdown pages into a single-file HTML deck (PPTX and PDF as well). Dia
 
 The engine (`scripts/` in the skill, theme directories under `templates/`) stays in the skill by default. User decks keep `config.ini`, `Makefile`, `build.py`, slide Markdown, and build outputs. Optional: copy a look into deck `themes/`; copy `scripts/` into `scripts/markdown-slides/` only after confirmation.
 
-## Create a book with `/markdown-pages`
+## Initialize a book with `/markdown-pages`
 
-Install or attach the skill from [`skills/markdown-pages/`](skills/markdown-pages/) (see [`SKILL.md`](skills/markdown-pages/SKILL.md)). Commands: no extra words (infer create vs edit), `create`, `edit`, `scripts`. There is no `theme` command in v1.
+Install or attach the skill from [`skills/markdown-pages/`](skills/markdown-pages/) (see [`SKILL.md`](skills/markdown-pages/SKILL.md)). The skill **only initializes** an ebook directory. Pass an optional directory name (default `pages/`). A project may hold several `type = "pages"` books. There are no `create` / `edit` / `scripts` subcommands.
 
-Create (only when missing):
+Initialize (only when that directory is still empty of book sources):
 
-1. Choose a book directory (default `pages/` if you do not name one).
+1. Choose a book directory (default `pages/` if you do not name one). Another name starts another ebook in the same project.
 2. Reuse the same trampoline `Makefile` / `build.py` as slides. Write `meta.toml` (`type = "pages"`, `name`, optional `title`, `[book] order`) in that directory. Seed chapters from `examples/pages/` only when the directory has no `README.md` and no numbered chapters.
 3. Nest this skill under `skills/markdown-pages` or set `MARKDOWN_PAGES_HOME`.
 4. Commit those sources, then `make html pages` from the **deck root** (multi-page site and one-file ebook under `build/pages/`). Use `make pdf pages` for PDF. `make ppt pages` is an error.
 
-The `scripts` command copies the engine into `scripts/markdown-pages/` **only after confirmation**. This publisher demo does not vendor that copy.
+This publisher demo does not vendor `scripts/markdown-pages/`. Later chapter edits are ordinary Markdown work; do not re-run the skill to change copy in an existing book.
 
 `examples/pages/` inside the skill is the English engine self-test book. `make html` in the skill directory builds that set. This repo’s root demo has no `pages/` book.
 

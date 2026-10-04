@@ -10,7 +10,7 @@ This demo vendors **no** engine: do not copy `scripts/` or theme templates into 
 
 Deck authoring follows `skills/markdown-slides/SKILL.md` and `skills/markdown-slides/references/design.md`. Do not re-initialize this deck or overwrite `slides/` with the English example template. Keep identity in `slides/meta.toml`. There is no required Chinese `pages/` demo book at the publisher root; the pages engine self-test is `skills/markdown-pages/examples/pages/`.
 
-Book authoring follows `skills/markdown-pages/SKILL.md` and `skills/markdown-pages/references/design.md`. The `scripts` command copies the pages engine into `scripts/markdown-pages/` **only after confirmation**.
+Book authoring follows `skills/markdown-pages/SKILL.md` and `skills/markdown-pages/references/design.md`. That skill **only initializes** an ebook directory (default `pages/`; more than one `type = "pages"` book is allowed). It has no `create` / `edit` / `scripts` subcommands. Do not vendor `scripts/markdown-pages/` into this publisher demo.
 
 ## Quality
 

@@ -9,29 +9,41 @@ DESIGN_MD = SKILL_ROOT / "references" / "design.md"
 EXAMPLES = SKILL_ROOT / "examples" / "pages"
 
 REQUIRED = (
-    "ask in English",
+    "user's preferred language",
+    "AskQuestion",
     "pages/",
-    "ask in English before git init",
+    "confirm before git init",
     "do not write pages",
     "do not git init",
     "from the deck root",
     "MARKDOWN_PAGES_HOME",
     "Do not hand-edit HTML",
-    "Read references/design.md before creating pages.",
+    "Read references/design.md before writing pages.",
     "The engine stays in the skill",
     "Skip git init when building it.",
     "order = auto",
     "sort = <file.md>",
     "do not re-initialize",
     "overwrite existing chapters",
-    "Ask the user to confirm before copying scripts.",
+    "more than one",
+    "only initializes",
     "make html",
     "make pdf",
     "build/",
     "meta.toml",
     'type = "pages"',
-    "scripts/markdown-pages/",
-    "PPTX is not this skill",
+)
+
+FORBIDDEN_LANG = (
+    "ask in English",
+)
+
+FORBIDDEN = (
+    "| `create`",
+    "| `edit`",
+    "| `scripts`",
+    'argument-hint: "[create | edit | scripts]"',
+    "Infer create vs edit",
 )
 
 
@@ -44,6 +56,16 @@ class SkillDocTest(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, self.text)
 
+    def test_no_create_edit_scripts_commands(self):
+        for phrase in FORBIDDEN:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, self.text)
+
+    def test_no_force_english_prompts(self):
+        for phrase in FORBIDDEN_LANG:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, self.text)
+
     def test_english_body(self):
         self.assertNotIn("电子书", self.text)
         self.assertNotIn("幻灯片", self.text)
@@ -55,6 +77,7 @@ class SkillDocTest(unittest.TestCase):
         self.assertTrue(self.text.startswith("---\n"))
         self.assertIn("name: markdown-pages\n", self.text)
         self.assertIn("description:", self.text)
+        self.assertIn('argument-hint: "[directory]"', self.text)
 
     def test_design_exists(self):
         self.assertTrue(DESIGN_MD.is_file())
