@@ -6,7 +6,7 @@ SKILL_ROOT := $(abspath .)
 
 help:
 	@echo "Targets (run from skills/markdown-slides):"
-	@echo "  make html    build HTML (set SLIDES= or a single type=slides dir)"
+	@echo "  make html    build HTML (set DOC= or a single type=slides dir)"
 	@echo "  make ppt     build PPTX via scripts/build-pptx.js"
 	@echo "  make pdf     export PDF via scripts/export-pdf.js"
 	@echo "  make serve   serve build/ locally"
@@ -15,23 +15,23 @@ help:
 	@echo "  make test    run unit tests"
 	@echo "  make fonts   download Google Fonts into .cache (once per theme)"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
-	@echo "Pass SLIDES to select a page directory (build/<dir>/)."
+	@echo "Pass DOC to select a document directory (build/<dir>/)."
 	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and slides/*.md."
 
 fonts:
 	python3 scripts/embed_fonts.py
 
 html:
-	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/build-slides.py
+	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" python3 scripts/build-slides.py
 
 ppt:
-	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" node scripts/build-pptx.js
+	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" node scripts/build-pptx.js
 
 pdf:
-	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" node scripts/export-pdf.js
+	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" node scripts/export-pdf.js
 
 serve:
-	DECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/serve.py
+	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" python3 scripts/serve.py
 
 fmt:
 	@command -v ruff >/dev/null || { echo "ruff is required: https://docs.astral.sh/ruff/" >&2; exit 1; }

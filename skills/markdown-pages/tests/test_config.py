@@ -52,7 +52,7 @@ class TestConfig(unittest.TestCase):
     def setUp(self):
         self._env = patch.dict(
             os.environ,
-            {"SLIDES": "", "PAGES": "", "DECK_ROOT": ""},
+            {"DOC": "", "DECK_ROOT": ""},
             clear=False,
         )
         self._env.start()
@@ -94,30 +94,21 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.pages_rel, "docs/guide")
             self.assertEqual(loaded.name, "guide-book")
 
-    def test_pages_env_selects_directory(self):
+    def test_doc_env_selects_directory(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             write_book(deck / "pages", "main-book", "Main")
             write_book(deck / "notes", "notes-book")
-            with patch.dict(os.environ, {"PAGES": "notes", "SLIDES": ""}, clear=False):
+            with patch.dict(os.environ, {"DOC": "notes"}, clear=False):
                 loaded = config_module.load_book(deck)
             self.assertEqual(loaded.pages_rel, "notes")
             self.assertEqual(loaded.name, "notes-book")
-
-    def test_slides_env_overrides_pages_alias(self):
-        with tempfile.TemporaryDirectory() as raw:
-            deck = Path(raw)
-            write_book(deck / "pages", "main-book")
-            write_book(deck / "notes", "notes-book")
-            with patch.dict(os.environ, {"SLIDES": "notes", "PAGES": "pages"}):
-                loaded = config_module.load_book(deck)
-            self.assertEqual(loaded.pages_rel, "notes")
 
     def test_type_slides_is_rejected_when_loading_as_pages(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             write_meta(deck / "talk", "talk-deck", "Talk", kind="slides")
-            with patch.dict(os.environ, {"SLIDES": "talk"}, clear=False):
+            with patch.dict(os.environ, {"DOC": "talk"}, clear=False):
                 with self.assertRaises(SystemExit) as caught:
                     config_module.load_book(deck)
             message = str(caught.exception)

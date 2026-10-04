@@ -8,8 +8,8 @@ generated HTML.
 ## Layout of sources
 
 Chapters sit in a **flat** book directory. There is **no `docs/`**
-subdirectory. The book directory is `--slides` / `SLIDES`, `--pages` /
-`PAGES`, or the only `type = "pages"` directory under the deck root.
+subdirectory. The book directory is `--doc` / `DOC`, or the only
+`type = "pages"` directory under the deck root.
 
 Do not scan `scripts/`, `skills/`, `build/`, `themes/`, or `.git` for
 chapters.

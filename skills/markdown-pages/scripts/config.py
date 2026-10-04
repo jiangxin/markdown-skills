@@ -4,9 +4,8 @@
 The skill root is the directory that contains this file's ``scripts/``
 parent. The deck root is ``--deck-root``, else the ``DECK_ROOT``
 environment variable, else the skill root. ``config.ini`` holds
-``[serve]``. Book directories are selected by ``--slides`` / ``SLIDES``,
-or the ``--pages`` / ``PAGES`` alias, or by scanning for ``meta.toml``
-with ``type = "pages"``.
+``[serve]``. Book directories are selected by ``--doc`` / ``DOC``, or by
+scanning for ``meta.toml`` with ``type = "pages"``.
 """
 
 from __future__ import annotations
@@ -91,13 +90,13 @@ def deck_root(argv: list[str] | None = None) -> Path:
 def load_book(deck_root: Path) -> Book:
     """Load identity and book options from that directory's ``meta.toml``.
 
-    ``--slides`` / ``SLIDES`` or ``--pages`` / ``PAGES`` selects a book
-    directory. When omitted, a single ``type = "pages"`` directory under
-    the deck root is used. This skill only builds ``type = "pages"``.
+    ``--doc`` or ``DOC`` selects a book directory. When omitted, a
+    single ``type = "pages"`` directory under the deck root is used.
+    This skill only builds ``type = "pages"``.
     """
     root = _existing_dir(deck_root)
-    pages_rel = _requested_pages_rel() or _default_pages_rel(root)
-    pages = _relative_path(root, pages_rel, "pages")
+    pages_rel = _requested_doc_rel() or _default_pages_rel(root)
+    pages = _relative_path(root, pages_rel, "doc")
     doc = _load_doc_meta(pages, pages_rel)
     order, sort, sort_rel = _meta_order(pages, pages_rel, doc)
     return Book(
@@ -136,9 +135,8 @@ def output_paths(root: Path | None = None) -> Outputs:
     """Return ``<build_root>/<pages>/<name>.html`` and ``.pdf``.
 
     ``name`` comes from that directory's ``meta.toml``. When ``root`` is
-    omitted, the deck root is ``deck_root()``. ``--slides`` / ``SLIDES``
-    and ``--pages`` / ``PAGES`` select the book directory.
-    ``[paths] build_root`` overrides ``build/``.
+    omitted, the deck root is ``deck_root()``. ``--doc`` and ``DOC``
+    select the book directory. ``[paths] build_root`` overrides ``build/``.
     """
     resolved = deck_root() if root is None else _existing_dir(root)
     book = load_book(resolved)
@@ -222,27 +220,23 @@ def _option_value(argv: list[str], flag: str) -> str | None:
     return None
 
 
-def _norm_pages_rel(raw: str) -> str:
+def _norm_doc_rel(raw: str) -> str:
     text = raw.strip().replace("\\", "/")
     if not text or text in {".", ".."}:
-        sys.exit(f"pages directory is empty or invalid: {raw!r}")
+        sys.exit(f"doc directory is empty or invalid: {raw!r}")
     relative = Path(text)
     if relative.is_absolute():
-        sys.exit(f"pages directory must be relative to the deck root, got: {raw!r}")
+        sys.exit(f"doc directory must be relative to the deck root, got: {raw!r}")
     return relative.as_posix().strip("/")
 
 
-def _requested_pages_rel() -> str | None:
-    chosen = _option_value(list(sys.argv), "--slides")
+def _requested_doc_rel() -> str | None:
+    chosen = _option_value(list(sys.argv), "--doc")
     if chosen is None:
-        chosen = _option_value(list(sys.argv), "--pages")
-    if chosen is None:
-        chosen = os.environ.get("SLIDES", "").strip() or None
-    if chosen is None:
-        chosen = os.environ.get("PAGES", "").strip() or None
+        chosen = os.environ.get("DOC", "").strip() or None
     if chosen is None:
         return None
-    return _norm_pages_rel(chosen)
+    return _norm_doc_rel(chosen)
 
 
 _SCAN_SKIP = {

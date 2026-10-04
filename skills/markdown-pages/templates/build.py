@@ -23,7 +23,7 @@ from pathlib import Path
 
 QUALITY = ("lint", "fmt", "test", "fonts")
 FORMATS = ("html", "ppt", "pdf", "serve")
-NEEDS_SLIDES = ("ppt", "pdf")
+NEEDS_DOC = ("ppt", "pdf")
 SCAN_SKIP = {
     ".cache",
     ".git",
@@ -264,28 +264,28 @@ def parse_args(args: list[str]) -> tuple[str, str | None]:
     if first in QUALITY:
         return first, None
     if first in FORMATS:
-        slides = rest[0] if rest else None
-        if first in NEEDS_SLIDES and not slides:
-            sys.stderr.write(f"pass a slides directory: make {first} slides\n")
+        doc = rest[0] if rest else None
+        if first in NEEDS_DOC and not doc:
+            sys.stderr.write(f"pass a document directory: make {first} slides\n")
             sys.exit(1)
-        return first, slides
-    slides = first
+        return first, doc
+    doc = first
     if rest and rest[0] in FORMATS:
-        return rest[0], slides
-    return "html", slides
+        return rest[0], doc
+    return "html", doc
 
 
-def run_engine(root: Path, target: str, slides: str | None, kind: str) -> int:
+def run_engine(root: Path, target: str, doc: str | None, kind: str) -> int:
     env = os.environ.copy()
     env["DECK_ROOT"] = str(root)
-    if slides:
-        env["SLIDES"] = slides
+    if doc:
+        env["DOC"] = doc
     else:
-        env.pop("SLIDES", None)
+        env.pop("DOC", None)
     skill = resolve_skill(root, kind)
     make_args = ["make", "-C", str(skill), target, f"DECK_ROOT={root}"]
-    if slides:
-        make_args.append(f"SLIDES={slides}")
+    if doc:
+        make_args.append(f"DOC={doc}")
     result = subprocess.run(make_args, check=False, env=env)
     return result.returncode
 
@@ -293,14 +293,14 @@ def run_engine(root: Path, target: str, slides: str | None, kind: str) -> int:
 def main(argv: list[str] | None = None) -> None:
     args = list(sys.argv[1:] if argv is None else argv)
     root = deck_root()
-    target, slides = parse_args(args)
+    target, doc = parse_args(args)
     if target == "help":
         sys.stdout.write(help_text())
         return
     if target in ("fmt", "lint", "test"):
         raise SystemExit(run_quality(root, target))
-    kind = choose_kind(root, target, slides)
-    raise SystemExit(run_engine(root, target, slides, kind))
+    kind = choose_kind(root, target, doc)
+    raise SystemExit(run_engine(root, target, doc, kind))
 
 
 if __name__ == "__main__":

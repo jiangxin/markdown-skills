@@ -159,7 +159,7 @@ class TestBuildSlides(unittest.TestCase):
     def test_makefile_html_passes_deck_root(self):
         text = (SKILL / "Makefile").read_text(encoding="utf-8")
         self.assertIn(
-            'html:\n\tDECK_ROOT="$(DECK_ROOT)" SLIDES="$(SLIDES)" python3 scripts/build-slides.py\n',
+            'html:\n\tDECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" python3 scripts/build-slides.py\n',
             text,
         )
 
@@ -340,7 +340,7 @@ class TestBuildSlides(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             combined = result.stderr + result.stdout
-            self.assertIn("slides directory", combined)
+            self.assertIn("document directory", combined)
 
     def test_deck_help_mentions_pages(self):
         with tempfile.TemporaryDirectory() as raw:

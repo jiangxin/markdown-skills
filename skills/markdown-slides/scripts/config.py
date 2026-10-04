@@ -4,9 +4,8 @@
 The skill root is the directory that contains ``scripts/build-slides.py``.
 The deck root is ``--deck-root``, else the ``DECK_ROOT`` environment
 variable, else the skill root. ``config.ini`` holds ``[serve]``. Page
-directories are selected by
-``--slides`` / ``SLIDES``, or by scanning for ``meta.toml`` with
-``type = "slides"``.
+directories are selected by ``--doc`` / ``DOC``, or by scanning for
+``meta.toml`` with ``type = "slides"``.
 """
 
 from __future__ import annotations
@@ -105,14 +104,14 @@ def deck_root(argv: list[str] | None = None) -> Path:
 def load_deck(deck_root: Path) -> Deck:
     """Load identity and slides options from that directory's ``meta.toml``.
 
-    ``--slides`` or ``SLIDES`` selects a page directory. When omitted, a
+    ``--doc`` or ``DOC`` selects a page directory. When omitted, a
     single ``type = "slides"`` directory under the deck root is used.
     ``config.ini`` holds ``[serve]``. This skill only builds
     ``type = "slides"``.
     """
     root = _existing_dir(deck_root)
-    slides_rel = _requested_slides_rel() or _default_slides_rel(root)
-    slides = _relative_path(root, slides_rel, "slides")
+    slides_rel = _requested_doc_rel() or _default_slides_rel(root)
+    slides = _relative_path(root, slides_rel, "doc")
     doc = _load_doc_meta(slides, slides_rel)
     order, sort, sort_rel = _meta_order(slides, slides_rel, doc)
     theme, theme_dir = _resolve_theme(root, slides_rel, doc.theme)
@@ -152,8 +151,8 @@ def output_paths(root: Path | None = None) -> Outputs:
 
     ``name`` comes from that directory's ``meta.toml``. When ``root`` is
     omitted, the deck root is ``deck_root()`` (``--deck-root``, else
-    ``DECK_ROOT``, else the skill root). ``--slides`` and ``SLIDES``
-    select the page directory. ``[paths] build_root`` overrides ``build/``.
+    ``DECK_ROOT``, else the skill root). ``--doc`` and ``DOC`` select the
+    page directory. ``[paths] build_root`` overrides ``build/``.
     """
     resolved = deck_root() if root is None else _existing_dir(root)
     deck = load_deck(resolved)
@@ -322,23 +321,23 @@ def _option_value(argv: list[str], flag: str) -> str | None:
     return None
 
 
-def _norm_slides_rel(raw: str) -> str:
+def _norm_doc_rel(raw: str) -> str:
     text = raw.strip().replace("\\", "/")
     if not text or text in {".", ".."}:
-        sys.exit(f"slides directory is empty or invalid: {raw!r}")
+        sys.exit(f"doc directory is empty or invalid: {raw!r}")
     relative = Path(text)
     if relative.is_absolute():
-        sys.exit(f"slides directory must be relative to the deck root, got: {raw!r}")
+        sys.exit(f"doc directory must be relative to the deck root, got: {raw!r}")
     return relative.as_posix().strip("/")
 
 
-def _requested_slides_rel() -> str | None:
-    chosen = _option_value(list(sys.argv), "--slides")
+def _requested_doc_rel() -> str | None:
+    chosen = _option_value(list(sys.argv), "--doc")
     if chosen is None:
-        chosen = os.environ.get("SLIDES", "").strip() or None
+        chosen = os.environ.get("DOC", "").strip() or None
     if chosen is None:
         return None
-    return _norm_slides_rel(chosen)
+    return _norm_doc_rel(chosen)
 
 
 _SCAN_SKIP = {

@@ -22,8 +22,7 @@ BUILD_PAGES = SKILL_ROOT / "scripts" / "build-pages.py"
 def _run_build(deck: Path, *extra: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["DECK_ROOT"] = str(deck)
-    env["SLIDES"] = "pages"
-    env["PAGES"] = ""
+    env["DOC"] = "pages"
     return subprocess.run(
         [sys.executable, str(BUILD_PAGES), *extra],
         cwd=str(SKILL_ROOT),
@@ -37,7 +36,7 @@ class TestBuildPages(unittest.TestCase):
     def setUp(self):
         self._env = patch.dict(
             os.environ,
-            {"SLIDES": "", "PAGES": "", "DECK_ROOT": ""},
+            {"DOC": "", "DECK_ROOT": ""},
             clear=False,
         )
         self._env.start()
@@ -46,7 +45,7 @@ class TestBuildPages(unittest.TestCase):
     def test_example_book_titles(self):
         with patch.dict(
             os.environ,
-            {"DECK_ROOT": str(SKILL_ROOT), "SLIDES": "examples/pages", "PAGES": ""},
+            {"DECK_ROOT": str(SKILL_ROOT), "DOC": "examples/pages"},
         ):
             proc = subprocess.run(
                 [sys.executable, str(BUILD_PAGES), "--clean"],
@@ -89,7 +88,7 @@ class TestBuildPages(unittest.TestCase):
                 encoding="utf-8",
             )
             proc = subprocess.run(
-                ["make", "html", f"DECK_ROOT={deck}", "SLIDES=pages"],
+                ["make", "html", f"DECK_ROOT={deck}", "DOC=pages"],
                 cwd=str(SKILL_ROOT),
                 capture_output=True,
                 text=True,
@@ -162,12 +161,12 @@ runpy.run_path(sys.argv[1], run_name="__main__")
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             write_book(deck / "notes", "note-book", "Notes")
-            with patch.dict(os.environ, {"DECK_ROOT": str(deck), "SLIDES": "notes"}):
+            with patch.dict(os.environ, {"DECK_ROOT": str(deck), "DOC": "notes"}):
                 paths = config_module.output_paths(deck)
                 proc = subprocess.run(
                     [sys.executable, str(BUILD_PAGES)],
                     cwd=str(SKILL_ROOT),
-                    env={**os.environ, "DECK_ROOT": str(deck), "SLIDES": "notes"},
+                    env={**os.environ, "DECK_ROOT": str(deck), "DOC": "notes"},
                     capture_output=True,
                     text=True,
                 )
@@ -225,7 +224,7 @@ class TestPdfExport(unittest.TestCase):
             deck = Path(raw)
             write_book(deck / "pages", "my-book", "My Book")
             proc = subprocess.run(
-                ["make", "pdf", f"DECK_ROOT={deck}", "SLIDES=pages"],
+                ["make", "pdf", f"DECK_ROOT={deck}", "DOC=pages"],
                 cwd=str(SKILL_ROOT),
                 capture_output=True,
                 text=True,

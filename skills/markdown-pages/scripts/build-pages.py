@@ -881,12 +881,8 @@ def build() -> None:
         help="deck root (default: DECK_ROOT or this skill)",
     )
     parser.add_argument(
-        "--slides",
-        help="pages directory relative to the deck root (SLIDES)",
-    )
-    parser.add_argument(
-        "--pages",
-        help="alias for --slides",
+        "--doc",
+        help="book directory relative to the deck root (DOC)",
     )
     parser.add_argument(
         "--clean",
