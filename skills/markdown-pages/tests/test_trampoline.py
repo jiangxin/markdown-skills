@@ -11,8 +11,8 @@ from test_config import write_book, write_meta
 
 PAGES_SKILL = Path(__file__).resolve().parent.parent
 SLIDES_SKILL = PAGES_SKILL.parent / "markdown-slides"
-TEMPLATE_MAKE = SLIDES_SKILL / "templates" / "Makefile.deck"
-TEMPLATE_BUILD = SLIDES_SKILL / "templates" / "build.py"
+TEMPLATE_MAKE = PAGES_SKILL / "templates" / "Makefile.deck"
+TEMPLATE_BUILD = PAGES_SKILL / "templates" / "build.py"
 
 SLIDE_PAGE = """---
 layout: title
@@ -39,6 +39,8 @@ def isolated(extra: dict[str, str] | None = None) -> dict[str, str]:
     for key in MAKE_LEAK:
         env.pop(key, None)
     env.setdefault("MARKDOWN_SLIDES_EMBED_FONTS", "0")
+    # Avoid picking up the developer's ~/.agents/skills installs.
+    env["HOME"] = str(Path(tempfile.gettempdir()) / "markdown-pages-empty-home")
     if extra:
         env.update(extra)
     return env
@@ -50,10 +52,21 @@ def _copy_trampoline(deck: Path) -> None:
 
 
 def _link_skills(deck: Path) -> None:
+    skills = deck / ".agents" / "skills"
+    skills.mkdir(parents=True)
+    os.symlink(SLIDES_SKILL, skills / "markdown-slides")
+    os.symlink(PAGES_SKILL, skills / "markdown-pages")
+
+
+def _write_skills_root(deck: Path) -> None:
     skills = deck / "skills"
     skills.mkdir()
     os.symlink(SLIDES_SKILL, skills / "markdown-slides")
     os.symlink(PAGES_SKILL, skills / "markdown-pages")
+    (deck / "config.ini").write_text(
+        "[serve]\nport = 8000\n\n[paths]\nskills_root = skills\n",
+        encoding="utf-8",
+    )
 
 
 def _write_slides(deck: Path) -> None:
@@ -66,9 +79,21 @@ def _write_slides(deck: Path) -> None:
 class TestTrampolineDispatch(unittest.TestCase):
     def setUp(self):
         if not TEMPLATE_BUILD.is_file() or not TEMPLATE_MAKE.is_file():
-            self.skipTest("markdown-slides trampoline templates are missing")
+            self.skipTest("markdown-pages trampoline templates are missing")
         if not (SLIDES_SKILL / "scripts" / "build-slides.py").is_file():
             self.skipTest("markdown-slides skill is not a sibling")
+        slides_build = SLIDES_SKILL / "templates" / "build.py"
+        slides_make = SLIDES_SKILL / "templates" / "Makefile.deck"
+        if slides_build.is_file():
+            self.assertEqual(
+                TEMPLATE_BUILD.read_text(encoding="utf-8"),
+                slides_build.read_text(encoding="utf-8"),
+            )
+        if slides_make.is_file():
+            self.assertEqual(
+                TEMPLATE_MAKE.read_text(encoding="utf-8"),
+                slides_make.read_text(encoding="utf-8"),
+            )
 
     def test_help_mentions_slides_and_pages(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -87,10 +112,10 @@ class TestTrampolineDispatch(unittest.TestCase):
             self.assertIn("pages", text)
             self.assertIn("MARKDOWN_PAGES_HOME", text)
             self.assertIn("MARKDOWN_SLIDES_HOME", text)
+            self.assertIn("skills_root", text)
+            self.assertIn(".agents/skills", text)
             self.assertIn("type=slides", text)
-            self.assertIn("scripts/markdown-pages/", text)
-            self.assertIn("scripts/markdown-slides/", text)
-            self.assertIn("each nested skill", text)
+            self.assertIn("meta.toml", text)
 
     def test_html_pages_does_not_clobber_slides_build(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -217,7 +242,7 @@ class TestTrampolineDispatch(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             self.assertTrue((deck / "build" / "pages" / "env-book.html").is_file())
 
-    def test_missing_pages_skill_mentions_home(self):
+    def test_missing_pages_skill_mentions_lookup(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
             write_book(deck / "pages", "no-engine", "No Engine")
@@ -231,8 +256,25 @@ class TestTrampolineDispatch(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             combined = result.stderr + result.stdout
-            self.assertIn("MARKDOWN_PAGES_HOME", combined)
+            self.assertIn(".agents/skills", combined)
+            self.assertIn("skills_root", combined)
             self.assertFalse((deck / "build" / "pages" / "index.html").exists())
+
+    def test_skills_root_config_selects_engine(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            write_book(deck / "pages", "root-book", "Root Book")
+            _copy_trampoline(deck)
+            _write_skills_root(deck)
+            result = subprocess.run(
+                ["make", "-C", str(deck), "html", "pages"],
+                env=isolated(),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            self.assertTrue((deck / "build" / "pages" / "root-book.html").is_file())
 
     def test_fmt_runs_both_nested_skill_makefiles(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -242,7 +284,7 @@ class TestTrampolineDispatch(unittest.TestCase):
                 ("markdown-slides", "build-slides.py"),
                 ("markdown-pages", "build-pages.py"),
             ):
-                skill = deck / "skills" / kind
+                skill = deck / ".agents" / "skills" / kind
                 (skill / "scripts").mkdir(parents=True)
                 (skill / "templates").mkdir()
                 (skill / "scripts" / marker).write_text("# marker\n", encoding="utf-8")

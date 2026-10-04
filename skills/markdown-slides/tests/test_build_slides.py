@@ -213,7 +213,7 @@ class TestBuildSlides(unittest.TestCase):
             self.assertFalse((deck / "build" / "pages" / "no-skill.html").exists())
             combined = result.stderr + result.stdout
             self.assertTrue(
-                "SKILL" in combined or "skills/" in combined,
+                "skills_root" in combined or ".agents/skills" in combined or "SKILL" in combined,
                 combined,
             )
 
@@ -360,9 +360,10 @@ class TestBuildSlides(unittest.TestCase):
             text = result.stdout
             self.assertIn("pages", text)
             self.assertIn("MARKDOWN_PAGES_HOME", text)
+            self.assertIn("skills_root", text)
+            self.assertIn(".agents/skills", text)
             self.assertIn("type=slides", text)
-            self.assertIn("scripts/markdown-pages/", text)
-            self.assertIn("each nested skill", text)
+            self.assertIn("meta.toml", text)
 
     def test_nested_pages_skill_does_not_break_slides_html(self):
         pages_skill = SKILL.parent / "markdown-pages"
@@ -374,8 +375,8 @@ class TestBuildSlides(unittest.TestCase):
             slides.mkdir()
             isolated_env.write_meta(slides, "demo-deck", "Demo")
             (slides / "010-hello.md").write_text(PAGE, encoding="utf-8")
-            skills = deck / "skills"
-            skills.mkdir()
+            skills = deck / ".agents" / "skills"
+            skills.mkdir(parents=True)
             os.symlink(SKILL, skills / "markdown-slides")
             os.symlink(pages_skill, skills / "markdown-pages")
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")

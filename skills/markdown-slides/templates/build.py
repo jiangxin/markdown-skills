@@ -3,10 +3,18 @@
 
 Copy this file next to the deck Makefile. It uses the stdlib only so the
 deck can find the engine before that engine is on PYTHONPATH.
+
+Keep this file identical in both skills:
+
+- skills/markdown-slides/templates/build.py
+- skills/markdown-pages/templates/build.py
+
+On install, either skill copies it to the project root as build.py.
 """
 
 from __future__ import annotations
 
+import configparser
 import os
 import subprocess
 import sys
@@ -29,6 +37,7 @@ SCAN_SKIP = {
     "tests",
     "themes",
 }
+SKILL_NAMES = {"slides": "markdown-slides", "pages": "markdown-pages"}
 SLIDES_MARKER = Path("scripts") / "build-slides.py"
 PAGES_MARKER = Path("scripts") / "build-pages.py"
 LOCAL_SLIDES = Path("scripts") / "markdown-slides" / "build-slides.py"
@@ -47,9 +56,16 @@ def deck_root() -> Path:
     return Path(__file__).resolve().parent
 
 
+def _marker(kind: str) -> Path:
+    return PAGES_MARKER if kind == "pages" else SLIDES_MARKER
+
+
+def _skill_name(kind: str) -> str:
+    return SKILL_NAMES[kind]
+
+
 def _is_engine(path: Path, kind: str) -> bool:
-    marker = PAGES_MARKER if kind == "pages" else SLIDES_MARKER
-    return (path / marker).is_file() and (path / "templates").is_dir()
+    return (path / _marker(kind)).is_file() and (path / "templates").is_dir()
 
 
 def _kind_type(directory: Path) -> str:
@@ -105,47 +121,72 @@ def choose_kind(root: Path, target: str, directory: str | None) -> str:
     return "slides"
 
 
-def _skill_hint(kind: str) -> str:
+def _read_skills_root(root: Path) -> Path | None:
+    config_path = root / "config.ini"
+    if not config_path.is_file():
+        return None
+    parser = configparser.ConfigParser()
+    try:
+        parser.read(config_path, encoding="utf-8")
+    except configparser.Error as exc:
+        sys.stderr.write(f"config.ini: {exc}\n")
+        sys.exit(1)
+    raw = ""
+    if parser.has_option("paths", "skills_root"):
+        raw = parser.get("paths", "skills_root").strip()
+    if not raw:
+        return None
+    path = Path(raw).expanduser()
+    path = path if path.is_absolute() else (root / path)
+    return path.resolve()
+
+
+def _env_skill(kind: str) -> str:
     if kind == "pages":
-        return "set MARKDOWN_PAGES_HOME, or put the skill under skills/\n"
-    return "set SKILL= or MARKDOWN_SLIDES_HOME, or put the skill under skills/\n"
+        return os.environ.get("MARKDOWN_PAGES_HOME", "").strip()
+    return os.environ.get("SKILL", "").strip() or os.environ.get("MARKDOWN_SLIDES_HOME", "").strip()
+
+
+def _skill_hint(kind: str) -> str:
+    name = _skill_name(kind)
+    return (
+        f"engine not found for {name}. Set [paths] skills_root in config.ini,\n"
+        f"install under .agents/skills/{name}, ~/.agents/skills/{name},\n"
+        "or set SKILL / MARKDOWN_SLIDES_HOME / MARKDOWN_PAGES_HOME.\n"
+    )
 
 
 def try_resolve_skill(root: Path, kind: str) -> Path | None:
-    if kind == "pages":
-        raw = os.environ.get("MARKDOWN_PAGES_HOME", "").strip()
-        marker = PAGES_MARKER
-        named = "markdown-pages"
-        missing = f"not a markdown-pages skill (missing {marker}): {{raw}}\n"
-    else:
-        raw = (
-            os.environ.get("SKILL", "").strip()
-            or os.environ.get("MARKDOWN_SLIDES_HOME", "").strip()
-        )
-        marker = SLIDES_MARKER
-        named = "markdown-slides"
-        missing = f"not a markdown-slides skill (missing {marker}): {{raw}}\n"
+    """Resolve the skill root that contains scripts/ for this kind.
+
+    Order:
+    1. SKILL / MARKDOWN_SLIDES_HOME / MARKDOWN_PAGES_HOME (explicit override)
+    2. config.ini [paths] skills_root / <skill-name>
+    3. <deck>/.agents/skills/<skill-name>
+    4. ~/.agents/skills/<skill-name>
+    """
+    named = _skill_name(kind)
+    marker = _marker(kind)
+    raw = _env_skill(kind)
     if raw:
         path = Path(raw).expanduser()
         path = path if path.is_absolute() else (root / path)
         path = path.resolve()
         if not path.is_dir() or not (path / marker).is_file():
-            sys.stderr.write(missing.format(raw=raw))
+            sys.stderr.write(f"not a {named} skill (missing {marker}): {raw}\n")
             sys.exit(1)
         return path
-    if _is_engine(root, kind):
-        return root
-    skills = root / "skills"
-    found: list[Path] = []
-    if skills.is_dir():
-        for child in sorted(skills.iterdir()):
-            if _is_engine(child, kind):
-                found.append(child.resolve())
-    named_hits = [path for path in found if path.name == named]
-    if named_hits:
-        return named_hits[0]
-    if len(found) == 1:
-        return found[0]
+
+    candidates: list[Path] = []
+    skills_root = _read_skills_root(root)
+    if skills_root is not None:
+        candidates.append(skills_root / named)
+    candidates.append(root / ".agents" / "skills" / named)
+    candidates.append(Path.home() / ".agents" / "skills" / named)
+
+    for path in candidates:
+        if _is_engine(path, kind):
+            return path.resolve()
     return None
 
 
@@ -171,8 +212,8 @@ def run_quality(root: Path, target: str) -> int:
     found = iter_quality_skills(root, target)
     if not found:
         sys.stderr.write(
-            "set SKILL or MARKDOWN_SLIDES_HOME for slides, MARKDOWN_PAGES_HOME for\n"
-            "pages, or nest the skills under skills/\n"
+            "no slides/pages skill found. Set [paths] skills_root, install under\n"
+            ".agents/skills/, ~/.agents/skills/, or set SKILL / MARKDOWN_*_HOME.\n"
         )
         sys.exit(1)
     for kind, _path in found:
@@ -200,15 +241,14 @@ def help_text() -> str:
         "  make ppt <dir>   build PPTX for a type=slides directory\n"
         "  make pdf <dir>   export PDF for that directory\n"
         "  make serve       serve build/ locally\n"
-        "  make fmt         format Python in each nested skill\n"
-        "  make lint        ruff + markdownlint in each nested skill (plus this deck)\n"
-        "  make test        run unit tests in each nested skill\n"
+        "  make fmt         format Python in each resolved skill\n"
+        "  make lint        ruff + markdownlint in each resolved skill (plus this deck)\n"
+        "  make test        run unit tests in each resolved skill\n"
         "  make fonts       vendor Google Fonts into the skill cache\n"
         "  python3 build.py <target> [dir]  same as make\n"
-        "Set SKILL or MARKDOWN_SLIDES_HOME for slides, MARKDOWN_PAGES_HOME for\n"
-        "pages, or nest the skills under skills/.\n"
-        "A deck-local scripts/markdown-slides/ copy runs html and serve when present.\n"
-        "A deck-local scripts/markdown-pages/ copy runs html when present.\n"
+        "Engine lookup: [paths] skills_root/<skill>, then .agents/skills/<skill>,\n"
+        "then ~/.agents/skills/<skill>. Override with SKILL / MARKDOWN_SLIDES_HOME\n"
+        "or MARKDOWN_PAGES_HOME. Document type comes from that directory's meta.toml.\n"
     )
 
 

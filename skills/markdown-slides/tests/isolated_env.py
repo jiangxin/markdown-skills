@@ -24,6 +24,8 @@ def isolated(extra: dict[str, str] | None = None) -> dict[str, str]:
     for key in MAKE_LEAK:
         env.pop(key, None)
     env.setdefault("MARKDOWN_SLIDES_EMBED_FONTS", "0")
+    # Avoid picking up the developer's ~/.agents/skills installs.
+    env["HOME"] = str(Path(__file__).resolve().parent / "_empty_home")
     if extra:
         env.update(extra)
     return env

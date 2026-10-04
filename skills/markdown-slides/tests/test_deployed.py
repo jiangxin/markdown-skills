@@ -50,6 +50,13 @@ class TestPublisherDeck(unittest.TestCase):
             template.read_text(encoding="utf-8"),
         )
 
+    def test_trampoline_templates_match_pages_skill(self):
+        pages = SKILL.parent / "markdown-pages" / "templates"
+        for name in ("build.py", "Makefile.deck"):
+            slides_text = (SKILL / "templates" / name).read_text(encoding="utf-8")
+            pages_text = (pages / name).read_text(encoding="utf-8")
+            self.assertEqual(slides_text, pages_text, name)
+
     def test_example_and_demo_meta_are_slides(self):
         for directory, name in (
             (SKILL / "examples" / "slides", "markdown-slides-examples"),
@@ -67,7 +74,10 @@ class TestPublisherDeck(unittest.TestCase):
     def test_agents_describes_pages_and_identical_trampoline(self):
         text = (REPO / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("markdown-pages", text)
-        self.assertIn("scripts/markdown-pages/", text)
         self.assertIn("vendors **no** engine", text)
-        self.assertIn("stays identical to `skills/markdown-slides/templates/build.py`", text)
+        self.assertIn("byte-identical", text)
+        self.assertIn("skills/markdown-pages/templates/build.py", text)
+        self.assertIn("skills/markdown-slides/templates/build.py", text)
+        self.assertIn("[paths] skills_root", text)
+        self.assertIn(".agents/skills/", text)
         self.assertIn("**both** nested skills", text)

@@ -30,6 +30,7 @@ REQUIRED = (
     "themes/",
     "Deep customization of the generator",
     ".agents/skills/markdown-slides",
+    "skills_root",
     "make slides",
     "build/",
     "meta.toml",

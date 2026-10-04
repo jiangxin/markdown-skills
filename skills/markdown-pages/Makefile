@@ -29,6 +29,9 @@ RUFF_PATHS := tests
 ifneq ($(wildcard scripts),)
 RUFF_PATHS += scripts
 endif
+ifneq ($(wildcard templates/build.py),)
+RUFF_PATHS += templates/build.py
+endif
 
 fmt:
 	@command -v ruff >/dev/null || { echo "ruff is required: https://docs.astral.sh/ruff/" >&2; exit 1; }

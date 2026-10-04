@@ -17,6 +17,9 @@ REQUIRED = (
     "do not git init",
     "from the deck root",
     "MARKDOWN_PAGES_HOME",
+    "skills_root",
+    "templates/build.py",
+    "templates/Makefile.deck",
     "Do not hand-edit HTML",
     "Read references/design.md before writing pages.",
     "The engine stays in the skill",
@@ -36,9 +39,7 @@ REQUIRED = (
     'type = "pages"',
 )
 
-FORBIDDEN_LANG = (
-    "ask in English",
-)
+FORBIDDEN_LANG = ("ask in English",)
 
 FORBIDDEN = (
     "| `create`",

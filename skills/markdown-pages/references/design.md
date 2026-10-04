@@ -70,6 +70,9 @@ ebook, `.md` links rewrite to in-page anchors.
 ## Engine
 
 The generator and templates live in this skill (`scripts/` and
-`templates/` in later steps). By default a user deck does not copy those
-files. Copy `scripts/` to `scripts/markdown-pages/` only after the user
-confirms.
+`templates/`). By default a user deck does not copy those files. The
+trampoline resolves this skill from document `meta.toml` `type`, then
+`[paths] skills_root`, `.agents/skills/markdown-pages`,
+`~/.agents/skills/markdown-pages`, or `MARKDOWN_PAGES_HOME`. Deck-root
+`Makefile` and `build.py` are identical copies from either skill's
+`templates/Makefile.deck` and `templates/build.py`.

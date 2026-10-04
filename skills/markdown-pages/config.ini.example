@@ -11,6 +11,13 @@
 ;         whose heading links set the chapter order. Do not set order and
 ;         sort together. Example: sort = "index.md"
 ;
+; [paths] skills_root: optional directory of installed skills. The trampoline
+;         looks for <skills_root>/markdown-slides and
+;         <skills_root>/markdown-pages (each with scripts/). Relative to the
+;         deck root. When unset, it tries .agents/skills/<name>, then
+;         ~/.agents/skills/<name>. Override with SKILL /
+;         MARKDOWN_SLIDES_HOME / MARKDOWN_PAGES_HOME.
+;
 ; Artifacts: build/<name>/index.html, chapter pages, <name>.html, <name>.pdf
 ;         make html <name>      multi-page site + one-file HTML
 ;         make pdf <name>       PDF from the one-file HTML
@@ -18,3 +25,6 @@
 
 [serve]
 port = 8000
+
+; [paths]
+; skills_root = skills

@@ -22,7 +22,7 @@ make lint
 make test
 ```
 
-The trampoline runs those targets for **both** nested skills. `fmt` is `ruff format` (slides: skill `scripts/`, `tests/`, and `templates/build.py`; pages: skill `scripts/` and `tests/`). `lint` is `ruff check`, `ruff format --check`, and `markdownlint-cli2` (slides: skill docs and `examples/slides/`; pages: skill docs and `examples/pages/`; plus this deck’s `README*.md`, `AGENTS.md`, `slides/*.md`, and `pages/*.md` when present). `test` is `python3 -m unittest discover` in each skill. `make fonts` is slides-only.
+The trampoline runs those targets for **both** nested skills. `fmt` is `ruff format` (slides: skill `scripts/`, `tests/`, and `templates/build.py`; pages: skill `scripts/`, `tests/`, and `templates/build.py`). `lint` is `ruff check`, `ruff format --check`, and `markdownlint-cli2` (slides: skill docs and `examples/slides/`; pages: skill docs and `examples/pages/`; plus this deck’s `README*.md`, `AGENTS.md`, `slides/*.md`, and `pages/*.md` when present). `test` is `python3 -m unittest discover` in each skill. `make fonts` is slides-only.
 
 Needs `ruff` on PATH and `npm install` in **each** of `skills/markdown-slides/` and `skills/markdown-pages/` (for `markdownlint-cli2`).
 
@@ -32,13 +32,33 @@ After editing the root demo, also `make slides` from the repo root. Commit slide
 
 The root trampoline and slide tree come from **using** the skills in this repo. Keep them aligned with the skill sources that generate them.
 
-After dispatch changes, trampoline `build.py` stays identical to `skills/markdown-slides/templates/build.py`. If you change skill resolution, type dispatch, or quality forwarding, copy that template to the root `build.py`. Do not fork it in the deck.
+### Shared trampoline (identical in both skills)
+
+These two files are **byte-identical** across both skills. Edit one pair, then copy to the other skill’s `templates/` and to the project root. Do not fork them.
+
+| File | markdown-slides | markdown-pages | Project root on install |
+|------|-----------------|----------------|-------------------------|
+| `build.py` | `skills/markdown-slides/templates/build.py` | `skills/markdown-pages/templates/build.py` | `build.py` |
+| `Makefile` | `skills/markdown-slides/templates/Makefile.deck` | `skills/markdown-pages/templates/Makefile.deck` | `Makefile` |
+
+Either skill may copy them to the deck root on init. After trampoline edits, sync all three copies (`templates/` in each skill + root).
+
+### Engine lookup (`build.py`)
+
+Document type comes from that directory’s `meta.toml` (`type = "slides"` or `type = "pages"`). Then resolve the skill that contains `scripts/`:
+
+1. Explicit override: `SKILL` / `MARKDOWN_SLIDES_HOME` (slides) or `MARKDOWN_PAGES_HOME` (pages)
+2. `config.ini` `[paths] skills_root` → `<skills_root>/<skill-name>/` (this demo uses `skills_root = skills`)
+3. `<deck>/.agents/skills/<skill-name>/`
+4. `~/.agents/skills/<skill-name>/`
+
+Skill names are `markdown-slides` and `markdown-pages`. A valid skill has `scripts/build-slides.py` or `scripts/build-pages.py` plus `templates/`.
+
+### Other deck alignment
 
 | Deck (repo root) | Skill source | Rule |
 |------------------|--------------|------|
-| `Makefile` | `skills/markdown-slides/templates/Makefile.deck` | Same file. If you change the trampoline Makefile, copy it to the root `Makefile`. Do not fork it in the deck. |
-| `build.py` | `skills/markdown-slides/templates/build.py` | Same file (including pages dispatch). Copy the template to the root after trampoline edits. |
-| `config.ini` | `skills/markdown-slides/config.ini.example` | Same keys and comments intent. This repo keeps `[serve]` only. Theme, order, and cover live in `slides/meta.toml`. |
+| `config.ini` | `skills/markdown-slides/config.ini.example` (and pages example for the same keys) | Same keys and comments intent. This repo keeps `[serve]` and `[paths] skills_root = skills`. Theme, order, and cover live in `slides/meta.toml`. |
 | `slides/` | `skills/markdown-slides/examples/slides/` | Same page set and layouts (`NNN-slug.md`, same `layout:` values). Root `slides/` is the Chinese demo; `examples/slides/` is the English engine self-test. Do not treat them as byte-identical. A dialect or layout change belongs in `design.md` first, then both decks if they still demonstrate that layout. |
 
-Do not add engine files next to this demo. The trampoline finds `skills/markdown-slides` and `skills/markdown-pages` by `meta.toml` `type`. Do not vendor `scripts/` here. Custom looks for other decks go in that deck’s `themes/`.
+Do not add engine files next to this demo. Custom looks for other decks go in that deck’s `themes/`.
