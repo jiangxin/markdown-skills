@@ -83,14 +83,37 @@ def _kind_type(directory: Path) -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
+def _read_build_root_skip(root: Path) -> set[str]:
+    skip = set(SCAN_SKIP)
+    config_path = root / "config.ini"
+    if not config_path.is_file():
+        return skip
+    parser = configparser.ConfigParser()
+    try:
+        parser.read(config_path, encoding="utf-8")
+    except configparser.Error:
+        return skip
+    raw = parser.get("paths", "build_root", fallback="").strip()
+    if not raw:
+        return skip
+    relative = Path(raw.replace("\\", "/"))
+    if relative.is_absolute():
+        return skip
+    parts = relative.parts
+    if parts and parts[0] not in {".", ".."}:
+        skip.add(parts[0])
+    return skip
+
+
 def _scan_kinds(root: Path) -> set[str]:
     found: set[str] = set()
+    skip = _read_build_root_skip(root)
     try:
         children = root.iterdir()
     except OSError:
         return found
     for child in children:
-        if not child.is_dir() or child.name.startswith(".") or child.name in SCAN_SKIP:
+        if not child.is_dir() or child.name.startswith(".") or child.name in skip:
             continue
         kind = _kind_type(child)
         if kind in {"slides", "pages"}:

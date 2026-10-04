@@ -18,6 +18,7 @@ REQUIRED = (
     "from the deck root",
     "MARKDOWN_PAGES_HOME",
     "skills_root",
+    "build_root",
     "templates/build.py",
     "templates/Makefile.deck",
     "Do not hand-edit HTML",

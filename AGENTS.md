@@ -58,7 +58,7 @@ Skill names are `markdown-slides` and `markdown-pages`. A valid skill has `scrip
 
 | Deck (repo root) | Skill source | Rule |
 |------------------|--------------|------|
-| `config.ini` | `skills/markdown-slides/config.ini.example` (and pages example for the same keys) | Same keys and comments intent. This repo keeps `[serve]` and `[paths] skills_root = skills`. Theme, order, and cover live in `slides/meta.toml`. |
+| `config.ini` | `skills/markdown-slides/config.ini.example` (and pages example for the same keys) | Same keys and comments intent. This repo keeps `[serve]` and `[paths] skills_root = skills`. Optional `[paths] build_root` overrides the default `build/` artifact directory. Theme, order, and cover live in `slides/meta.toml`. |
 | `slides/` | `skills/markdown-slides/examples/slides/` | Same page set and layouts (`NNN-slug.md`, same `layout:` values). Root `slides/` is the Chinese demo; `examples/slides/` is the English engine self-test. Do not treat them as byte-identical. A dialect or layout change belongs in `design.md` first, then both decks if they still demonstrate that layout. |
 
 Do not add engine files next to this demo. Custom looks for other decks go in that deck’s `themes/`.

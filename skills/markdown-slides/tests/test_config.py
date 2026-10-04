@@ -66,6 +66,19 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(loaded.title, "talk")
             self.assertEqual(loaded.slides, (deck / "talk").resolve())
             self.assertEqual(paths.html, deck.resolve() / "build" / "talk" / "talk.html")
+            self.assertEqual(paths.build_root, deck.resolve() / "build")
+
+    def test_paths_build_root_overrides_artifact_dir(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            isolated_env.write_meta(deck / "slides", "alt-deck", "Alt")
+            (deck / "config.ini").write_text(
+                "[serve]\nport = 8000\n\n[paths]\nbuild_root = dist\n",
+                encoding="utf-8",
+            )
+            paths = config_module.output_paths(deck)
+            self.assertEqual(paths.build_root, (deck / "dist").resolve())
+            self.assertEqual(paths.html, (deck / "dist" / "slides" / "alt-deck.html").resolve())
 
     def test_slides_env_matching_config_keeps_name(self):
         with tempfile.TemporaryDirectory() as raw:

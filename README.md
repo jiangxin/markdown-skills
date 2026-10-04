@@ -24,7 +24,7 @@ Create (only when missing):
 
 1. Choose a page directory (default `slides/` if you do not name one).
 2. Write `config.ini` (`[serve]` only), a `Makefile` from `templates/Makefile.deck`, and `build.py` from `templates/build.py`. Write `meta.toml` (`type = "slides"`, `name`, optional `title`, `theme`, `[deck] order`) in the slides directory. Seed `NNN-slug.md` from `examples/slides/` only when that directory has no pages.
-3. Nest this skill under `skills/markdown-slides` or set `SKILL`.
+3. Install the skill where the trampoline can find it: `[paths] skills_root`, `.agents/skills/markdown-slides`, `~/.agents/skills/markdown-slides`, or set `SKILL` / `MARKDOWN_SLIDES_HOME`.
 4. Commit those sources, then `make slides` from the **deck root** (HTML under `build/slides/`). Use `make ppt slides` and `make pdf slides` for those formats.
 
 Later edits: change Markdown, commit, rebuild. Do not hand-edit the HTML.
@@ -37,7 +37,9 @@ Project keys in `config.ini`:
 
 | Section | Key | What to set |
 |---------|-----|-------------|
-| `[serve]` | `port` | `make serve` port. Default: `8000`. Document root is `build/`. |
+| `[serve]` | `port` | `make serve` port. Default: `8000`. |
+| `[paths]` | `build_root` | Artifact directory. Default: `build`. Also the `make serve` document root. |
+| `[paths]` | `skills_root` | Optional skill install directory for the trampoline. |
 
 Per-slides keys in that directory's `meta.toml`:
 
@@ -65,7 +67,7 @@ Initialize (only when that directory is still empty of book sources):
 
 1. Choose a book directory (default `pages/` if you do not name one). Another name starts another ebook in the same project.
 2. Reuse the same trampoline `Makefile` / `build.py` as slides. Write `meta.toml` (`type = "pages"`, `name`, optional `title`, `[book] order`) in that directory. Seed chapters from `examples/pages/` only when the directory has no `README.md` and no numbered chapters.
-3. Nest this skill under `skills/markdown-pages` or set `MARKDOWN_PAGES_HOME`.
+3. Install the skill where the trampoline can find it: `[paths] skills_root`, `.agents/skills/markdown-pages`, `~/.agents/skills/markdown-pages`, or set `MARKDOWN_PAGES_HOME`.
 4. Commit those sources, then `make html pages` from the **deck root** (multi-page site and one-file ebook under `build/pages/`). Use `make pdf pages` for PDF. `make ppt pages` is an error.
 
 This publisher demo does not vendor `scripts/markdown-pages/`. Later chapter edits are ordinary Markdown work; do not re-run the skill to change copy in an existing book.
@@ -96,7 +98,7 @@ Root [`slides/`](slides/) **is** the skill’s example deck: generated here with
 | File | Role |
 |------|------|
 | [`slides/`](slides/) | Page sources, `NNN-slug.md`, ordered by filename |
-| [`config.ini`](config.ini) | `[serve]` port; document root is `build/` |
+| [`config.ini`](config.ini) | `[serve]` port; `[paths] skills_root` / optional `build_root` |
 | [`Makefile`](Makefile) | Thin wrapper: `python3 build.py <target>` |
 | [`build.py`](build.py) | Finds nested skills by `meta.toml` `type` and forwards `make` with `DECK_ROOT` |
 

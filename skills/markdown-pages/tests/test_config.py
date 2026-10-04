@@ -144,7 +144,23 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(paths.pages_rel, "custom/pages")
             self.assertEqual(paths.html, resolved / "build" / "custom" / "pages" / "my-book.html")
             self.assertEqual(paths.pdf, resolved / "build" / "custom" / "pages" / "my-book.pdf")
+            self.assertEqual(paths.build_root, resolved / "build")
             self.assertFalse(hasattr(paths, "pptx"))
+
+    def test_paths_build_root_overrides_artifact_dir(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            write_book(deck / "pages", "alt-book", "Alt")
+            (deck / "config.ini").write_text(
+                "[serve]\nport = 8000\n\n[paths]\nbuild_root = out/site\n",
+                encoding="utf-8",
+            )
+            paths = config_module.output_paths(deck)
+            self.assertEqual(paths.build_root, (deck / "out" / "site").resolve())
+            self.assertEqual(
+                paths.html,
+                (deck / "out" / "site" / "pages" / "alt-book.html").resolve(),
+            )
 
     def test_bundled_example_config(self):
         loaded = config_module.load_book(config_module.skill_root())

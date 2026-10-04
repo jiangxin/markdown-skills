@@ -24,7 +24,7 @@
 
 1. 选定页面目录（未指定时默认 `slides/`）。
 2. 写下 `config.ini`（只有 `[serve]`），从 `templates/Makefile.deck` 拷来的 `Makefile`，以及从 `templates/build.py` 拷来的 `build.py`。在页面目录写下 `meta.toml`（`type = "slides"`、`name`、可选 `title`、`theme`、`[deck] order`）。仅当页面目录里还没有 `NNN-slug.md` 时，才从 `examples/slides/` 播种。
-3. 把本 skill 放在 `skills/markdown-slides`，或设置 `SKILL`。
+3. 把 skill 装到 trampoline 能找到的位置：`[paths] skills_root`、`.agents/skills/markdown-slides`、`~/.agents/skills/markdown-slides`，或设置 `SKILL` / `MARKDOWN_SLIDES_HOME`。
 4. 提交这些源文件，再在**稿根目录**执行 `make slides`（HTML 在 `build/slides/`）。PPT/PDF 用 `make ppt slides`、`make pdf slides`。
 
 之后改 Markdown、提交、再构建。不要手改 HTML。
@@ -37,7 +37,9 @@
 
 | 段 | 键 | 含义 |
 |----|----|------|
-| `[serve]` | `port` | `make serve` 端口。缺省 `8000`。文档根是 `build/`。 |
+| `[serve]` | `port` | `make serve` 端口。缺省 `8000`。 |
+| `[paths]` | `build_root` | 产物目录。缺省 `build`。也是 `make serve` 的文档根。 |
+| `[paths]` | `skills_root` | 可选；trampoline 查找 skill 的安装目录。 |
 
 该页面目录 `meta.toml` 里的稿级键：
 
@@ -65,7 +67,7 @@
 
 1. 选定书目录（未指定时默认 `pages/`）。换一个目录名即可再开一本。
 2. 复用与 slides 相同的 trampoline `Makefile` / `build.py`。在该书目录写下 `meta.toml`（`type = "pages"`、`name`、可选 `title`、`[book] order`）。仅当目录里还没有 `README.md` 和带编号的章节时，才从 `examples/pages/` 播种。
-3. 把本 skill 放在 `skills/markdown-pages`，或设置 `MARKDOWN_PAGES_HOME`。
+3. 把 skill 装到 trampoline 能找到的位置：`[paths] skills_root`、`.agents/skills/markdown-pages`、`~/.agents/skills/markdown-pages`，或设置 `MARKDOWN_PAGES_HOME`。
 4. 提交这些源文件，再在**稿根目录**执行 `make html pages`（多页站点和单文件 HTML 在 `build/pages/`）。PDF 用 `make pdf pages`。`make ppt pages` 会失败。
 
 本仓库演示稿不内嵌 `scripts/markdown-pages/`。之后改章节就是改 Markdown，不要为改文案再跑一遍本 skill。
@@ -96,7 +98,7 @@ Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill
 | 文件 | 作用 |
 |------|------|
 | [`slides/`](slides/) | 页面源文件，`NNN-slug.md`，顺序按文件名 |
-| [`config.ini`](config.ini) | `[serve]` 端口；文档根是 `build/` |
+| [`config.ini`](config.ini) | `[serve]` 端口；`[paths] skills_root` / 可选 `build_root` |
 | [`Makefile`](Makefile) | 薄封装：`python3 build.py <target>` |
 | [`build.py`](build.py) | 按 `meta.toml` 的 `type` 找到嵌套 skill，再带 `DECK_ROOT` 转发 |
 

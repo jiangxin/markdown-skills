@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_PORT = 8000
+DEFAULT_BUILD_ROOT = "build"
 DEFAULT_ORDER = "auto"
 DOC_TYPE_PAGES = "pages"
 META_FILE = "meta.toml"
@@ -52,7 +53,7 @@ class Book:
 
 @dataclass(frozen=True)
 class Outputs:
-    """Artifact paths under ``root/build/<pages>/``."""
+    """Artifact paths under ``<build_root>/<pages>/``."""
 
     root: Path
     name: str
@@ -61,6 +62,7 @@ class Outputs:
     pages_rel: str
     html: Path
     pdf: Path
+    build_root: Path
 
 
 def skill_root() -> Path:
@@ -113,16 +115,35 @@ def load_book(deck_root: Path) -> Book:
 load_deck = load_book
 
 
+def build_root(deck_root: Path) -> Path:
+    """Return the artifact root directory (default ``<deck>/build``).
+
+    ``config.ini`` ``[paths] build_root`` overrides the default. Relative
+    paths are resolved from the deck root.
+    """
+    root = _existing_dir(deck_root)
+    parser = _load_parser(root)
+    raw = parser.get("paths", "build_root", fallback="").strip()
+    if not raw:
+        raw = DEFAULT_BUILD_ROOT
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        path = root / path
+    return path.resolve()
+
+
 def output_paths(root: Path | None = None) -> Outputs:
-    """Return ``<root>/build/<pages>/<name>.html`` and ``.pdf``.
+    """Return ``<build_root>/<pages>/<name>.html`` and ``.pdf``.
 
     ``name`` comes from that directory's ``meta.toml``. When ``root`` is
     omitted, the deck root is ``deck_root()``. ``--slides`` / ``SLIDES``
     and ``--pages`` / ``PAGES`` select the book directory.
+    ``[paths] build_root`` overrides ``build/``.
     """
     resolved = deck_root() if root is None else _existing_dir(root)
     book = load_book(resolved)
-    out_dir = resolved / "build" / Path(book.pages_rel)
+    artifacts = build_root(resolved)
+    out_dir = artifacts / Path(book.pages_rel)
     return Outputs(
         root=resolved,
         name=book.name,
@@ -131,6 +152,7 @@ def output_paths(root: Path | None = None) -> Outputs:
         pages_rel=book.pages_rel,
         html=out_dir / f"{book.name}.html",
         pdf=out_dir / f"{book.name}.pdf",
+        build_root=artifacts,
     )
 
 
@@ -161,6 +183,21 @@ def serve_port(deck_root: Path) -> int:
     if not raw:
         return DEFAULT_PORT
     return _parse_port(raw)
+
+
+def _paths_build_root_skip(root: Path) -> set[str]:
+    """Top-level names to skip when scanning, including custom build_root."""
+    skip = set(_SCAN_SKIP)
+    raw = _load_parser(root).get("paths", "build_root", fallback="").strip()
+    if not raw:
+        return skip
+    relative = Path(raw.replace("\\", "/"))
+    if relative.is_absolute():
+        return skip
+    parts = relative.parts
+    if parts and parts[0] not in {".", ".."}:
+        skip.add(parts[0])
+    return skip
 
 
 def _existing_dir(raw: str | Path) -> Path:
@@ -238,12 +275,13 @@ def _scan_pages_rels(root: Path, current: Path | None = None, depth: int = 0) ->
         return []
     here = root if current is None else current
     found: list[str] = []
+    skip = _paths_build_root_skip(root)
     try:
         children = sorted(here.iterdir())
     except OSError:
         return []
     for child in children:
-        if not child.is_dir() or child.name.startswith(".") or child.name in _SCAN_SKIP:
+        if not child.is_dir() or child.name.startswith(".") or child.name in skip:
             continue
         meta = child / META_FILE
         if meta.is_file():
@@ -382,6 +420,7 @@ def _print_output(kind: str, paths: Outputs) -> None:
                 "pages": paths.pages_rel,
                 "html": str(paths.html),
                 "pdf": str(paths.pdf),
+                "buildRoot": str(paths.build_root),
             },
             sys.stdout,
             ensure_ascii=False,

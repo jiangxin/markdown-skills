@@ -40,13 +40,13 @@ If the deck root is not a git work tree, confirm before git init in the user's p
 
 Otherwise write only what is missing for this initialization:
 
-1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root`. Do not write `[book]` in that file.
+1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root` and `build_root` (default `build`). Do not write `[book]` in that file.
 2. Copy this skill `templates/Makefile.deck` to the deck root as `Makefile` and `templates/build.py` as `build.py` if they are absent. Those two files stay identical to the copies under `markdown-slides/templates/`; sync both skills after trampoline edits. This skill `templates/book.css` is engine CSS; do not copy it into the deck on init.
 3. Create the chosen book directory if needed. Write `meta.toml` with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`. Seed chapters from `examples/pages/` into that directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter. Then replace the example copy with the user's topic.
 
 ## Config and build
 
-`config.ini` in the deck root holds `[serve]` and optional `[paths] skills_root`. Each book directory has `meta.toml`: `type` must be `pages` for this skill (other types such as slides are not built here), `name` is the output basename, `title` is the HTML document title (defaults to `name`). Chapter order defaults to filename order of `NN-slug.md` / `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[book]`). Set `sort = <file.md>` relative to that pages directory to a Markdown file whose heading links list the chapters. Do not set `order` and `sort` together.
+`config.ini` in the deck root holds `[serve]` and optional `[paths] skills_root` / `build_root`. Each book directory has `meta.toml`: `type` must be `pages` for this skill (other types such as slides are not built here), `name` is the output basename, `title` is the HTML document title (defaults to `name`). Chapter order defaults to filename order of `NN-slug.md` / `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[book]`). Set `sort = <file.md>` relative to that pages directory to a Markdown file whose heading links list the chapters. Do not set `order` and `sort` together. Artifacts go under `[paths] build_root` (default `build/`).
 
 The trampoline picks the engine from document `meta.toml` `type`, then `[paths] skills_root` / `markdown-pages`, else `.agents/skills/markdown-pages`, else `~/.agents/skills/markdown-pages`. `MARKDOWN_PAGES_HOME` overrides that lookup. For deep generator customization, install and edit the skill in the project (typically `.agents/skills/markdown-pages`). PDF still uses skill-bundled browser tooling.
 

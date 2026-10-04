@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_PORT = 8000
+DEFAULT_BUILD_ROOT = "build"
 DEFAULT_ORDER = "auto"
 DEFAULT_THEME = "swiss-modern"
 DOC_TYPE_SLIDES = "slides"
@@ -63,7 +64,7 @@ class Deck:
 
 @dataclass(frozen=True)
 class Outputs:
-    """Artifact paths under ``root/build/<slides>/``."""
+    """Artifact paths under ``<build_root>/<slides>/``."""
 
     root: Path
     name: str
@@ -75,6 +76,7 @@ class Outputs:
     pdf: Path
     theme: str
     theme_dir: Path
+    build_root: Path
 
 
 def skill_root() -> Path:
@@ -128,17 +130,35 @@ def load_deck(deck_root: Path) -> Deck:
     )
 
 
+def build_root(deck_root: Path) -> Path:
+    """Return the artifact root directory (default ``<deck>/build``).
+
+    ``config.ini`` ``[paths] build_root`` overrides the default. Relative
+    paths are resolved from the deck root.
+    """
+    root = _existing_dir(deck_root)
+    parser = _load_parser(root)
+    raw = parser.get("paths", "build_root", fallback="").strip()
+    if not raw:
+        raw = DEFAULT_BUILD_ROOT
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        path = root / path
+    return path.resolve()
+
+
 def output_paths(root: Path | None = None) -> Outputs:
-    """Return ``<root>/build/<slides>/<name>.html``, ``.pptx``, and ``.pdf``.
+    """Return ``<build_root>/<slides>/<name>.html``, ``.pptx``, and ``.pdf``.
 
     ``name`` comes from that directory's ``meta.toml``. When ``root`` is
     omitted, the deck root is ``deck_root()`` (``--deck-root``, else
     ``DECK_ROOT``, else the skill root). ``--slides`` and ``SLIDES``
-    select the page directory.
+    select the page directory. ``[paths] build_root`` overrides ``build/``.
     """
     resolved = deck_root() if root is None else _existing_dir(root)
     deck = load_deck(resolved)
-    out_dir = resolved / "build" / Path(deck.slides_rel)
+    artifacts = build_root(resolved)
+    out_dir = artifacts / Path(deck.slides_rel)
     return Outputs(
         root=resolved,
         name=deck.name,
@@ -150,6 +170,7 @@ def output_paths(root: Path | None = None) -> Outputs:
         pdf=out_dir / f"{deck.name}.pdf",
         theme=deck.theme,
         theme_dir=deck.theme_dir,
+        build_root=artifacts,
     )
 
 
@@ -236,6 +257,21 @@ def serve_port(deck_root: Path) -> int:
     if not raw:
         return DEFAULT_PORT
     return _parse_port(raw)
+
+
+def _paths_build_root_skip(root: Path) -> set[str]:
+    """Top-level names to skip when scanning, including custom build_root."""
+    skip = set(_SCAN_SKIP)
+    raw = _load_parser(root).get("paths", "build_root", fallback="").strip()
+    if not raw:
+        return skip
+    relative = Path(raw.replace("\\", "/"))
+    if relative.is_absolute():
+        return skip
+    parts = relative.parts
+    if parts and parts[0] not in {".", ".."}:
+        skip.add(parts[0])
+    return skip
 
 
 def cover_overrides(deck_root: Path, path: Path, meta: dict[str, str]) -> dict[str, str]:
@@ -335,12 +371,13 @@ def _scan_slides_rels(root: Path, current: Path | None = None, depth: int = 0) -
         return []
     here = root if current is None else current
     found: list[str] = []
+    skip = _paths_build_root_skip(root)
     try:
         children = sorted(here.iterdir())
     except OSError:
         return []
     for child in children:
-        if not child.is_dir() or child.name.startswith(".") or child.name in _SCAN_SKIP:
+        if not child.is_dir() or child.name.startswith(".") or child.name in skip:
             continue
         meta = child / META_FILE
         if meta.is_file():
@@ -523,6 +560,7 @@ def _print_output(kind: str, paths: Outputs) -> None:
                 "pdf": str(paths.pdf),
                 "theme": paths.theme,
                 "themeDir": str(paths.theme_dir),
+                "buildRoot": str(paths.build_root),
             },
             sys.stdout,
             ensure_ascii=False,

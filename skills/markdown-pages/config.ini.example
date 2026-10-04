@@ -1,6 +1,7 @@
 ; Copy to config.ini in the deck root.
 ; Project keys live here. Per-book keys live in that directory's meta.toml.
-; [serve] port: make serve listens here and uses build/ as the document root.
+; [serve] port: make serve listens here; document root is [paths] build_root
+;         (default build/).
 ;
 ; Each book directory has meta.toml:
 ;         type: pages for this skill. Other values (slides, ...) are not built here.
@@ -17,14 +18,17 @@
 ;         deck root. When unset, it tries .agents/skills/<name>, then
 ;         ~/.agents/skills/<name>. Override with SKILL /
 ;         MARKDOWN_SLIDES_HOME / MARKDOWN_PAGES_HOME.
+; [paths] build_root: artifact directory (default build). Relative to the
+;         deck root, or absolute. make serve uses this as the document root.
 ;
-; Artifacts: build/<name>/index.html, chapter pages, <name>.html, <name>.pdf
+; Artifacts: <build_root>/<name>/index.html, chapter pages, <name>.html, <name>.pdf
 ;         make html <name>      multi-page site + one-file HTML
 ;         make pdf <name>       PDF from the one-file HTML
-;         make serve            preview build/
+;         make serve            preview <build_root>/
 
 [serve]
 port = 8000
 
 ; [paths]
 ; skills_root = skills
+; build_root = build

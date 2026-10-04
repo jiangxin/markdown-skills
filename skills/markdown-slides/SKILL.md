@@ -56,7 +56,7 @@ Stop if the deck is already initialized (see above). Say that it is already a ma
 
 Otherwise write only what is missing:
 
-1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root`. Do not write `[deck]`.
+1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root` and `build_root` (default `build`). Do not write `[deck]`.
 2. Copy `templates/Makefile.deck` to the deck root as `Makefile` and `templates/build.py` as `build.py` if they are absent. Those two files stay identical to the copies under `markdown-pages/templates/`; sync both skills after trampoline edits.
 3. Write `meta.toml` in the slides directory with `type = "slides"`, `name` (output basename), optional `title`, `theme =` (default `swiss-modern`), and `[deck] order = auto`. Seed pages from `examples/slides/` `NNN-slug.md` into that directory **only when it has no `NNN-slug.md`**. Do not copy a template file over an existing page. Then replace the example copy with the user's topic.
 
@@ -75,7 +75,7 @@ Use when the user wants a custom look, picked a bundled name, or finished `/fron
 
 ## Config and build
 
-`config.ini` in the deck root holds `[serve]` and optional `[paths] skills_root`. Each page directory has `meta.toml`: `type` must be `slides` for this skill (other types such as a future ebook are not built here), `name` is the output basename and the storage key `markdown-slides:<name>`, `title` is the HTML document title (defaults to `name`), and `theme =` names a look under deck `themes/` or skill `templates/`. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[deck]`). Set `sort = <file.md>` relative to that slides directory to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together.
+`config.ini` in the deck root holds `[serve]` and optional `[paths] skills_root` / `build_root`. Each page directory has `meta.toml`: `type` must be `slides` for this skill (other types such as a future ebook are not built here), `name` is the output basename and the storage key `markdown-slides:<name>`, `title` is the HTML document title (defaults to `name`), and `theme =` names a look under deck `themes/` or skill `templates/`. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[deck]`). Set `sort = <file.md>` relative to that slides directory to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together. Artifacts go under `[paths] build_root` (default `build/`).
 
 The trampoline picks the engine from document `meta.toml` `type`, then `[paths] skills_root` / `markdown-slides`, else `.agents/skills/markdown-slides`, else `~/.agents/skills/markdown-slides`. `SKILL` / `MARKDOWN_SLIDES_HOME` overrides that lookup. For deep generator customization, install and edit the skill in the project (typically `.agents/skills/markdown-slides`). Optional `meta.toml` `[cover]` `presenter` and `presented_at` override those fields on `010-cover.md`.
 
