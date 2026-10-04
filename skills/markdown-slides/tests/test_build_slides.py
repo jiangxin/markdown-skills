@@ -217,29 +217,27 @@ class TestBuildSlides(unittest.TestCase):
                 combined,
             )
 
-    def test_deck_makefile_uses_local_scripts_for_html(self):
+    def test_deck_makefile_uses_agents_skills_for_html(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
-            self._write_deck(deck, name="local-scripts", title="Local Scripts")
-            shutil.copytree(
-                SKILL / "scripts",
-                deck / "scripts" / "markdown-slides",
-                ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
-            )
+            self._write_deck(deck, name="agents-deck", title="Agents Deck")
+            agents = deck / ".agents" / "skills" / "markdown-slides"
+            agents.parent.mkdir(parents=True)
+            os.symlink(SKILL, agents)
             shutil.copy(SKILL / "templates" / "Makefile.deck", deck / "Makefile")
             shutil.copy(SKILL / "templates" / "build.py", deck / "build.py")
             result = subprocess.run(
                 ["make", "-C", str(deck), "pages"],
-                env=isolated_env.isolated({"SKILL": str(SKILL)}),
+                env=isolated_env.isolated(),
                 capture_output=True,
                 text=True,
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-            html_path = deck / "build" / "pages" / "local-scripts.html"
+            html_path = deck / "build" / "pages" / "agents-deck.html"
             self.assertTrue(html_path.is_file())
             html = html_path.read_text(encoding="utf-8")
-            self.assertIn("<title>Local Scripts</title>", html)
+            self.assertIn("<title>Agents Deck</title>", html)
 
     def test_deck_makefile_ignores_build_slides_at_scripts_root(self):
         with tempfile.TemporaryDirectory() as raw:

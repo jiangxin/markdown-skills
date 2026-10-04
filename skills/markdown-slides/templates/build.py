@@ -40,16 +40,6 @@ SCAN_SKIP = {
 SKILL_NAMES = {"slides": "markdown-slides", "pages": "markdown-pages"}
 SLIDES_MARKER = Path("scripts") / "build-slides.py"
 PAGES_MARKER = Path("scripts") / "build-pages.py"
-LOCAL_SLIDES = Path("scripts") / "markdown-slides" / "build-slides.py"
-LOCAL_PAGES = Path("scripts") / "markdown-pages" / "build-pages.py"
-LOCAL_PY = {
-    "slides": {"html": "build-slides.py", "serve": "serve.py"},
-    "pages": {"html": "build-pages.py"},
-}
-LOCAL_TARGETS = {
-    "slides": ("html", "serve"),
-    "pages": ("html",),
-}
 
 
 def deck_root() -> Path:
@@ -246,15 +236,6 @@ def run_quality(root: Path, target: str) -> int:
     return 0
 
 
-def resolve_scripts(root: Path, kind: str) -> Path | None:
-    if _is_engine(root, kind):
-        return None
-    marker = root / (LOCAL_PAGES if kind == "pages" else LOCAL_SLIDES)
-    if not marker.is_file():
-        return None
-    return marker.parent.resolve()
-
-
 def help_text() -> str:
     return (
         "Targets (run from the deck root):\n"
@@ -301,15 +282,6 @@ def run_engine(root: Path, target: str, slides: str | None, kind: str) -> int:
         env["SLIDES"] = slides
     else:
         env.pop("SLIDES", None)
-    local = resolve_scripts(root, kind)
-    if local is not None and target in LOCAL_TARGETS[kind]:
-        result = subprocess.run(
-            ["python3", str(local / LOCAL_PY[kind][target])],
-            cwd=str(root),
-            env=env,
-            check=False,
-        )
-        return result.returncode
     skill = resolve_skill(root, kind)
     make_args = ["make", "-C", str(skill), target, f"DECK_ROOT={root}"]
     if slides:

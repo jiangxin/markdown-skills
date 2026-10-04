@@ -198,35 +198,6 @@ class TestTrampolineDispatch(unittest.TestCase):
             self.assertIn("ppt", combined)
             self.assertIn("slides", combined)
 
-    def test_local_markdown_pages_scripts_run_html(self):
-        with tempfile.TemporaryDirectory() as raw:
-            deck = Path(raw)
-            write_book(deck / "pages", "local-book", "Local Book")
-            _copy_trampoline(deck)
-            local = deck / "scripts" / "markdown-pages"
-            local.mkdir(parents=True)
-            (local / "build-pages.py").write_text(
-                "#!/usr/bin/env python3\n"
-                "import os\n"
-                "from pathlib import Path\n"
-                "out = Path(os.environ['DECK_ROOT']) / 'build' / 'pages'\n"
-                "out.mkdir(parents=True)\n"
-                "(out / 'local.txt').write_text('from-local\\n')\n",
-                encoding="utf-8",
-            )
-            result = subprocess.run(
-                ["make", "-C", str(deck), "html", "pages"],
-                env=isolated(),
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-            marker = deck / "build" / "pages" / "local.txt"
-            self.assertTrue(marker.is_file())
-            self.assertEqual(marker.read_text(encoding="utf-8"), "from-local\n")
-            self.assertFalse((deck / "build" / "pages" / "local-book.html").exists())
-
     def test_pages_home_env_selects_engine(self):
         with tempfile.TemporaryDirectory() as raw:
             deck = Path(raw)
