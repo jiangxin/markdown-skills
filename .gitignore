@@ -1,4 +1,5 @@
 /build/
+.venv/
 
 skills/markdown-slides/build/
 skills/markdown-slides/node_modules/

@@ -47,6 +47,7 @@ REQUIRED = (
     "Generate after plan approval",
     "Write `<slides>/AGENTS.md`",
     "templates/AGENTS.md",
+    "No PyPI packages are required",
 )
 
 FORBIDDEN = (

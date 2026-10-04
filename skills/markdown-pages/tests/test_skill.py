@@ -48,6 +48,10 @@ REQUIRED = (
     "Generate after plan approval",
     "Write `<book>/AGENTS.md`",
     "templates/AGENTS.md",
+    "Python environment (required)",
+    "requirements.txt",
+    "ensure_venv.py",
+    ".venv",
 )
 
 FORBIDDEN_LANG = ("ask in English",)

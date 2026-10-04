@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Compile a Markdown book to a multi-page HTML site and a one-page ebook.
 
-Requires: pip install markdown
+Requires the skill ``.venv`` with ``requirements.txt`` (``markdown``).
+Run ``python3 scripts/ensure_venv.py`` or ``make html`` from this skill.
 
 The book root is the selected pages directory (flat, no docs/). Artifacts
 go under ``build/<pages>/``: chapter HTML, shared CSS, and
@@ -24,7 +25,9 @@ try:
     from markdown.extensions.toc import slugify as md_slugify
 except ImportError:
     print(
-        "Missing dependency: markdown\n  pip install markdown",
+        "Missing dependency: markdown\n"
+        "  From the skill root: python3 scripts/ensure_venv.py\n"
+        "  Then rebuild with make html (uses .venv/bin/python)",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -872,7 +875,7 @@ def build() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Compile a Markdown book to build/<pages>/ (multi-page site and "
-            "one-page ebook). Requires: pip install markdown"
+            "one-page ebook). Requires skill .venv (python3 scripts/ensure_venv.py)"
         )
     )
     parser.add_argument(

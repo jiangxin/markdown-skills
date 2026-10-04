@@ -1,8 +1,9 @@
 .DEFAULT_GOAL := help
 
 SKILL_ROOT := $(abspath .)
+VENV_PYTHON := $(SKILL_ROOT)/.venv/bin/python
 
-.PHONY: help html pdf serve test lint fmt
+.PHONY: help html pdf serve test lint fmt ensure-venv
 
 help:
 	@echo "Targets (run from skills/markdown-pages):"
@@ -14,13 +15,17 @@ help:
 	@echo "  make test    run unit tests"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
 	@echo "Pass DOC to select a book directory (build/<dir>/)."
+	@echo "HTML/PDF/test use .venv (created from requirements.txt via ensure-venv)."
 	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and pages/*.md / example-pages/*.md."
 
-html:
-	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" python3 scripts/build-pages.py
+ensure-venv:
+	@python3 scripts/ensure_venv.py >/dev/null
 
-pdf:
-	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" python3 scripts/build-pages.py --pdf
+html: ensure-venv
+	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" "$(VENV_PYTHON)" scripts/build-pages.py
+
+pdf: ensure-venv
+	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" "$(VENV_PYTHON)" scripts/build-pages.py --pdf
 
 serve:
 	@echo "serve: use the deck-root trampoline (make serve); this skill does not host build/"
@@ -54,9 +59,9 @@ lint:
 	fi
 	npx --no-install markdownlint-cli2 $(EXTRA_MD)
 
-test:
+test: ensure-venv
 	@if [ -d skills/markdown-pages/tests ]; then \
-		DECK_ROOT="$(DECK_ROOT)" python3 -m unittest discover -s skills/markdown-pages/tests; \
+		DECK_ROOT="$(DECK_ROOT)" "$(VENV_PYTHON)" -m unittest discover -s skills/markdown-pages/tests; \
 	else \
-		DECK_ROOT="$(DECK_ROOT)" python3 -m unittest discover -s tests; \
+		DECK_ROOT="$(DECK_ROOT)" "$(VENV_PYTHON)" -m unittest discover -s tests; \
 	fi

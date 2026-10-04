@@ -145,7 +145,7 @@ runpy.run_path(sys.argv[1], run_name="__main__")
             text=True,
         )
         self.assertNotEqual(proc.returncode, 0)
-        self.assertIn("pip install markdown", proc.stderr)
+        self.assertIn("ensure_venv.py", proc.stderr)
         self.assertIn("Missing dependency: markdown", proc.stderr)
 
     def test_empty_book_exits(self):

@@ -9,6 +9,10 @@ argument-hint: "[create | edit | theme]"
 
 Build a deck from Markdown pages and the engine already in this skill. User project files are config.ini, Makefile, build.py, the slides directory, and build outputs. The engine stays in the skill. Deck root resolution is --deck-root, else DECK_ROOT, else the skill root. Visual is `meta.toml` `theme`: first `themes/<theme>/` in the deck, else `templates/<theme>/` in the skill (default `templates/swiss-modern`). Do not restyle by editing HTML. Looks are frontend-slides presets ported into this skill. Do not copy frontend-slides HTML into a deck.
 
+## Python environment
+
+No PyPI packages are required for `make html` / `ppt` / `pdf` / `serve`. The engine uses the stdlib only. Optional `scripts/compress-images.py` needs Pillow if you run that helper; it is not part of the default build. Do not create a skill `.venv` unless you add a `requirements.txt` for optional tools.
+
 ## Commands
 
 Read the extra words after `/markdown-slides`, or the user intent. If there is no extra word, **infer**:

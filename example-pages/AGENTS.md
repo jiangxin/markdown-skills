@@ -34,4 +34,4 @@ make pdf example-pages
 make serve
 ```
 
-产物在 `build/example-pages/`。需要 git 版本戳时先提交再构建。`build/`、`node_modules/`、`.cache/` 不要入库。
+产物在 `build/example-pages/`。skill 的 `Makefile` 会通过 `scripts/ensure_venv.py` 准备 `.venv`（安装 `requirements.txt` 里的 `markdown`），再用 `.venv/bin/python` 构建。需要 git 版本戳时先提交再构建。`build/`、`node_modules/`、`.cache/`、`.venv/` 不要入库。

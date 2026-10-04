@@ -13,6 +13,17 @@ Initialize a book directory of Markdown chapters. The engine already in this ski
 
 This skill **only initializes** an ebook directory. Later chapter edits are ordinary Markdown work outside this skill. This skill does not copy the engine into the deck.
 
+## Python environment (required)
+
+The engine needs the PyPI package `markdown` (`requirements.txt`). Before initialize/generate work that will build, and before relying on `make html` / `make pdf`:
+
+1. Resolve this skill root (`.agents/skills/markdown-pages`, `<deck>/skills/markdown-pages`, `MARKDOWN_PAGES_HOME`, or this checkout).
+2. If `<skill>/.venv` is missing, create it: `python3 -m venv .venv` (or run `python3 scripts/ensure_venv.py` from the skill root).
+3. Install deps into that venv from `requirements.txt` (`scripts/ensure_venv.py` does this and stamps `.venv/.requirements.sha256`).
+4. Builds must use that interpreter. The skill `Makefile` runs `ensure-venv` then `.venv/bin/python scripts/build-pages.py`. Do not call `build-pages.py` with a bare system `python3` unless that environment already has `markdown`.
+
+Leave `.venv/` untracked. Playwright Chromium remains optional for PDF when system Chrome is unavailable.
+
 Read the extra words after `/markdown-pages`, or the user intent:
 
 - A path the prompt already names is the book directory.
@@ -46,10 +57,11 @@ If the deck root is not a git work tree, confirm before git init in the user's p
 
 Otherwise write only what is missing for this initialization:
 
-1. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root` and `build_root` (default `build`). Do not write `[book]` in that file.
-2. Copy this skill `templates/Makefile.deck` to the deck root as `Makefile` and `templates/build.py` as `build.py` if they are absent. Those two files stay identical to the copies under `markdown-slides/templates/`; sync both skills after trampoline edits. This skill `templates/book.css` is engine CSS; do not copy it into the deck on init.
-3. Create the chosen book directory if needed. Write `meta.toml` with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`.
-4. **Plan then generate.** Follow the SOP below. Do not seed chapters before the user approves the plan.
+1. Ensure this skill's Python venv (see **Python environment** above): from the skill root run `python3 scripts/ensure_venv.py`.
+2. `config.ini` if absent. Set `[serve] port` (default `8000`). Optional `[paths] skills_root` and `build_root` (default `build`). Do not write `[book]` in that file.
+3. Copy this skill `templates/Makefile.deck` to the deck root as `Makefile` and `templates/build.py` as `build.py` if they are absent. Those two files stay identical to the copies under `markdown-slides/templates/`; sync both skills after trampoline edits. This skill `templates/book.css` is engine CSS; do not copy it into the deck on init.
+4. Create the chosen book directory if needed. Write `meta.toml` with `type = "pages"`, `name` (output basename), optional `title`, and `[book] order = auto`.
+5. **Plan then generate.** Follow the SOP below. Do not seed chapters before the user approves the plan.
 
 ### Plan (required; stop before chapters)
 
@@ -83,7 +95,7 @@ The trampoline picks the engine from document `meta.toml` `type`, then `[paths] 
 
 Write `README.md` as the home page and one Markdown file per chapter under the book directory, named `NN-slug.md` or `NNN-slug.md`. Page order is that filename sort unless `meta.toml` `[book] sort` points at an index file. Keep `<book>/references/plan.md` as the authoring plan and `<book>/AGENTS.md` as agent guidance; neither is a chapter.
 
-A project may hold more than one pages directory. Each has its own `meta.toml`. This skill builds only `type = "pages"`. Artifacts go under `build/<name>/` as a multi-page site (`index.html` and chapter pages), a one-file ebook `<name>.html`, and `<name>.pdf`. Build from the deck root: `make html <name>` builds HTML for that directory. `make pdf <name>` writes the PDF. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck. Commit the chapter markdown, `meta.toml`, `config.ini`, `Makefile`, and `build.py`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
+A project may hold more than one pages directory. Each has its own `meta.toml`. This skill builds only `type = "pages"`. Artifacts go under `build/<name>/` as a multi-page site (`index.html` and chapter pages), a one-file ebook `<name>.html`, and `<name>.pdf`. Build from the deck root: `make html <name>` builds HTML for that directory. `make pdf <name>` writes the PDF. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck; the skill Makefile then uses `.venv/bin/python` after `ensure-venv`. Commit the chapter markdown, `meta.toml`, `config.ini`, `Makefile`, and `build.py`. Leave `build/`, `node_modules/`, `.cache/`, and `.venv/` untracked.
 
 Later chapter edits change Markdown, then commit, then rebuild. Do not hand-edit HTML. Do not re-run this skill to change copy in an existing book.
 

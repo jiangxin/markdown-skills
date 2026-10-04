@@ -26,7 +26,7 @@ The trampoline runs those targets for **both** nested skills. `fmt` is `ruff for
 
 Needs `ruff` on PATH and `npm install` in **each** of `skills/markdown-slides/` and `skills/markdown-pages/` (for `markdownlint-cli2`).
 
-After editing the root demo, also `make example-slides` from the repo root. Commit slide Markdown, `config.ini`, `Makefile`, and `build.py` before that build so the cover stamp is not `unknown`. Leave `build/`, `node_modules/`, and `.cache/` untracked.
+After editing the root demo, also `make example-slides` from the repo root. Commit slide Markdown, `config.ini`, `Makefile`, and `build.py` before that build so the cover stamp is not `unknown`. Leave `build/`, `node_modules/`, `.cache/`, and `.venv/` untracked. `markdown-pages` builds use that skill's `.venv` (see its `requirements.txt` / `scripts/ensure_venv.py`); `markdown-slides` needs no PyPI packages for the default build.
 
 ## Deployed deck files
 
