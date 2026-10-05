@@ -757,7 +757,10 @@ def build(output: Path | None = None) -> None:
         rev = html.escape(version, quote=True)
         title = html.escape(deck.title)
         icon = favicon_link(root)
-        font_css = embedded_font_css(theme_font_href(deck.theme_dir))
+        font_css = embedded_font_css(
+            theme_font_href(deck.theme_dir),
+            enabled=config.webfont_enabled(root),
+        )
         doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>

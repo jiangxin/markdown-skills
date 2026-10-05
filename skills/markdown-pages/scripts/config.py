@@ -4,8 +4,9 @@
 The skill root is the directory that contains this file's ``scripts/``
 parent. The deck root is ``--deck-root``, else the ``DECK_ROOT``
 environment variable, else the skill root. ``config.ini`` holds
-``[serve]``. Book directories are selected by ``--doc`` / ``DOC``, or by
-scanning for ``meta.toml`` with ``type = "pages"``.
+``[serve]`` and optional ``[paths]`` / ``[assets]``. Book directories
+are selected by ``--doc`` / ``DOC``, or by scanning for ``meta.toml``
+with ``type = "pages"``.
 """
 
 from __future__ import annotations
@@ -27,6 +28,8 @@ DOC_TYPE_PAGES = "pages"
 META_FILE = "meta.toml"
 _NAME_RE = re.compile(r"^[A-Za-z0-9-]+$")
 _CHAPTER_RE = re.compile(r"^[0-9]{2,3}-[a-z0-9-]+\.md$")
+_WEBFONT_ON = frozenset({"1", "true", "yes", "on"})
+_WEBFONT_OFF = frozenset({"", "0", "false", "no", "off"})
 
 
 @dataclass(frozen=True)
@@ -181,6 +184,17 @@ def serve_port(deck_root: Path) -> int:
     if not raw:
         return DEFAULT_PORT
     return _parse_port(raw)
+
+
+def webfont_enabled(deck_root: Path) -> bool:
+    """Return whether HTML should inline cached webfonts (default off)."""
+    parser = _load_parser(_existing_dir(deck_root))
+    raw = parser.get("assets", "webfont", fallback="off").strip().lower()
+    if raw in _WEBFONT_ON:
+        return True
+    if raw in _WEBFONT_OFF:
+        return False
+    sys.exit(f"config.ini [assets] webfont must be on or off, got: {raw!r}")
 
 
 def _paths_build_root_skip(root: Path) -> set[str]:

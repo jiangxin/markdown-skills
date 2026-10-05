@@ -28,11 +28,16 @@
 ; [paths] build_root: artifact directory (default build). Relative to the
 ;         deck root, or absolute. make serve uses this as the document root.
 ;
+; [assets] webfont: off (default) or on. When on, HTML inlines @font-face
+;         from the skill .cache/fonts/ populated by `make fonts`. Missing
+;         cache falls back to system fonts; viewing never hits Google Fonts.
+;
 ; Artifacts: <build_root>/<slides>/<name>.html / .pptx / .pdf
 ;         make slides           HTML for that type=slides directory
 ;         make ppt slides       PPTX
 ;         make pdf slides       PDF
 ;         make serve            preview <build_root>/
+;         make fonts            download Google Fonts into skill caches
 
 [serve]
 port = 8000
@@ -40,3 +45,6 @@ port = 8000
 ; [paths]
 ; skills_root = skills
 ; build_root = build
+
+; [assets]
+; webfont = off

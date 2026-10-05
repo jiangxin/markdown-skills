@@ -12,3 +12,4 @@ summary: 每套页面目录有 meta.toml。稿根 config.ini 只管预览服务�
 | meta.toml [deck] | order / sort | 页序；两键不要同时设 |
 | meta.toml [cover] | presenter | 封面可选覆盖 |
 | config.ini [serve] | port | `make serve` 端口；根是 `build/` |
+| config.ini [assets] | webfont | 默认 off；on 时内联本地字体缓存 |

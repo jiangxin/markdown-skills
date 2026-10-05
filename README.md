@@ -87,7 +87,7 @@ Looks live in [`skills/markdown-slides/templates/`](skills/markdown-slides/templ
 
 Set the name in `meta.toml` `theme`. To customize a look in the project, copy `templates/<slug>/` to `themes/<slug>/` (the `/markdown-slides theme` command). To add another look: run `/frontend-slides` for visual discovery, then put `deck.css`, `deck.js`, and `pptx/` in deck `themes/<slug>/` or skill `templates/<slug>/`. Point `theme` at the name. Do not drop frontend-slides HTML into the deck.
 
-The built HTML inlines webfonts. `make slides` may download Google Fonts once into `skills/markdown-slides/.cache/` (needs network). Opening the HTML does not. `make fonts` warms that cache. Without a cache and without a network, the build still succeeds and the deck uses system fonts instead of blocking on the CDN.
+Webfonts are off by default (`[assets] webfont` in `config.ini`). HTML uses system font stacks and never links Google Fonts or jsDelivr. MathJax for pages is vendored under `skills/markdown-pages/vendor/mathjax/`. To opt in to webfonts: run `make fonts` once (needs network) to fill each skill’s `.cache/fonts/`, then set `webfont = on`. Missing cache still builds with system fonts.
 
 `examples/slides/` inside the skill is English engine self-test pages. `make html` in the skill directory builds that set.
 

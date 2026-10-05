@@ -87,9 +87,11 @@ Otherwise write only what is missing for this initialization:
 
 ## Config and build
 
-`config.ini` in the deck root holds `[serve]` and optional `[paths] skills_root` / `build_root`. Each book directory has `meta.toml`: `type` must be `pages` for this skill (other types such as slides are not built here), `name` is the output basename, `title` is the HTML document title (defaults to `name`). Chapter order defaults to filename order of `NN-slug.md` / `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[book]`). Set `sort = <file.md>` relative to that pages directory to a Markdown file whose heading links list the chapters. Do not set `order` and `sort` together. Artifacts go under `[paths] build_root` (default `build/`).
+`config.ini` in the deck root holds `[serve]`, optional `[paths] skills_root` / `build_root`, and optional `[assets] webfont` (`off` by default). Each book directory has `meta.toml`: `type` must be `pages` for this skill (other types such as slides are not built here), `name` is the output basename, `title` is the HTML document title (defaults to `name`). Chapter order defaults to filename order of `NN-slug.md` / `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[book]`). Set `sort = <file.md>` relative to that pages directory to a Markdown file whose heading links list the chapters. Do not set `order` and `sort` together. Artifacts go under `[paths] build_root` (default `build/`).
 
 The trampoline picks the engine from document `meta.toml` `type`, then `[paths] skills_root` / `markdown-pages`, else `.agents/skills/markdown-pages`, else `~/.agents/skills/markdown-pages`. `MARKDOWN_PAGES_HOME` overrides that lookup. For deep generator customization, install and edit the skill in the project (typically `.agents/skills/markdown-pages`). PDF still uses skill-bundled browser tooling.
+
+MathJax is vendored under `vendor/mathjax/` and copied into `build/<name>/assets/mathjax/` (no CDN). Webfonts are off by default; set `[assets] webfont = on` and run `make fonts` to cache Google Fonts under the skill `.cache/fonts/`. HTML never links fonts.googleapis.com / fonts.gstatic.com / jsDelivr.
 
 ## After initialize
 

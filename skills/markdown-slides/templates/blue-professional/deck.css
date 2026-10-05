@@ -15,10 +15,13 @@
             --on-filled: #f4efe6;
             --on-accent: #ffffff;
             --code-bg: #ebe4d6;
-            --font-display: "Manrope", "Noto Sans SC", sans-serif;
-            --font-body: "Manrope", "Noto Sans SC", sans-serif;
-            --font-cn: "Noto Sans SC", "Manrope", sans-serif;
-            --font-mono: "IBM Plex Mono", monospace;
+            --font-display: "Manrope", "Noto Sans SC", "PingFang SC",
+                "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-body: "Manrope", "Noto Sans SC", "PingFang SC",
+                "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-cn: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+                "Microsoft YaHei", "Manrope", sans-serif;
+            --font-mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
             --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
             --duration-normal: 0.35s;
         }

@@ -11,10 +11,13 @@
             --faint: #e8e8e8;
             --accent: #ff3300;
             --paper: #ffffff;
-            --font-display: "Archivo", "Noto Sans SC", sans-serif;
-            --font-body: "Nunito", "Noto Sans SC", sans-serif;
-            --font-cn: "Noto Sans SC", "Nunito", sans-serif;
-            --font-mono: "IBM Plex Mono", monospace;
+            --font-display: "Archivo", "Noto Sans SC", "PingFang SC",
+                "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-body: "Nunito", "Noto Sans SC", "PingFang SC",
+                "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-cn: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+                "Microsoft YaHei", "Nunito", sans-serif;
+            --font-mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
             --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
             --duration-normal: 0.35s;
         }

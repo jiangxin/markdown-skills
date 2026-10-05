@@ -3,7 +3,7 @@
 SKILL_ROOT := $(abspath .)
 VENV_PYTHON := $(SKILL_ROOT)/.venv/bin/python
 
-.PHONY: help html pdf serve test lint fmt ensure-venv
+.PHONY: help html pdf serve test lint fmt fonts ensure-venv
 
 help:
 	@echo "Targets (run from skills/markdown-pages):"
@@ -13,6 +13,7 @@ help:
 	@echo "  make fmt     format Python with ruff"
 	@echo "  make lint    ruff + markdownlint-cli2"
 	@echo "  make test    run unit tests"
+	@echo "  make fonts   download Google Fonts into .cache (for [assets] webfont=on)"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
 	@echo "Pass DOC to select a book directory (build/<dir>/)."
 	@echo "HTML/PDF/test use .venv (created from requirements.txt via ensure-venv)."
@@ -20,6 +21,9 @@ help:
 
 ensure-venv:
 	@python3 scripts/ensure_venv.py >/dev/null
+
+fonts:
+	python3 scripts/embed_fonts.py
 
 html: ensure-venv
 	DECK_ROOT="$(DECK_ROOT)" DOC="$(DOC)" "$(VENV_PYTHON)" scripts/build-pages.py

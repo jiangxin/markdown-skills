@@ -218,6 +218,19 @@ class TestConfig(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 config_module.serve_port(deck)
 
+    def test_webfont_default_and_toggle(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self.assertFalse(config_module.webfont_enabled(deck))
+            self._write(deck, "[assets]\nwebfont = on\n")
+            self.assertTrue(config_module.webfont_enabled(deck))
+            self._write(deck, "[assets]\nwebfont = off\n")
+            self.assertFalse(config_module.webfont_enabled(deck))
+            self._write(deck, "[assets]\nwebfont = maybe\n")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.webfont_enabled(deck)
+            self.assertIn("webfont", str(caught.exception))
+
     def test_bundled_example_config(self):
         loaded = config_module.load_deck(config_module.skill_root())
         self.assertEqual(loaded.name, "markdown-slides-examples")

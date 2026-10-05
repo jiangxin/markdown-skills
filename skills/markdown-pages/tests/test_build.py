@@ -74,6 +74,12 @@ class TestBuildPages(unittest.TestCase):
         css = (out / "assets" / "book.css").read_text(encoding="utf-8")
         self.assertIn(".chapter-nav", css)
         self.assertIn("@media print", css)
+        for html in (index, intro, ebook):
+            self.assertNotIn("fonts.googleapis.com", html)
+            self.assertNotIn("fonts.gstatic.com", html)
+            self.assertNotIn("cdn.jsdelivr.net", html)
+            self.assertIn("assets/mathjax/tex-chtml.js", html)
+        self.assertTrue((out / "assets" / "mathjax" / "tex-chtml.js").is_file())
 
     def test_temp_deck_via_make_html(self):
         with tempfile.TemporaryDirectory() as raw:

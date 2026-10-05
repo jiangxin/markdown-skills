@@ -104,11 +104,11 @@ Use when the user wants a custom look, picked a bundled name, or finished `/fron
 
 ## Config and build
 
-`config.ini` in the deck root holds `[serve]` and optional `[paths] skills_root` / `build_root`. Each page directory has `meta.toml`: `type` must be `slides` for this skill (other types such as a future ebook are not built here), `name` is the output basename and the storage key `markdown-slides:<name>`, `title` is the HTML document title (defaults to `name`), and `theme =` names a look under deck `themes/` or skill `templates/`. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[deck]`). Set `sort = <file.md>` relative to that slides directory to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together. Artifacts go under `[paths] build_root` (default `build/`).
+`config.ini` in the deck root holds `[serve]`, optional `[paths] skills_root` / `build_root`, and optional `[assets] webfont` (`off` by default). Each page directory has `meta.toml`: `type` must be `slides` for this skill (other types such as a future ebook are not built here), `name` is the output basename and the storage key `markdown-slides:<name>`, `title` is the HTML document title (defaults to `name`), and `theme =` names a look under deck `themes/` or skill `templates/`. Page order defaults to filename order of `NNN-slug.md` in that directory (`order = auto` in `meta.toml` `[deck]`). Set `sort = <file.md>` relative to that slides directory to a Markdown file whose `## Slides` links list the pages. Do not set `order` and `sort` together. Artifacts go under `[paths] build_root` (default `build/`).
 
 The trampoline picks the engine from document `meta.toml` `type`, then `[paths] skills_root` / `markdown-slides`, else `.agents/skills/markdown-slides`, else `~/.agents/skills/markdown-slides`. `SKILL` / `MARKDOWN_SLIDES_HOME` overrides that lookup. For deep generator customization, install and edit the skill in the project (typically `.agents/skills/markdown-slides`). Optional `meta.toml` `[cover]` `presenter` and `presented_at` override those fields on `010-cover.md`.
 
-The generator inlines Google Fonts into the HTML at build time (cache under the engine `.cache/fonts/`). Viewing the deck does not request fonts.googleapis.com or fonts.gstatic.com.
+Webfonts are off by default (system font stacks in theme CSS). Set `[assets] webfont = on` and run `make fonts` once to populate the skill `.cache/fonts/`; the HTML build then inlines that cache. Viewing never requests fonts.googleapis.com or fonts.gstatic.com. Missing cache with webfont on still builds with system fonts.
 
 ## Write, commit, then build
 

@@ -15,10 +15,13 @@
             --on-filled: #e6edf3;
             --on-accent: #0d1117;
             --code-bg: #30363d;
-            --font-display: "JetBrains Mono", "Noto Sans SC", monospace;
-            --font-body: "JetBrains Mono", "Noto Sans SC", monospace;
-            --font-cn: "Noto Sans SC", "JetBrains Mono", sans-serif;
-            --font-mono: "JetBrains Mono", monospace;
+            --font-display: "JetBrains Mono", "SF Mono", Menlo, Consolas,
+                "Noto Sans SC", "PingFang SC", monospace;
+            --font-body: "JetBrains Mono", "SF Mono", Menlo, Consolas,
+                "Noto Sans SC", "PingFang SC", monospace;
+            --font-cn: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+                "Microsoft YaHei", "JetBrains Mono", sans-serif;
+            --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
             --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
             --duration-normal: 0.35s;
         }

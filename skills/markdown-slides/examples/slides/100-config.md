@@ -12,3 +12,4 @@ summary: Each page directory has meta.toml. Project config.ini holds serve.
 | meta.toml [deck] | order / sort | Page order; do not set both |
 | meta.toml [cover] | presenter | Optional cover override |
 | config.ini [serve] | port | `make serve` port; root is `build/` |
+| config.ini [assets] | webfont | Default off; on inlines local font cache |

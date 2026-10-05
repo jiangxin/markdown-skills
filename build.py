@@ -112,7 +112,7 @@ def _scan_kinds(root: Path) -> set[str]:
 
 
 def choose_kind(root: Path, target: str, directory: str | None) -> str:
-    if target == "serve" or target == "fonts":
+    if target == "serve":
         return "slides"
     if directory:
         kind = _kind_type(root / directory)
@@ -212,9 +212,8 @@ def resolve_skill(root: Path, kind: str) -> Path:
 
 
 def iter_quality_skills(root: Path, target: str) -> list[tuple[str, Path]]:
-    kinds = ("slides",) if target == "fonts" else ("slides", "pages")
     found: list[tuple[str, Path]] = []
-    for kind in kinds:
+    for kind in ("slides", "pages"):
         path = try_resolve_skill(root, kind)
         if path is not None:
             found.append((kind, path))
@@ -248,7 +247,7 @@ def help_text() -> str:
         "  make fmt         format Python in each resolved skill\n"
         "  make lint        ruff + markdownlint in each resolved skill (plus this deck)\n"
         "  make test        run unit tests in each resolved skill\n"
-        "  make fonts       vendor Google Fonts into the skill cache\n"
+        "  make fonts       download Google Fonts into each skill .cache/fonts/\n"
         "  python3 build.py <target> [dir]  same as make\n"
         "Engine lookup: [paths] skills_root/<skill>, then .agents/skills/<skill>,\n"
         "then ~/.agents/skills/<skill>. Override with SKILL / MARKDOWN_SLIDES_HOME\n"
@@ -297,7 +296,7 @@ def main(argv: list[str] | None = None) -> None:
     if target == "help":
         sys.stdout.write(help_text())
         return
-    if target in ("fmt", "lint", "test"):
+    if target in ("fmt", "lint", "test", "fonts"):
         raise SystemExit(run_quality(root, target))
     kind = choose_kind(root, target, doc)
     raise SystemExit(run_engine(root, target, doc, kind))

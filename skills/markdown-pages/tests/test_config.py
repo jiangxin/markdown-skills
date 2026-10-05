@@ -214,6 +214,19 @@ class TestConfig(unittest.TestCase):
             self.assertNotIn("notes.md", names)
             self.assertNotIn("meta.toml", names)
 
+    def test_webfont_default_and_toggle(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self.assertFalse(config_module.webfont_enabled(deck))
+            (deck / "config.ini").write_text("[assets]\nwebfont = yes\n", encoding="utf-8")
+            self.assertTrue(config_module.webfont_enabled(deck))
+            (deck / "config.ini").write_text("[assets]\nwebfont = no\n", encoding="utf-8")
+            self.assertFalse(config_module.webfont_enabled(deck))
+            (deck / "config.ini").write_text("[assets]\nwebfont = maybe\n", encoding="utf-8")
+            with self.assertRaises(SystemExit) as caught:
+                config_module.webfont_enabled(deck)
+            self.assertIn("webfont", str(caught.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

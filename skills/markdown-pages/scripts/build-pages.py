@@ -33,6 +33,7 @@ except ImportError:
     sys.exit(1)
 
 import config
+from embed_fonts import embedded_font_css, font_href
 
 MD_LINK_RE = re.compile(
     r"\[([^\]]+)\]\(([^)]+\.md)(#[^)]*)?\)",
@@ -359,6 +360,24 @@ def nav_links(
     return f'<div class="nav-links">{prev_a}{home}{next_a}</div>'
 
 
+def mathjax_script_tag() -> str:
+    """Return MathJax config + local script tags, or empty if vendor missing."""
+    vendor = config.skill_root() / "vendor" / "mathjax" / "tex-chtml.js"
+    if not vendor.is_file():
+        sys.stderr.write("markdown-pages: vendor/mathjax missing; math will not render\n")
+        return ""
+    return """  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
+        displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']]
+      }
+    };
+  </script>
+  <script defer src="assets/mathjax/tex-chtml.js"></script>
+"""
+
+
 def shell_page(
     *,
     title: str,
@@ -374,10 +393,17 @@ def shell_page(
 ) -> str:
     wrap_cls = "content-wrap index-wrap" if is_index else "content-wrap"
     page_toc_block = "" if is_index else page_toc
+    font_css = embedded_font_css(
+        font_href(templates_dir()),
+        enabled=config.webfont_enabled(config.deck_root()),
+    )
     if inline_css:
-        style_block = f"<style>\n{book_css()}\n</style>"
+        style_block = f"<style>\n{font_css}\n{book_css()}\n</style>"
     else:
-        style_block = '<link rel="stylesheet" href="assets/book.css" />'
+        style_block = (
+            f"<style>\n{font_css}</style>\n" '<link rel="stylesheet" href="assets/book.css" />'
+        )
+    mathjax = mathjax_script_tag()
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -385,19 +411,7 @@ def shell_page(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{html.escape(title)}</title>
   {style_block}
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;650&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap" rel="stylesheet" />
-  <script>
-    window.MathJax = {{
-      tex: {{
-        inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
-        displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']]
-      }}
-    }};
-  </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-</head>
+{mathjax}</head>
 <body>
   <header class="site-header">
     <a class="brand" href="{html.escape(brand_href)}">{html.escape(book_title)}</a>
@@ -480,6 +494,14 @@ def ensure_assets(html_dir: Path, *, refresh: bool) -> None:
     css_path = assets_dir / "book.css"
     if refresh or not css_path.is_file():
         css_path.write_text(book_css(), encoding="utf-8")
+    mathjax_src = config.skill_root() / "vendor" / "mathjax"
+    mathjax_dst = assets_dir / "mathjax"
+    marker = mathjax_dst / "tex-chtml.js"
+    if mathjax_src.is_dir() and (mathjax_src / "tex-chtml.js").is_file():
+        if refresh or not marker.is_file():
+            if mathjax_dst.exists():
+                shutil.rmtree(mathjax_dst)
+            shutil.copytree(mathjax_src, mathjax_dst)
 
 
 def _prev_next_plain(chapters: list[Chapter], index: int) -> str:

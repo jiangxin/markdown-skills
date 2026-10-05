@@ -87,7 +87,7 @@ Skill 目录里的 `examples/pages/` 是引擎自测用的英文小书。在 ski
 
 在 `meta.toml` 的 `theme` 里写目录名。要在工程里改外观：把 `templates/<slug>/` 拷到 `themes/<slug>/`（`/markdown-slides theme`）。要再加一种：用 `/frontend-slides` 做视觉挑选，然后在稿 `themes/<slug>/` 或 skill `templates/<slug>/` 放入 `deck.css`、`deck.js`、`pptx/`。把 `theme` 指过去。不要把 frontend-slides 的 HTML 丢进稿仓库。
 
-构建好的 HTML 会内联 webfont。`make slides` 可能把 Google Fonts 下载一次到 `skills/markdown-slides/.cache/`（需要联网）。打开 HTML 不再访问外网。`make fonts` 可预热缓存。没有缓存、也没有网络时，构建仍会成功，稿用系统字体，而不会卡在 CDN。
+Webfont 默认关闭（`config.ini` 的 `[assets] webfont`）。HTML 使用系统字体栈，不链接 Google Fonts 或 jsDelivr。pages 的 MathJax 已放在 `skills/markdown-pages/vendor/mathjax/`。若要启用 webfont：先 `make fonts` 一次（需联网）写入各 skill 的 `.cache/fonts/`，再设 `webfont = on`。无缓存时仍用系统字体，构建不会失败。
 
 Skill 目录里的 `examples/slides/` 是引擎自测用的英文页。在 skill 目录执行 `make html` 会构建那一套。
 

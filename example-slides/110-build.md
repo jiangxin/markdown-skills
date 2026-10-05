@@ -12,4 +12,4 @@ summary_after: slides / serve 只需 Python。ppt / pdf 还要 Node.js。产物�
 | `make ppt example-slides` | `build/example-slides/name.pptx` | Node.js |
 | `make pdf example-slides` | `build/example-slides/name.pdf` | Node.js |
 | `make serve` | 本地预览 | Python |
-| `make fonts` | 预热字体缓存 | 可选联网 |
+| `make fonts` | 下载 webfont 到 skill 缓存 | 需联网；配合 `webfont=on` |

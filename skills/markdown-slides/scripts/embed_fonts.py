@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Vendor Google Fonts CSS and woff2 files into data URIs.
+"""Cache Google Fonts as inlined data-URI CSS under ``.cache/fonts/``.
 
-A render-blocking <link> to fonts.googleapis.com waits until the CSS
-returns. Offline, that stalls first paint until the browser times out.
-The HTML build inlines the stylesheet and font files instead.
+HTML builds only read that cache when ``config.ini`` ``[assets] webfont`` is
+on. They never fetch Google Fonts. Run ``make fonts`` once (needs network)
+to populate the cache.
 """
 
 from __future__ import annotations
@@ -28,6 +28,7 @@ _UA = (
 _TIMEOUT = 20
 _UNVERIFIED_SSL = False
 _UNVERIFIED_WARNED = False
+_ENV_OFF = frozenset({"0", "false", "no", "off"})
 
 
 def cache_dir(href: str, root: Path | None = None) -> Path:
@@ -36,27 +37,54 @@ def cache_dir(href: str, root: Path | None = None) -> Path:
     return base
 
 
-def embedded_font_css(href: str, *, skill: Path | None = None) -> str:
-    """Return @font-face CSS with data URIs, or a skip comment.
+def embedded_font_css(
+    href: str,
+    *,
+    skill: Path | None = None,
+    enabled: bool = False,
+) -> str:
+    """Return cached @font-face CSS, or a skip comment. Never downloads.
 
-    Set MARKDOWN_SLIDES_EMBED_FONTS=0 to skip the download (tests).
-    A failed fetch uses a previous cache, then system fonts.
+    Priority: ``MARKDOWN_SLIDES_EMBED_FONTS`` in {_ENV_OFF} forces skip;
+    then ``enabled`` (from config.ini ``[assets] webfont``); missing cache
+    falls back to system fonts without failing the HTML build.
     """
     href = (href or "").strip()
     if not href:
         return "/* webfonts: no fonts.url */\n"
-    if os.environ.get("MARKDOWN_SLIDES_EMBED_FONTS", "1").strip() in {"0", "false", "no"}:
+    env = os.environ.get("MARKDOWN_SLIDES_EMBED_FONTS", "").strip().lower()
+    if env in _ENV_OFF:
         return "/* webfonts: skipped (MARKDOWN_SLIDES_EMBED_FONTS=0) */\n"
+    if not enabled:
+        return "/* webfonts: disabled (config [assets] webfont) */\n"
+    cached = cache_dir(href, skill) / "embedded.css"
+    if cached.is_file():
+        try:
+            return cached.read_text(encoding="utf-8")
+        except OSError as err:
+            sys.stderr.write(
+                f"markdown-slides: could not read font cache ({err}); using system fonts\n"
+            )
+            return "/* webfonts: cache unreadable; system fonts */\n"
+    sys.stderr.write(
+        "markdown-slides: webfont on but no local cache; " "run make fonts, using system fonts\n"
+    )
+    return "/* webfonts: no local cache; run make fonts */\n"
+
+
+def vendor_font_css(href: str, *, skill: Path | None = None) -> str:
+    """Download Google Fonts into the skill cache (``make fonts`` only)."""
+    href = (href or "").strip()
+    if not href:
+        return "/* webfonts: no fonts.url */\n"
     cached = cache_dir(href, skill) / "embedded.css"
     if cached.is_file():
         return cached.read_text(encoding="utf-8")
     try:
         css = _inline(href, fetch=_http_get)
     except (OSError, urllib.error.URLError, TimeoutError, ValueError) as err:
-        sys.stderr.write(
-            f"markdown-slides: could not vendor Google Fonts ({err}); using system fonts\n"
-        )
-        return "/* webfonts: vendor failed; system fonts */\n"
+        sys.stderr.write(f"markdown-slides: could not vendor Google Fonts ({err})\n")
+        raise SystemExit(1) from err
     cached.parent.mkdir(parents=True, exist_ok=True)
     cached.write_text(css, encoding="utf-8")
     (cached.parent / "source.url").write_text(href + "\n", encoding="utf-8")
@@ -121,11 +149,14 @@ def main() -> None:
     """Pre-warm the font cache for every templates/*/fonts.url."""
     skill = config.skill_root()
     templates = skill / "templates"
-    os.environ.pop("MARKDOWN_SLIDES_EMBED_FONTS", None)
-    for fonts in sorted(templates.glob("*/fonts.url")):
+    found = sorted(templates.glob("*/fonts.url"))
+    if not found:
+        sys.stderr.write("markdown-slides: no templates/*/fonts.url\n")
+        raise SystemExit(1)
+    for fonts in found:
         href = fonts.read_text(encoding="utf-8").strip()
         sys.stderr.write("vendor %s\n" % fonts.parent.name)
-        css = embedded_font_css(href, skill=skill)
+        css = vendor_font_css(href, skill=skill)
         sys.stderr.write("  %s bytes\n" % format(len(css), ","))
 
 

@@ -13,7 +13,7 @@ help:
 	@echo "  make fmt     format Python with ruff"
 	@echo "  make lint    ruff + markdownlint-cli2"
 	@echo "  make test    run unit tests"
-	@echo "  make fonts   download Google Fonts into .cache (once per theme)"
+	@echo "  make fonts   download Google Fonts into .cache (for [assets] webfont=on)"
 	@echo "Pass DECK_ROOT to select a deck directory. The default is this skill."
 	@echo "Pass DOC to select a document directory (build/<dir>/)."
 	@echo "When DECK_ROOT is another deck, lint also checks that deck's README*.md and slides/*.md / example-slides/*.md."
