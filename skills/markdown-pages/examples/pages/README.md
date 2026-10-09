@@ -1,9 +1,9 @@
 # Markdown Pages Examples
 
-This small book is the English self-test for the markdown-pages skill.
-
-It uses a flat directory: `README.md` is the home page, and numbered
-chapter files sit beside it. There is no `docs/` folder.
+This directory is the English self-test for the markdown-pages skill.
+`README.md` is a summary for people opening the repository. It is not
+compiled. Numbered chapter files beside it are the article. There is
+no `docs/` folder.
 
 Chapters:
 

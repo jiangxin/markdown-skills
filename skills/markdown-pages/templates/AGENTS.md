@@ -19,8 +19,7 @@ Replace the links below if this deck uses another skill path.
 
 ## Markdown format (summary)
 
-- Flat book directory: home `README.md` plus `NN-slug.md` or `NNN-slug.md` chapters.
-- `meta.toml` and this `AGENTS.md` are **not** chapters. Authoring notes may live under `references/` (for example `plan.md`); that tree is not chapters.
+- Flat book directory: numbered `NN-slug.md` or `NNN-slug.md` chapters. `README.md` is a repository summary and is not compiled. `meta.toml` and this `AGENTS.md` are not compiled either. Authoring notes may live under `references/` (for example `plan.md`); that tree is not chapters.
 - Chapter bodies are ordinary CommonMark (headings, lists, links, code fences).
 - Do **not** use slide layouts, `layout:` frontmatter, or `:::card` fences.
 - Order defaults to filename sort (`[book] order = auto`). Optional `[book] sort = <file.md>` uses a heading link list instead.

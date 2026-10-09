@@ -166,23 +166,17 @@ def output_paths(root: Path | None = None) -> Outputs:
 
 
 def list_chapters(pages_dir: Path) -> list[Path]:
-    """Return the home ``README.md`` (if present) then numbered chapters.
+    """Return numbered chapters in filename order.
 
-    Numbered files match ``NN-slug.md`` or ``NNN-slug.md`` in that
-    directory only. ``meta.toml`` is not a chapter.
+    ``README.md`` is a repository summary and ``AGENTS.md`` is agent
+    guidance. Neither is a chapter, so neither is compiled.
     """
     directory = Path(pages_dir)
-    chapters: list[Path] = []
-    home = directory / "README.md"
-    if home.is_file():
-        chapters.append(home.resolve())
-    numbered = [
+    return [
         path.resolve()
         for path in sorted(directory.iterdir(), key=lambda item: item.name)
         if path.is_file() and _CHAPTER_RE.fullmatch(path.name)
     ]
-    chapters.extend(numbered)
-    return chapters
 
 
 def serve_port(deck_root: Path) -> int:

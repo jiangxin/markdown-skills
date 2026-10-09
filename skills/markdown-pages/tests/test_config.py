@@ -83,7 +83,7 @@ class TestConfig(unittest.TestCase):
             chapters = config_module.list_chapters(loaded.pages)
             self.assertEqual(
                 [path.name for path in chapters],
-                ["README.md", "01-intro.md", "02-next.md"],
+                ["01-intro.md", "02-next.md"],
             )
 
     def test_nested_pages_dir_is_selected(self):
@@ -166,7 +166,7 @@ class TestConfig(unittest.TestCase):
         )
         self.assertEqual(
             [path.name for path in config_module.list_chapters(loaded.pages)],
-            ["README.md", "01-intro.md", "02-next.md"],
+            ["01-intro.md", "02-next.md"],
         )
 
     def test_deck_root_resolution(self):
@@ -209,10 +209,13 @@ class TestConfig(unittest.TestCase):
             pages = Path(raw) / "pages"
             write_book(pages, "pages")
             (pages / "notes.md").write_text("# Notes\n", encoding="utf-8")
+            (pages / "AGENTS.md").write_text("# Agent only\n", encoding="utf-8")
             (pages / "010-appendix.md").write_text("# Appendix\n", encoding="utf-8")
             names = [path.name for path in config_module.list_chapters(pages)]
-            self.assertEqual(names, ["README.md", "01-intro.md", "010-appendix.md", "02-next.md"])
+            self.assertEqual(names, ["01-intro.md", "010-appendix.md", "02-next.md"])
             self.assertNotIn("notes.md", names)
+            self.assertNotIn("README.md", names)
+            self.assertNotIn("AGENTS.md", names)
             self.assertNotIn("meta.toml", names)
 
     def test_webfont_default_and_toggle(self):

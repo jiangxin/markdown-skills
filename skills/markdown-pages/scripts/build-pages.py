@@ -176,7 +176,12 @@ def rewrite_md_links(md_text: str, pages_dir: Path) -> str:
         except ValueError:
             return match.group(0)
         stem = Path(target).name
-        if stem.lower().endswith(".md"):
+        lower = stem.lower()
+        if lower == "agents.md":
+            return match.group(0)
+        if lower == "readme.md":
+            return f"[{label}](index.html{frag})"
+        if lower.endswith(".md"):
             stem = stem[:-3]
         return f"[{label}]({stem}.html{frag})"
 
@@ -196,10 +201,13 @@ def rewrite_md_links_one_page(md_text: str, pages_dir: Path) -> str:
         except ValueError:
             return match.group(0)
         stem = Path(target).name
-        if stem.lower().endswith(".md"):
+        lower = stem.lower()
+        if lower == "agents.md":
+            return match.group(0)
+        if lower == "readme.md":
+            return f"[{label}](#)"
+        if lower.endswith(".md"):
             stem = stem[:-3]
-        if stem.lower() == "readme":
-            stem = "readme"
         if frag:
             frag_id = frag[1:] if frag.startswith("#") else frag
             return f"[{label}](#{stem}--{frag_id})"
@@ -462,20 +470,11 @@ def shell_page(
 """
 
 
-def book_toc_one_page(
-    *,
-    chapters: list[Chapter],
-    include_readme: bool,
-    readme_title: str,
-) -> str:
-    items: list[str] = []
-    if include_readme:
-        items.append(f'<li><a href="#ch-readme">{html.escape(readme_title)}</a></li>')
-    for chapter in chapters:
-        items.append(
-            f'<li><a href="#ch-{html.escape(chapter.stem)}">'
-            f"{html.escape(chapter.title)}</a></li>"
-        )
+def book_toc_one_page(*, chapters: list[Chapter]) -> str:
+    items = [
+        f'<li><a href="#ch-{html.escape(chapter.stem)}">' f"{html.escape(chapter.title)}</a></li>"
+        for chapter in chapters
+    ]
     return (
         '<nav class="sidebar" aria-label="全书目录">\n'
         "<h2>全书目录</h2>\n"
@@ -498,7 +497,7 @@ def _render_one_page_section(
 def load_chapters(pages_dir: Path) -> list[Chapter]:
     chapters: list[Chapter] = []
     for path in config.list_chapters(pages_dir):
-        if path.name.lower() == "readme.md":
+        if path.name.lower() in {"readme.md", "agents.md"}:
             continue
         text = path.read_text(encoding="utf-8")
         title = extract_title(text, path.stem)
@@ -584,19 +583,11 @@ def write_chapter_page(
 def write_index_page(
     *,
     chapters: list[Chapter],
-    pages_dir: Path,
     html_dir: Path,
     book_title: str,
 ) -> None:
-    readme_path = pages_dir / "README.md"
-    if readme_path.is_file():
-        readme_md = rewrite_md_links(readme_path.read_text(encoding="utf-8"), pages_dir)
-        readme_body = md_to_html(readme_md)
-    else:
-        readme_body = f"<h1>{html.escape(book_title)}</h1>\n"
-
     index_article = (
-        f'<article class="index">\n{readme_body}\n'
+        f'<article class="index">\n<h1>{html.escape(book_title)}</h1>\n'
         f"<h2>章节</h2>\n{chapter_list_html(chapters)}</article>\n"
     )
     index_nav = nav_links(chapters, None, for_index=True)
@@ -615,10 +606,10 @@ def write_index_page(
 
 
 def require_sources(pages_dir: Path, chapters: list[Chapter]) -> None:
-    readme = pages_dir / "README.md"
-    if not chapters and not readme.is_file():
+    if not chapters:
         print(
-            f"no README.md or numbered chapter markdown in {pages_dir}",
+            f"no numbered chapter markdown in {pages_dir}; "
+            "README.md and AGENTS.md are not compiled",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -631,27 +622,15 @@ def build_one_page_book(
     title: str,
     chapters: list[Chapter] | None = None,
 ) -> Path:
-    """Compile README + numbered chapters into one self-contained HTML file."""
+    """Compile numbered chapters into one self-contained HTML file.
+
+    ``README.md`` and ``AGENTS.md`` are not chapters and are omitted.
+    """
     if chapters is None:
         chapters = load_chapters(pages_dir)
     require_sources(pages_dir, chapters)
 
-    readme_path = pages_dir / "README.md"
-    include_readme = readme_path.is_file()
-    readme_title = title
     sections: list[str] = []
-
-    if include_readme:
-        readme_raw = readme_path.read_text(encoding="utf-8")
-        readme_title = extract_title(readme_raw, title)
-        sections.append(
-            _render_one_page_section(
-                stem="readme",
-                raw_md=readme_raw,
-                pages_dir=pages_dir,
-            )
-        )
-
     for chapter in chapters:
         sections.append(
             _render_one_page_section(
@@ -663,27 +642,14 @@ def build_one_page_book(
 
     output.parent.mkdir(parents=True, exist_ok=True)
     body_main = "\n".join(sections)
-    sidebar = book_toc_one_page(
-        chapters=chapters,
-        include_readme=include_readme,
-        readme_title=readme_title,
+    sidebar = book_toc_one_page(chapters=chapters)
+    top_nav = (
+        '<div class="nav-links">'
+        f'<a href="#ch-{html.escape(chapters[0].stem)}">顶部</a>'
+        '<span class="disabled">单页全书</span>'
+        "</div>"
     )
-    if include_readme:
-        top_nav = (
-            '<div class="nav-links">'
-            '<a href="#ch-readme">顶部</a>'
-            '<span class="disabled">单页全书</span>'
-            "</div>"
-        )
-        brand = "#ch-readme"
-    else:
-        top_nav = (
-            '<div class="nav-links">'
-            f'<a href="#ch-{html.escape(chapters[0].stem)}">顶部</a>'
-            '<span class="disabled">单页全书</span>'
-            "</div>"
-        )
-        brand = f"#ch-{chapters[0].stem}"
+    brand = f"#ch-{chapters[0].stem}"
 
     page = shell_page(
         title=f"{title} · 单页",
@@ -906,7 +872,6 @@ def build_site(
         if not (site_dir / "index.html").is_file():
             write_index_page(
                 chapters=chapters,
-                pages_dir=pages_dir,
                 html_dir=site_dir,
                 book_title=book_title,
             )
@@ -915,7 +880,6 @@ def build_site(
 
     write_index_page(
         chapters=chapters,
-        pages_dir=pages_dir,
         html_dir=site_dir,
         book_title=book_title,
     )

@@ -63,6 +63,8 @@ class TestBuildPages(unittest.TestCase):
         self.assertIn("Intro", index)
         self.assertIn("01-intro.html", index)
         self.assertNotIn("01-intro.md", index)
+        self.assertNotIn("English self-test", index)
+        self.assertNotIn("English self-test", ebook)
         self.assertIn("Intro", intro)
         self.assertIn("chapter-nav", intro)
         self.assertIn("Markdown Pages Examples", ebook)
@@ -109,14 +111,14 @@ class TestBuildPages(unittest.TestCase):
             index = (site / "index.html").read_text(encoding="utf-8")
             intro = (site / "01-intro.html").read_text(encoding="utf-8")
             ebook = (out / "my-book.html").read_text(encoding="utf-8")
-            self.assertIn("Home", index)
+            self.assertNotIn("Home", index)
             self.assertIn("My Book", index)
             self.assertIn("Intro", index)
             self.assertIn('href="01-intro.html"', index)
             self.assertIn("Intro", intro)
             self.assertIn("Details", intro)
             self.assertIn("page-toc", intro)
-            self.assertIn("Home", ebook)
+            self.assertNotIn("Home", ebook)
             self.assertIn("Intro", ebook)
             self.assertIn('href="#ch-01-intro"', ebook)
             self.assertIn("<style>", ebook)
@@ -148,6 +150,39 @@ class TestBuildPages(unittest.TestCase):
             self.assertNotIn("返回首页", ebook)
             self.assertIn('href="#ch-02-next"', ebook)
             self.assertIn("Done.", ebook)
+
+    def test_readme_and_agents_are_not_compiled(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            write_book(deck / "pages", "skip-book", "Skip Book")
+            (deck / "pages" / "README.md").write_text(
+                "# Repo summary\n\nUNIQUE_README_SENTENCE\n",
+                encoding="utf-8",
+            )
+            (deck / "pages" / "AGENTS.md").write_text(
+                "# For agents\n\nUNIQUE_AGENTS_SENTENCE\n",
+                encoding="utf-8",
+            )
+            (deck / "pages" / "01-intro.md").write_text(
+                "# Intro\n\nSee [home](README.md) and [agents](AGENTS.md).\n",
+                encoding="utf-8",
+            )
+            proc = _run_build(deck)
+            self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+            site = deck / "build" / "pages" / "pages"
+            built = "\n".join(path.read_text(encoding="utf-8") for path in site.glob("*.html"))
+            ebook = (deck / "build" / "pages" / "skip-book.html").read_text(encoding="utf-8")
+            intro = (site / "01-intro.html").read_text(encoding="utf-8")
+            self.assertNotIn("UNIQUE_README_SENTENCE", built)
+            self.assertNotIn("UNIQUE_AGENTS_SENTENCE", built)
+            self.assertNotIn("UNIQUE_README_SENTENCE", ebook)
+            self.assertNotIn("UNIQUE_AGENTS_SENTENCE", ebook)
+            self.assertNotIn("ch-readme", ebook)
+            self.assertIn('href="index.html"', intro)
+            self.assertIn("AGENTS.md", intro)
+            self.assertNotIn("AGENTS.html", intro)
+            self.assertFalse((site / "README.html").exists())
+            self.assertFalse((site / "AGENTS.html").exists())
 
     def test_missing_markdown_matches_source(self):
         code = r"""
@@ -191,8 +226,8 @@ runpy.run_path(sys.argv[1], run_name="__main__")
             write_meta(deck / "pages", "empty-book")
             proc = _run_build(deck)
             self.assertNotEqual(proc.returncode, 0)
-            self.assertIn("README.md", proc.stderr)
             self.assertIn("numbered chapter", proc.stderr)
+            self.assertIn("not compiled", proc.stderr)
 
     def test_config_output_matches_written_ebook(self):
         with tempfile.TemporaryDirectory() as raw:
