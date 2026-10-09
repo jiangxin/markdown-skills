@@ -416,39 +416,72 @@ def mathjax_script_tag(asset_prefix: str = "") -> str:
 """
 
 
-_GIT_DESCRIBE: dict[Path, str] = {}
+_GIT_DESCRIBE: dict[tuple[Path, str], str] = {}
 
 
-def git_describe(root: Path | None = None) -> str:
-    """``git describe --always --dirty`` in the deck root, or ``unknown``."""
+def git_describe(root: Path | None = None, doc_rel: str | None = None) -> str:
+    """Revision for one document directory, or ``unknown`` outside git.
+
+    The stamp is ``<doc-path>@<git describe --always of the last commit
+    that touched that path>``, plus ``-dirty`` when that directory itself
+    has uncommitted changes. Two directories in one repository never share
+    a stamp. A deck that is not a git work tree is ``unknown``.
+    """
     resolved = (root if root is not None else config.deck_root()).resolve()
-    cached = _GIT_DESCRIBE.get(resolved)
+    if doc_rel is None:
+        doc_rel = config.load_book(resolved).pages_rel
+    rel = doc_rel.replace("\\", "/").strip("/")
+    key = (resolved, rel)
+    cached = _GIT_DESCRIBE.get(key)
     if cached is None:
-        cached = _read_git_describe(resolved)
-        _GIT_DESCRIBE[resolved] = cached
+        cached = _read_document_revision(resolved, rel)
+        _GIT_DESCRIBE[key] = cached
     return cached
 
 
-def _read_git_describe(root: Path) -> str:
+def _git(root: Path, args: list[str]) -> subprocess.CompletedProcess[str] | None:
     try:
-        result = subprocess.run(
-            ["git", "describe", "--always", "--dirty"],
+        return subprocess.run(
+            ["git", *args],
             cwd=root,
             capture_output=True,
             text=True,
             check=False,
         )
     except OSError:
+        return None
+
+
+def _read_document_revision(root: Path, rel: str) -> str:
+    probe = _git(root, ["rev-parse", "--is-inside-work-tree"])
+    if probe is None or probe.returncode != 0 or probe.stdout.strip() != "true":
         return "unknown"
-    text = (result.stdout or "").strip()
-    return text if result.returncode == 0 and text else "unknown"
+    logged = _git(root, ["log", "-1", "--format=%H", "--", rel])
+    commit = ""
+    if logged is not None and logged.returncode == 0:
+        commit = (logged.stdout or "").strip()
+    if not commit:
+        base = "unknown"
+    else:
+        described = _git(root, ["describe", "--always", commit])
+        text = ""
+        if described is not None and described.returncode == 0:
+            text = (described.stdout or "").strip()
+        base = text or "unknown"
+    status = _git(root, ["status", "--porcelain", "--", rel])
+    dirty = bool(status is not None and status.returncode == 0 and (status.stdout or "").strip())
+    if dirty and not base.endswith("-dirty"):
+        base = f"{base}-dirty"
+    return f"{rel}@{base}"
 
 
 def cache_bust_html(revision: str) -> str:
     """Head tags that reload HTML when the revision changes.
 
-    ``file:`` is left alone so PDF export can open the one-file HTML
-    directly. An iframe load also skips the redirect.
+    The reload waits until the load event so the static server finishes
+    sending this response before the browser navigates. ``file:`` is left
+    alone so PDF export can open the one-file HTML directly. An iframe
+    load also skips the redirect.
     """
     rev = html.escape(revision, quote=True)
     return f"""  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -457,16 +490,20 @@ def cache_bust_html(revision: str) -> str:
   <meta name="revision" content="{rev}" />
   <script>
     (function () {{
-      if (location.protocol === "file:") return;
-      if (window.self !== window.top) return;
-      var m = document.querySelector('meta[name="revision"]');
-      var rev = m ? m.content : "";
-      if (!rev) return;
-      var key = "_v=" + encodeURIComponent(rev);
-      if (location.search.indexOf(key) === -1) {{
-        var url = location.origin + location.pathname + "?" + key + location.hash;
-        location.replace(url);
+      function go() {{
+        if (location.protocol === "file:") return;
+        if (window.self !== window.top) return;
+        var m = document.querySelector('meta[name="revision"]');
+        var rev = m ? m.content : "";
+        if (!rev) return;
+        var key = "_v=" + encodeURIComponent(rev);
+        if (location.search.indexOf(key) === -1) {{
+          var url = location.origin + location.pathname + "?" + key + location.hash;
+          location.replace(url);
+        }}
       }}
+      if (document.readyState === "complete") go();
+      else window.addEventListener("load", go);
     }})();
   </script>"""
 

@@ -2,6 +2,7 @@
 
 import importlib.util
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -88,6 +89,7 @@ class TestBuildPages(unittest.TestCase):
             self.assertIn('name="revision"', html)
             self.assertIn('location.protocol === "file:"', html)
             self.assertIn("location.replace(url)", html)
+            self.assertIn('addEventListener("load", go)', html)
             self.assertIn('"_v="', html)
         self.assertTrue((out / "assets" / "mathjax" / "tex-chtml.js").is_file())
 
@@ -130,6 +132,69 @@ class TestBuildPages(unittest.TestCase):
             self.assertNotIn('href="assets/book.css"', ebook)
             self.assertIn('content="unknown"', index)
             self.assertIn('location.protocol === "file:"', ebook)
+
+    def test_two_books_get_different_revisions(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            write_book(deck / "alpha", "alpha-book", "Alpha")
+            write_book(deck / "beta", "beta-book", "Beta")
+            env = os.environ.copy()
+            env.update(
+                {
+                    "GIT_AUTHOR_NAME": "Test",
+                    "GIT_AUTHOR_EMAIL": "test@example.com",
+                    "GIT_COMMITTER_NAME": "Test",
+                    "GIT_COMMITTER_EMAIL": "test@example.com",
+                }
+            )
+            init = subprocess.run(
+                ["git", "init"],
+                cwd=deck,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(init.returncode, 0, init.stderr)
+            add = subprocess.run(
+                ["git", "add", "alpha", "beta"],
+                cwd=deck,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(add.returncode, 0, add.stderr)
+            commit = subprocess.run(
+                ["git", "-c", "commit.gpgsign=false", "commit", "-m", "init"],
+                cwd=deck,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(commit.returncode, 0, commit.stderr)
+            for doc in ("alpha", "beta"):
+                proc = subprocess.run(
+                    [sys.executable, str(BUILD_PAGES)],
+                    cwd=str(SKILL_ROOT),
+                    env={**os.environ, "DECK_ROOT": str(deck), "DOC": doc},
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+            alpha = (deck / "build" / "alpha" / "alpha-book.html").read_text(encoding="utf-8")
+            beta = (deck / "build" / "beta" / "beta-book.html").read_text(encoding="utf-8")
+
+            def revision(page: str) -> str:
+                match = re.search(r'name="revision" content="([^"]*)"', page)
+                self.assertIsNotNone(match)
+                assert match is not None
+                return match.group(1)
+
+            alpha_rev = revision(alpha)
+            beta_rev = revision(beta)
+            self.assertTrue(alpha_rev.startswith("alpha@"), alpha_rev)
+            self.assertTrue(beta_rev.startswith("beta@"), beta_rev)
+            self.assertNotEqual(alpha_rev, beta_rev)
 
     def test_one_page_omits_trailing_chapter_nav(self):
         with tempfile.TemporaryDirectory() as raw:

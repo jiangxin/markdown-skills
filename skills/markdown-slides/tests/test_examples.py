@@ -25,18 +25,9 @@ if str(SCRIPTS) not in sys.path:
 import slide_model
 
 
-def git_describe(root: Path) -> str:
-    result = subprocess.run(
-        ["git", "describe", "--always", "--dirty"],
-        cwd=root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    text = (result.stdout or "").strip()
-    if result.returncode == 0 and text:
-        return text
-    return "unknown"
+def git_describe(root: Path, doc_rel: str) -> str:
+    slide_model._GIT_DESCRIBE.clear()
+    return slide_model.git_describe(root, doc_rel)
 
 
 def size_tokens() -> list[str]:
@@ -74,15 +65,16 @@ class TestExamples(unittest.TestCase):
         if not HTML_PATH.is_file():
             raise AssertionError(f"missing {HTML_PATH}")
         cls.html = HTML_PATH.read_text(encoding="utf-8")
-        slide_model._GIT_DESCRIBE.pop(SKILL.resolve(), None)
+        slide_model._GIT_DESCRIBE.clear()
         cls.deck = slide_model.load_deck(SKILL)
 
     def test_cover_stamp_matches_git_describe(self):
-        version = git_describe(SKILL)
+        version = git_describe(SKILL, "examples/slides")
         expected = f"{version}{STAMP_SUFFIX}"
         stamps = re.findall(r'<span class="stamp">(.*?)</span>', self.html)
         self.assertTrue(stamps, "built HTML has no footer stamp")
         self.assertEqual(stamps[0], html.escape(expected))
+        self.assertIn("addEventListener('load', go)", self.html)
         self.assertTrue(expected.endswith(STAMP_SUFFIX))
         self.assertEqual(self.deck["slides"][0]["stamp"], expected)
 

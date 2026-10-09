@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import os
 import re
 import subprocess
 import sys
@@ -73,19 +74,41 @@ class TestSlideIndex(unittest.TestCase):
             self.assertIn(needle, err)
         return err
 
-    def _live_describe(self, root: Path) -> str:
-        try:
-            result = subprocess.run(
-                ["git", "describe", "--always", "--dirty"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-        except OSError:
+    def _document_revision(self, root: Path, rel: str) -> str:
+        def run(args: list[str]) -> subprocess.CompletedProcess[str] | None:
+            try:
+                return subprocess.run(
+                    ["git", *args],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+            except OSError:
+                return None
+
+        probe = run(["rev-parse", "--is-inside-work-tree"])
+        if probe is None or probe.returncode != 0 or probe.stdout.strip() != "true":
             return "unknown"
-        text = (result.stdout or "").strip()
-        return text if result.returncode == 0 and text else "unknown"
+        logged = run(["log", "-1", "--format=%H", "--", rel])
+        commit = ""
+        if logged is not None and logged.returncode == 0:
+            commit = (logged.stdout or "").strip()
+        if not commit:
+            base = "unknown"
+        else:
+            described = run(["describe", "--always", commit])
+            text = ""
+            if described is not None and described.returncode == 0:
+                text = (described.stdout or "").strip()
+            base = text or "unknown"
+        status = run(["status", "--porcelain", "--", rel])
+        dirty = bool(
+            status is not None and status.returncode == 0 and (status.stdout or "").strip()
+        )
+        if dirty and not base.endswith("-dirty"):
+            base = f"{base}-dirty"
+        return f"{rel}@{base}"
 
     def test_pages_load_in_filename_order_by_default(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -145,7 +168,7 @@ class TestSlideIndex(unittest.TestCase):
                 ),
                 "[deck]\nname = sample-deck\ntitle = Sample Title\nslides = custom/pages\n",
             )
-            slide_model._GIT_DESCRIBE.pop(deck.resolve(), None)
+            slide_model._GIT_DESCRIBE.clear()
             loaded = slide_model.load_deck(deck)
             self.assertEqual(loaded["name"], "sample-deck")
             self.assertEqual(loaded["title"], "Sample Title")
@@ -155,7 +178,7 @@ class TestSlideIndex(unittest.TestCase):
                 ["020-beta.md", "010-alpha.md"],
             )
             self.assertEqual(loaded["total"], 2)
-            version = self._live_describe(deck)
+            version = self._document_revision(deck, "custom/pages")
             self.assertEqual(loaded["version"], version)
             self.assertEqual(loaded["slides"][0]["stamp"], f"{version} · 01 / 02")
             self.assertEqual(loaded["slides"][1]["stamp"], f"{version} · 02 / 02")
@@ -255,10 +278,10 @@ class TestSlideIndex(unittest.TestCase):
                 {"010-cover.md": PAGE},
                 "## Slides\n\n- [Cover](010-cover.md)\n",
             )
-            slide_model._GIT_DESCRIBE.pop(deck.resolve(), None)
+            slide_model._GIT_DESCRIBE.clear()
 
             def fake_run(cmd, **kwargs):
-                self.assertEqual(cmd, ["git", "describe", "--always", "--dirty"])
+                self.assertEqual(cmd[0], "git")
                 self.assertEqual(Path(kwargs["cwd"]).resolve(), deck.resolve())
                 return subprocess.CompletedProcess(cmd, 128, "", "fatal: not a git repository")
 
@@ -266,6 +289,52 @@ class TestSlideIndex(unittest.TestCase):
                 loaded = slide_model.load_deck(deck)
             self.assertEqual(loaded["version"], "unknown")
             self.assertEqual(loaded["slides"][0]["stamp"], "unknown · 01 / 01")
+
+    def test_two_directories_get_different_revisions(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            self._deck(deck, "slides", {"010-cover.md": PAGE})
+            self._deck(deck, "talk", {"010-cover.md": PAGE})
+            env = os.environ.copy()
+            env.update(
+                {
+                    "GIT_AUTHOR_NAME": "Test",
+                    "GIT_AUTHOR_EMAIL": "test@example.com",
+                    "GIT_COMMITTER_NAME": "Test",
+                    "GIT_COMMITTER_EMAIL": "test@example.com",
+                }
+            )
+            init = subprocess.run(
+                ["git", "init"],
+                cwd=deck,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(init.returncode, 0, init.stderr)
+            add = subprocess.run(
+                ["git", "add", "slides", "talk"],
+                cwd=deck,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(add.returncode, 0, add.stderr)
+            commit = subprocess.run(
+                ["git", "-c", "commit.gpgsign=false", "commit", "-m", "init"],
+                cwd=deck,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(commit.returncode, 0, commit.stderr)
+            slide_model._GIT_DESCRIBE.clear()
+            slides = slide_model.git_describe(deck, "slides")
+            talk = slide_model.git_describe(deck, "talk")
+            self.assertTrue(slides.startswith("slides@"), slides)
+            self.assertTrue(talk.startswith("talk@"), talk)
+            self.assertNotEqual(slides, talk)
 
     def test_include_and_image_search_slide_dir_then_deck_root(self):
         with tempfile.TemporaryDirectory() as raw:

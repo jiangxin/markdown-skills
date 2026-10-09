@@ -743,7 +743,7 @@ def build(output: Path | None = None) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     pages = ordered_pages(deck)
     total = len(pages)
-    version = git_describe(root)
+    version = git_describe(root, deck.slides_rel)
     _state = _RenderState(root=root, version=version, asset_prefix=_asset_prefix(root, dest))
     try:
         slides = "\n\n".join(render_page(path, i, total) for i, path in enumerate(pages, start=1))
@@ -773,18 +773,22 @@ def build(output: Path | None = None) -> None:
     <title>{title}</title>
 {icon}    <script>
     (function () {{
-      if (window.self !== window.top) return;
-      var m = document.querySelector('meta[name="revision"]');
-      var rev = m ? m.content : '';
-      if (!rev) return;
-      var key = '_v=' + encodeURIComponent(rev);
-      if (location.search.indexOf(key) === -1) {{
-        var url = location.origin + location.pathname + '?' + key + location.hash;
-        location.replace(url);
+      function go() {{
+        if (window.self !== window.top) return;
+        var m = document.querySelector('meta[name="revision"]');
+        var rev = m ? m.content : '';
+        if (!rev) return;
+        var key = '_v=' + encodeURIComponent(rev);
+        if (location.search.indexOf(key) === -1) {{
+          var url = location.origin + location.pathname + '?' + key + location.hash;
+          location.replace(url);
+        }}
       }}
+      if (document.readyState === 'complete') go();
+      else window.addEventListener('load', go);
     }})();
     </script>
-    <!-- git describe: {rev} -->
+    <!-- revision: {rev} -->
     <style>
 {font_css}
 {css}

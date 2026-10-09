@@ -37,7 +37,7 @@ Page order defaults to the filename sort of `NNN-slug.md` files in that director
 
 When `sort` is set, the generator walks Markdown links under the heading `## Slides` from top to bottom. A link target is a slug: an optional `NNN-` prefix, then lowercase letters, digits, and hyphens. The file on disk is `NNN-slug.md` in the slides directory, so a link written as `cover.md` resolves to `010-cover.md` when that file is the only `cover` slug. The link label is not read. A missing `## Slides` heading, an empty list, a missing file, or a duplicate slug is an error. The numeric prefix does not set the order in this mode.
 
-Every footer ends with a stamp the generator writes from `git describe --always --dirty` in the deck root, plus the one-based index and the page total, each zero-padded to two digits. Do not author that stamp in the page. When git cannot describe the deck, the version text is `unknown`.
+Every footer ends with a per-document revision, plus the one-based index and the page total, each zero-padded to two digits. The revision is `<doc-path>@<git describe --always of the last commit that touched that slides directory>`, plus `-dirty` when that directory has uncommitted changes. Two document directories in one repository never share a revision. Do not author that stamp in the page. When the deck is not a git work tree, the version text is `unknown`.
 
 ## Layouts
 

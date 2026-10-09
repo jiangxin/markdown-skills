@@ -22,7 +22,7 @@ from typing import NoReturn
 import config
 
 PAGE_NAME = re.compile(r"^(?:(\d{3})-)?([a-z0-9-]+)\.md$")
-_GIT_DESCRIBE: dict[Path, str] = {}
+_GIT_DESCRIBE: dict[tuple[Path, str], str] = {}
 
 _MARKDOWN_LINK = re.compile(r"\[([^\]]+?)\]\(([^)]+?)\)")
 _BARE_URL = re.compile(
@@ -469,29 +469,60 @@ def pages_from_index(slides_dir: Path, index: Path) -> list[Path]:
     return paths
 
 
-def git_describe(root: Path | None = None) -> str:
-    """``git describe --always --dirty`` in the deck root, or ``unknown``."""
+def git_describe(root: Path | None = None, doc_rel: str | None = None) -> str:
+    """Revision for one document directory, or ``unknown`` outside git.
+
+    The stamp is ``<doc-path>@<git describe --always of the last commit
+    that touched that path>``, plus ``-dirty`` when that directory itself
+    has uncommitted changes. Two directories in one repository never share
+    a stamp. A deck that is not a git work tree is ``unknown``.
+    """
     resolved = (root if root is not None else config.deck_root()).resolve()
-    cached = _GIT_DESCRIBE.get(resolved)
+    if doc_rel is None:
+        doc_rel = config.load_deck(resolved).slides_rel
+    rel = doc_rel.replace("\\", "/").strip("/")
+    key = (resolved, rel)
+    cached = _GIT_DESCRIBE.get(key)
     if cached is None:
-        cached = _read_git_describe(resolved)
-        _GIT_DESCRIBE[resolved] = cached
+        cached = _read_document_revision(resolved, rel)
+        _GIT_DESCRIBE[key] = cached
     return cached
 
 
-def _read_git_describe(root: Path) -> str:
+def _git(root: Path, args: list[str]) -> subprocess.CompletedProcess[str] | None:
     try:
-        result = subprocess.run(
-            ["git", "describe", "--always", "--dirty"],
+        return subprocess.run(
+            ["git", *args],
             cwd=root,
             capture_output=True,
             text=True,
             check=False,
         )
     except OSError:
+        return None
+
+
+def _read_document_revision(root: Path, rel: str) -> str:
+    probe = _git(root, ["rev-parse", "--is-inside-work-tree"])
+    if probe is None or probe.returncode != 0 or probe.stdout.strip() != "true":
         return "unknown"
-    text = (result.stdout or "").strip()
-    return text if result.returncode == 0 and text else "unknown"
+    logged = _git(root, ["log", "-1", "--format=%H", "--", rel])
+    commit = ""
+    if logged is not None and logged.returncode == 0:
+        commit = (logged.stdout or "").strip()
+    if not commit:
+        base = "unknown"
+    else:
+        described = _git(root, ["describe", "--always", commit])
+        text = ""
+        if described is not None and described.returncode == 0:
+            text = (described.stdout or "").strip()
+        base = text or "unknown"
+    status = _git(root, ["status", "--porcelain", "--", rel])
+    dirty = bool(status is not None and status.returncode == 0 and (status.stdout or "").strip())
+    if dirty and not base.endswith("-dirty"):
+        base = f"{base}-dirty"
+    return f"{rel}@{base}"
 
 
 def page_stamp(index: int, total: int, version: str | None = None) -> str:
@@ -505,7 +536,7 @@ def load_deck(root: Path | None = None) -> dict:
     deck = config.load_deck(root_resolved)
     paths = ordered_pages(deck)
     total = len(paths)
-    version = git_describe(root_resolved)
+    version = git_describe(root_resolved, deck.slides_rel)
     slides = []
     for index, path in enumerate(paths, start=1):
         meta, body = parse_frontmatter(path.read_text(encoding="utf-8"))

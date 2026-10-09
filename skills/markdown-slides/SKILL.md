@@ -141,4 +141,4 @@ The stage script already implements these keys. Hotkeys: arrows change slides, F
 
 ## Cover version stamp
 
-Point at examples/slides/010-cover.md as the version-stamp example (git describe --always --dirty written into the cover footer). The generator writes that stamp into every footer. Do not put the revision in the page Markdown. A build before the sources are committed prints `unknown`.
+Point at examples/slides/010-cover.md as the version-stamp example. The generator writes a per-document revision into every footer and into `<meta name="revision">`. The value is `<doc-path>@<git describe --always of the last commit that touched that directory>`, plus `-dirty` when that directory has uncommitted changes. Two document directories in one repository therefore never share a revision. Do not put the revision in the page Markdown. A build outside a git work tree prints `unknown`.
