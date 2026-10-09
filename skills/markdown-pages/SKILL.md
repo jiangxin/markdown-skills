@@ -1,7 +1,7 @@
 ---
 name: markdown-pages
 disable-model-invocation: true
-description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. Plan in <book>/references/plan.md and wait for approval before seeding chapters. After generate, write <book>/AGENTS.md with skill links, format summary, and build commands. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-pages).
+description: Initialize a Markdown ebook directory that builds to a multi-page site, a one-file HTML ebook, and PDF. Use for /markdown-pages. Confirm the book directory (default pages/) and git before first write. Plan in <book>/references/plan.md and wait for approval before seeding chapters. After generate, write <book>/AGENTS.md with skill links, format summary, build commands, and voice rules. A project may hold several type=pages books. Do not re-initialize or overwrite an existing book directory with the example template. For deep generator customization, install this skill in the project (typically .agents/skills/markdown-pages).
 argument-hint: "[directory]"
 ---
 
@@ -74,7 +74,7 @@ Otherwise write only what is missing for this initialization:
 
 1. Seed chapters from `examples/pages/` into the book directory **only when it has no `README.md` and no `NN-slug.md` / `NNN-slug.md`**. Do not copy a template file over an existing chapter.
 2. **Customize the seeded Markdown** using `<book>/references/plan.md` as the outline source. Follow the customize SOP below before you treat init as done.
-3. **Write `<book>/AGENTS.md`** (required). Start from this skill `templates/AGENTS.md`. It must name **markdown-pages**, summarize the Markdown dialect, link this skill `SKILL.md` and `references/design.md` (fix relative paths for how the skill is installed), and list deck-root build commands for **this directory** (`make html <dir>`, `make pdf <dir>`, `make serve`). Write it in the **user's preferred language**. `AGENTS.md` is not a chapter. Do not skip this file.
+3. **Write `<book>/AGENTS.md`** (required). Start from this skill `templates/AGENTS.md`. It must name **markdown-pages**, summarize the Markdown dialect, link this skill `SKILL.md` and `references/design.md` (fix relative paths for how the skill is installed), and list deck-root build commands for **this directory** (`make html <dir>`, `make pdf <dir>`, `make serve`). Write it in the **user's preferred language**. Keep the Voice section from the template. Translate it with the rest of AGENTS.md. Do not omit it. `AGENTS.md` is not a chapter. Do not skip this file.
 
 ### Customize seeded Markdown (required)
 

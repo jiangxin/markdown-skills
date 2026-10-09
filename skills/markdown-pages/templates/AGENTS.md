@@ -26,6 +26,29 @@ Replace the links below if this deck uses another skill path.
 
 For filenames, home page rules, `meta.toml` keys, and link rewriting, follow the dialect file above.
 
+## Voice
+
+These rules apply only to reader-facing chapter copy in this directory. They do not apply to code, commit messages, or technical replies.
+
+- Do not use: 「在……的时代」, 「不可否认」, 「总而言之」, 「宛如一幅画卷」, 「视觉盛宴」, 「值得注意的是」, Delve, Testament, Tapestry, It's important to remember, In conclusion. Do not open with a 总-分-总 frame. Do not close with a summary sermon.
+- Mix sentence lengths. A short sentence, a question, or a spoken turn (老实说 / 其实不然) is allowed.
+- Use first person. Name a concrete sensation, a number, or a specific snag. Do not summarize a mood from above.
+- Keep one clear preference. Stop when the point is made.
+- Do not define the point by rejecting an alternative (不是 A，而是 B). State what holds.
+- Do not announce a count of equal parts (三条, 四件事) and then list them at matching length. A list still needs one sentence only this section can say.
+- Do not repeat the heading in the next sentence.
+- Do not write a lesson frame: handing the reader a map, 「读完应能判断」, or a closing recap of what this part taught. Name one example. Do not leave it as A 或 B.
+- Do not stack abstract nouns (薄底座, 横切, 最小闭环, 可隔离、可停止、可复核). Name the thing.
+- Do not end every page with the same sentence. A link to the next page is navigation. A repeated closer is not.
+
+Machine:
+
+> 这片风景令人心旷神怡，光线恰到好处。
+
+Human:
+
+> 清晨五点爬上山顶，手指冻得按快门都发僵。那道冷金色的逆光劈开云层时，连着喝三天的冷风都值了。
+
 ## Build
 
 From the **deck root** (parent of this directory), with trampoline `Makefile` / `build.py`:

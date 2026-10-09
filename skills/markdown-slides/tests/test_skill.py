@@ -47,6 +47,7 @@ REQUIRED = (
     "Generate after plan approval",
     "Write `<slides>/AGENTS.md`",
     "templates/AGENTS.md",
+    "Keep the Voice section from the template.",
     "No PyPI packages are required",
 )
 
@@ -75,6 +76,9 @@ class SkillDocTest(unittest.TestCase):
         self.assertIn("markdown-slides", text)
         self.assertIn("references/design.md", text)
         self.assertIn("make html <dir>", text)
+        self.assertIn("## Voice", text)
+        self.assertIn("不可否认", text)
+        self.assertIn("Do not expand a slide into an essay", text)
 
     def test_no_scripts_command(self):
         for phrase in FORBIDDEN:

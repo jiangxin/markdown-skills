@@ -48,6 +48,7 @@ REQUIRED = (
     "Generate after plan approval",
     "Write `<book>/AGENTS.md`",
     "templates/AGENTS.md",
+    "Keep the Voice section from the template.",
     "Python environment (required)",
     "requirements.txt",
     "ensure_venv.py",
@@ -107,6 +108,8 @@ class SkillDocTest(unittest.TestCase):
         self.assertIn("markdown-pages", text)
         self.assertIn("references/design.md", text)
         self.assertIn("make html <dir>", text)
+        self.assertIn("## Voice", text)
+        self.assertIn("不可否认", text)
 
     def test_example_pages(self):
         self.assertTrue(EXAMPLES.is_dir())
