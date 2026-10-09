@@ -184,6 +184,42 @@ class TestBuildPages(unittest.TestCase):
             self.assertFalse((site / "README.html").exists())
             self.assertFalse((site / "AGENTS.html").exists())
 
+    def test_home_toc_follows_index_marker(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            write_book(deck / "pages", "toc-book", "TOC Book")
+            (deck / "pages" / "index.md").write_text(
+                "# Welcome\n\nBefore the list.\n\n[TOC]\n\nAfter the list.\n\n" "```\n[TOC]\n```\n",
+                encoding="utf-8",
+            )
+            (deck / "pages" / "01-intro.md").write_text(
+                "# Intro\n\n[TOC]\n\n## Details\n\n### More\n",
+                encoding="utf-8",
+            )
+            proc = _run_build(deck)
+            self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+            site = deck / "build" / "pages" / "pages"
+            index = (site / "index.html").read_text(encoding="utf-8")
+            intro = (site / "01-intro.html").read_text(encoding="utf-8")
+            ebook = (deck / "build" / "pages" / "toc-book.html").read_text(encoding="utf-8")
+            self.assertLess(index.index("Before the list."), index.index('class="home-toc"'))
+            self.assertLess(index.index('class="home-toc"'), index.index("After the list."))
+            self.assertIn('href="01-intro.html"', index)
+            self.assertIn('href="01-intro.html#details"', index)
+            self.assertIn('class="depth-2"', index)
+            self.assertIn('class="depth-3"', index)
+            self.assertIn(">More</a>", index)
+            self.assertLess(index.index(">Details</a>"), index.index(">More</a>"))
+            self.assertIn("<code>[TOC]\n</code>", index)
+            self.assertNotIn('class="home-toc"', intro)
+            self.assertIn("[TOC]", intro)
+            self.assertLess(ebook.index("Before the list."), ebook.index('class="home-toc"'))
+            self.assertLess(ebook.index('class="home-toc"'), ebook.index("After the list."))
+            self.assertIn('href="#ch-01-intro"', ebook)
+            self.assertIn('href="#01-intro--details"', ebook)
+            self.assertIn('href="#01-intro--more"', ebook)
+            self.assertEqual(ebook.count('class="home-toc"'), 1)
+
     def test_missing_markdown_matches_source(self):
         code = r"""
 import importlib.abc

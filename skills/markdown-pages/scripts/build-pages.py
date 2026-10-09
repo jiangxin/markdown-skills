@@ -50,6 +50,7 @@ TAG_RE = re.compile(r"<[^>]+>")
 STEM_CHAPTER_RE = re.compile(r"^(\d+)")
 _STALE_CHAPTER_HTML = re.compile(r"^[0-9]{2,3}-[a-z0-9-]+\.html$")
 _SITE_ASSET_PREFIX = "../"
+_HOME_TOC_TOKEN = "%%BOOKTOC%%"
 H2_REL_NUM_RE = re.compile(r"^(##)\s+(?!\d+\.\d+)(\d+)\.\s+", re.MULTILINE)
 H3_REL_NUM_RE = re.compile(
     r"^(###)\s+(?!\d+\.\d+\.\d+)(\d+)\.(\d+)\.?\s+",
@@ -321,6 +322,7 @@ def md_to_html(md_text: str) -> str:
                 "permalink": False,
                 "slugify": slugify,
                 "toc_depth": "2-3",
+                "marker": "",
             }
         },
         output_format="html5",
@@ -470,11 +472,14 @@ def shell_page(
 """
 
 
-def book_toc_one_page(*, chapters: list[Chapter]) -> str:
-    items = [
+def book_toc_one_page(*, chapters: list[Chapter], home_title: str | None = None) -> str:
+    items: list[str] = []
+    if home_title:
+        items.append(f'<li><a href="#ch-index">{html.escape(home_title)}</a></li>')
+    items.extend(
         f'<li><a href="#ch-{html.escape(chapter.stem)}">' f"{html.escape(chapter.title)}</a></li>"
         for chapter in chapters
-    ]
+    )
     return (
         '<nav class="sidebar" aria-label="全书目录">\n'
         "<h2>全书目录</h2>\n"
@@ -503,6 +508,134 @@ def load_chapters(pages_dir: Path) -> list[Chapter]:
         title = extract_title(text, path.stem)
         chapters.append(Chapter(path=path, stem=path.stem, title=title))
     return chapters
+
+
+def home_markdown(pages_dir: Path) -> str | None:
+    """Return ``index.md`` when the book has a compiled home page."""
+    path = pages_dir / "index.md"
+    if path.is_file():
+        return path.read_text(encoding="utf-8")
+    return None
+
+
+def stash_home_toc_marker(md_text: str) -> str:
+    """Replace a lone ``[TOC]`` line outside code fences with a placeholder."""
+
+    def transform(chunk: str) -> str:
+        lines = chunk.splitlines(keepends=True)
+        out: list[str] = []
+        for line in lines:
+            if line.strip() == "[TOC]":
+                ending = "\n" if line.endswith("\n") else ""
+                out.append(f"{_HOME_TOC_TOKEN}{ending}")
+            else:
+                out.append(line)
+        return "".join(out)
+
+    return _map_outside_fences(md_text, transform)
+
+
+def _chapter_sections(chapter: Chapter, pages_dir: Path) -> list[tuple[int, str, str]]:
+    """Return rendered h2/h3 headings as ``(level, id, title)``."""
+    raw = chapter.path.read_text(encoding="utf-8")
+    body = md_to_html(prepare_chapter_md(raw, pages_dir, chapter.stem))
+    sections: list[tuple[int, str, str]] = []
+    for match in HEADING_RE.finditer(body):
+        title = html.unescape(strip_tags(match.group(3))).strip()
+        if title:
+            sections.append((int(match.group(1)), match.group(2), title))
+    return sections
+
+
+def _nested_section_html(
+    sections: list[tuple[int, str, str]],
+    href_for,
+) -> str:
+    """Nest h3 entries under the preceding h2."""
+    nodes: list[dict] = []
+    current: dict | None = None
+    for level, hid, title in sections:
+        node = {"level": level, "hid": hid, "title": title, "children": []}
+        if level <= 2 or current is None:
+            nodes.append(node)
+            current = node if level == 2 else None
+        else:
+            current["children"].append(node)
+
+    def render(items: list[dict]) -> str:
+        if not items:
+            return ""
+        lis = []
+        for node in items:
+            depth = "depth-2" if node["level"] == 2 else "depth-3"
+            lis.append(
+                f'<li class="{depth}"><a href="{html.escape(href_for(node["hid"]))}">'
+                f"{html.escape(node['title'])}</a>{render(node['children'])}</li>"
+            )
+        return f"<ul>\n{''.join(lis)}\n</ul>\n"
+
+    return render(nodes)
+
+
+def home_toc_html(chapters: list[Chapter], pages_dir: Path, *, one_page: bool) -> str:
+    items = []
+    for index, chapter in enumerate(chapters, 1):
+        if one_page:
+            chapter_href = f"#ch-{chapter.stem}"
+
+            def href_for(hid: str, stem: str = chapter.stem) -> str:
+                return f"#{stem}--{hid}"
+
+        else:
+            chapter_href = chapter.html_name
+
+            def href_for(hid: str, name: str = chapter.html_name) -> str:
+                return f"{name}#{hid}"
+
+        sections = _nested_section_html(
+            _chapter_sections(chapter, pages_dir),
+            href_for,
+        )
+        items.append(
+            f'<li><span class="num">{index:02d}</span>'
+            f'<a href="{html.escape(chapter_href)}">{html.escape(chapter.title)}</a>'
+            f"{sections}</li>"
+        )
+    return (
+        '<nav class="home-toc" aria-label="目录">\n'
+        f'<ol class="chapter-list">\n{"".join(items)}\n</ol>\n'
+        "</nav>\n"
+    )
+
+
+def expand_home_toc(
+    body_html: str,
+    chapters: list[Chapter],
+    pages_dir: Path,
+    *,
+    one_page: bool,
+) -> str:
+    toc = home_toc_html(chapters, pages_dir, one_page=one_page)
+    return re.sub(rf"<p>\s*{re.escape(_HOME_TOC_TOKEN)}\s*</p>", toc, body_html)
+
+
+def render_home_body(
+    raw_md: str,
+    pages_dir: Path,
+    chapters: list[Chapter],
+    *,
+    one_page: bool,
+) -> str:
+    prepared = prepare_chapter_md(
+        stash_home_toc_marker(raw_md),
+        pages_dir,
+        "index",
+        one_page=one_page,
+    )
+    body = expand_home_toc(md_to_html(prepared), chapters, pages_dir, one_page=one_page)
+    if one_page:
+        body = prefix_heading_ids(body, "index")
+    return body
 
 
 def chapter_list_html(chapters: list[Chapter]) -> str:
@@ -583,13 +716,18 @@ def write_chapter_page(
 def write_index_page(
     *,
     chapters: list[Chapter],
+    pages_dir: Path,
     html_dir: Path,
     book_title: str,
 ) -> None:
-    index_article = (
-        f'<article class="index">\n<h1>{html.escape(book_title)}</h1>\n'
-        f"<h2>章节</h2>\n{chapter_list_html(chapters)}</article>\n"
-    )
+    raw = home_markdown(pages_dir)
+    if raw is None:
+        body = (
+            f"<h1>{html.escape(book_title)}</h1>\n" f"<h2>章节</h2>\n{chapter_list_html(chapters)}"
+        )
+    else:
+        body = render_home_body(raw, pages_dir, chapters, one_page=False)
+    index_article = f'<article class="index">\n{body}\n</article>\n'
     index_nav = nav_links(chapters, None, for_index=True)
     index_html = shell_page(
         title=book_title,
@@ -622,15 +760,22 @@ def build_one_page_book(
     title: str,
     chapters: list[Chapter] | None = None,
 ) -> Path:
-    """Compile numbered chapters into one self-contained HTML file.
+    """Compile the home page and numbered chapters into one HTML file.
 
-    ``README.md`` and ``AGENTS.md`` are not chapters and are omitted.
+    ``index.md`` is the home page when present. A ``[TOC]`` line there
+    becomes the chapter list. ``README.md`` and ``AGENTS.md`` are omitted.
     """
     if chapters is None:
         chapters = load_chapters(pages_dir)
     require_sources(pages_dir, chapters)
 
     sections: list[str] = []
+    raw_home = home_markdown(pages_dir)
+    home_title = ""
+    if raw_home is not None:
+        home_title = extract_title(raw_home, title)
+        home_body = render_home_body(raw_home, pages_dir, chapters, one_page=True)
+        sections.append(f'<article id="ch-index" class="index">\n{home_body}\n</article>\n')
     for chapter in chapters:
         sections.append(
             _render_one_page_section(
@@ -642,14 +787,15 @@ def build_one_page_book(
 
     output.parent.mkdir(parents=True, exist_ok=True)
     body_main = "\n".join(sections)
-    sidebar = book_toc_one_page(chapters=chapters)
+    sidebar = book_toc_one_page(chapters=chapters, home_title=home_title or None)
+    top_target = "index" if raw_home is not None else chapters[0].stem
     top_nav = (
         '<div class="nav-links">'
-        f'<a href="#ch-{html.escape(chapters[0].stem)}">顶部</a>'
+        f'<a href="#ch-{html.escape(top_target)}">顶部</a>'
         '<span class="disabled">单页全书</span>'
         "</div>"
     )
-    brand = f"#ch-{chapters[0].stem}"
+    brand = f"#ch-{top_target}"
 
     page = shell_page(
         title=f"{title} · 单页",
@@ -872,6 +1018,7 @@ def build_site(
         if not (site_dir / "index.html").is_file():
             write_index_page(
                 chapters=chapters,
+                pages_dir=pages_dir,
                 html_dir=site_dir,
                 book_title=book_title,
             )
@@ -880,6 +1027,7 @@ def build_site(
 
     write_index_page(
         chapters=chapters,
+        pages_dir=pages_dir,
         html_dir=site_dir,
         book_title=book_title,
     )

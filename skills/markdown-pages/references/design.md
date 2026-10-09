@@ -23,9 +23,18 @@ chapters.
 
 ## Home page
 
-The generator writes `pages/index.html` from the book title and the
-numbered chapter list. It does not read `README.md` or `AGENTS.md`.
-`index.md` is not a home page.
+`index.md` is the home page when that file exists. The generator writes
+it to `pages/index.html`, and places the same text at the start of the
+one-file HTML. A line that is only `[TOC]` marks where the chapter list
+goes. Each entry is a chapter, with that chapter's level-2 and level-3
+headings nested under it. The marker is replaced in both outputs:
+chapter and heading links in the multi-page site, in-page anchors in
+the one-file HTML. `[TOC]` inside a code fence stays literal. Numbered
+chapters do not grow a chapter list from that marker.
+
+When `index.md` is absent, `pages/index.html` is the book title plus the
+numbered chapter list. The generator does not read `README.md` or
+`AGENTS.md`. `README.md` is not the home page.
 
 `meta.toml` is not a chapter.
 

@@ -289,13 +289,21 @@ article hr {
 
 .chapter-nav .disabled { color: var(--muted); opacity: 0.45; }
 
+.home-toc {
+  margin: 0.5rem 0 1.5rem;
+}
+
+.home-toc .chapter-list {
+  margin-top: 0.75rem;
+}
+
 .chapter-list {
   list-style: none;
   margin: 1.5rem 0 0;
   padding: 0;
 }
 
-.chapter-list li {
+.chapter-list > li {
   margin: 0.45rem 0;
   padding: 0.75rem 0.9rem;
   background: var(--code-bg);
@@ -309,9 +317,36 @@ article hr {
 }
 .chapter-list a:hover { color: var(--accent); }
 .chapter-list .num {
+  display: inline-block;
+  min-width: 1.6rem;
+  margin-right: 0.4rem;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
-  margin-right: 0.4rem;
+}
+
+.home-toc .chapter-list ul {
+  list-style: none;
+  margin: 0.45rem 0 0.1rem;
+  padding: 0 0 0 0.85rem;
+  border-left: 2px solid var(--border);
+}
+
+.home-toc .chapter-list ul li {
+  margin: 0.2rem 0;
+}
+
+.home-toc .chapter-list ul a {
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+.home-toc .chapter-list li.depth-3 {
+  margin-left: 0.85rem;
+}
+
+.home-toc .chapter-list li.depth-3 a {
+  font-weight: 400;
+  color: var(--muted);
 }
 
 .site-footer {
