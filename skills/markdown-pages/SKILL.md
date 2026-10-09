@@ -7,7 +7,7 @@ argument-hint: "[directory]"
 
 # Markdown Pages
 
-Initialize a book directory of Markdown chapters. The engine already in this skill builds a multi-page HTML site, a one-file HTML ebook, and PDF under `build/<name>/`. User project files are config.ini, Makefile, build.py, one or more book directories, and build outputs. The engine stays in the skill. Deck root resolution is --deck-root, else DECK_ROOT, else the skill root. Do not restyle by editing HTML.
+Initialize a book directory of Markdown chapters. The engine already in this skill builds a multi-page HTML site under `build/<name>/pages/`, plus a one-file HTML ebook and PDF at `build/<name>/<name>.html` and `build/<name>/<name>.pdf`. User project files are config.ini, Makefile, build.py, one or more book directories, and build outputs. The engine stays in the skill. Deck root resolution is --deck-root, else DECK_ROOT, else the skill root. Do not restyle by editing HTML.
 
 ## What this skill does
 
@@ -91,13 +91,13 @@ Otherwise write only what is missing for this initialization:
 
 The trampoline picks the engine from document `meta.toml` `type`, then `[paths] skills_root` / `markdown-pages`, else `.agents/skills/markdown-pages`, else `~/.agents/skills/markdown-pages`. `MARKDOWN_PAGES_HOME` overrides that lookup. For deep generator customization, install and edit the skill in the project (typically `.agents/skills/markdown-pages`). PDF still uses skill-bundled browser tooling.
 
-MathJax is vendored under `vendor/mathjax/` and copied into `build/<name>/assets/mathjax/` (no CDN). Webfonts are off by default; set `[assets] webfont = on` and run `make fonts` to cache Google Fonts under the skill `.cache/fonts/`. HTML never links fonts.googleapis.com / fonts.gstatic.com / jsDelivr.
+MathJax is vendored under `vendor/mathjax/` and copied into `build/<name>/assets/mathjax/` (no CDN). Chapter pages link to it as `../assets/`. The one-file HTML inlines CSS and links `assets/mathjax/` beside itself. Webfonts are off by default; set `[assets] webfont = on` and run `make fonts` to cache Google Fonts under the skill `.cache/fonts/`. HTML never links fonts.googleapis.com / fonts.gstatic.com / jsDelivr.
 
 ## After initialize
 
 Write `README.md` as the home page and one Markdown file per chapter under the book directory, named `NN-slug.md` or `NNN-slug.md`. Page order is that filename sort unless `meta.toml` `[book] sort` points at an index file. Keep `<book>/references/plan.md` as the authoring plan and `<book>/AGENTS.md` as agent guidance; neither is a chapter.
 
-A project may hold more than one pages directory. Each has its own `meta.toml`. This skill builds only `type = "pages"`. Artifacts go under `build/<name>/` as a multi-page site (`index.html` and chapter pages), a one-file ebook `<name>.html`, and `<name>.pdf`. Build from the deck root: `make html <name>` builds HTML for that directory. `make pdf <name>` writes the PDF. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck; the skill Makefile then uses `.venv/bin/python` after `ensure-venv`. Commit the chapter markdown, `meta.toml`, `config.ini`, `Makefile`, and `build.py`. Leave `build/`, `node_modules/`, `.cache/`, and `.venv/` untracked.
+A project may hold more than one pages directory. Each has its own `meta.toml`. This skill builds only `type = "pages"`. Artifacts go under `build/<name>/`: the multi-page site in `pages/` (`index.html` and chapter pages), a one-file ebook `<name>.html`, and `<name>.pdf`. Build from the deck root: `make html <name>` builds HTML for that directory. `make pdf <name>` writes the PDF. `make serve` serves `build/`. That Makefile runs `python3 build.py`, which finds the skill and forwards with `DECK_ROOT` set to the deck; the skill Makefile then uses `.venv/bin/python` after `ensure-venv`. Commit the chapter markdown, `meta.toml`, `config.ini`, `Makefile`, and `build.py`. Leave `build/`, `node_modules/`, `.cache/`, and `.venv/` untracked.
 
 Later chapter edits change Markdown, then commit, then rebuild. Do not hand-edit HTML. Do not re-run this skill to change copy in an existing book.
 

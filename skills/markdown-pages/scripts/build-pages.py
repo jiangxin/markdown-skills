@@ -4,9 +4,10 @@
 Requires the skill ``.venv`` with ``requirements.txt`` (``markdown``).
 Run ``python3 scripts/ensure_venv.py`` or ``make html`` from this skill.
 
-The book root is the selected pages directory (flat, no docs/). Artifacts
-go under ``build/<pages>/``: chapter HTML, shared CSS, and
-``build/<pages>/<name>.html``.
+The book root is the selected pages directory (flat, no docs/). The
+multi-page site is ``build/<pages>/pages/``. Shared CSS and MathJax stay
+in ``build/<pages>/assets/``. The one-file HTML and PDF are
+``build/<pages>/<name>.html`` and ``.pdf``.
 """
 
 from __future__ import annotations
@@ -46,6 +47,8 @@ HEADING_RE = re.compile(
 H1_RE = re.compile(r"^#\s+(.+)$", re.MULTILINE)
 TAG_RE = re.compile(r"<[^>]+>")
 STEM_CHAPTER_RE = re.compile(r"^(\d+)")
+_STALE_CHAPTER_HTML = re.compile(r"^[0-9]{2,3}-[a-z0-9-]+\.html$")
+_SITE_ASSET_PREFIX = "../"
 H2_REL_NUM_RE = re.compile(r"^(##)\s+(?!\d+\.\d+)(\d+)\.\s+", re.MULTILINE)
 H3_REL_NUM_RE = re.compile(
     r"^(###)\s+(?!\d+\.\d+\.\d+)(\d+)\.(\d+)\.?\s+",
@@ -360,21 +363,22 @@ def nav_links(
     return f'<div class="nav-links">{prev_a}{home}{next_a}</div>'
 
 
-def mathjax_script_tag() -> str:
+def mathjax_script_tag(asset_prefix: str = "") -> str:
     """Return MathJax config + local script tags, or empty if vendor missing."""
     vendor = config.skill_root() / "vendor" / "mathjax" / "tex-chtml.js"
     if not vendor.is_file():
         sys.stderr.write("markdown-pages: vendor/mathjax missing; math will not render\n")
         return ""
-    return """  <script>
-    window.MathJax = {
-      tex: {
+    src = f"{asset_prefix}assets/mathjax/tex-chtml.js"
+    return f"""  <script>
+    window.MathJax = {{
+      tex: {{
         inlineMath: [['\\\\(', '\\\\)'], ['$', '$']],
         displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']]
-      }
-    };
+      }}
+    }};
   </script>
-  <script defer src="assets/mathjax/tex-chtml.js"></script>
+  <script defer src="{src}"></script>
 """
 
 
@@ -390,6 +394,7 @@ def shell_page(
     is_index: bool = False,
     inline_css: bool = False,
     brand_href: str = "index.html",
+    asset_prefix: str = "",
 ) -> str:
     wrap_cls = "content-wrap index-wrap" if is_index else "content-wrap"
     page_toc_block = "" if is_index else page_toc
@@ -401,9 +406,10 @@ def shell_page(
         style_block = f"<style>\n{font_css}\n{book_css()}\n</style>"
     else:
         style_block = (
-            f"<style>\n{font_css}</style>\n" '<link rel="stylesheet" href="assets/book.css" />'
+            f"<style>\n{font_css}</style>\n"
+            f'<link rel="stylesheet" href="{asset_prefix}assets/book.css" />'
         )
-    mathjax = mathjax_script_tag()
+    mathjax = mathjax_script_tag(asset_prefix)
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -547,6 +553,7 @@ def write_chapter_page(
         top_nav=top,
         footer_nav=top,
         is_index=False,
+        asset_prefix=_SITE_ASSET_PREFIX,
     )
     (html_dir / chapter.html_name).write_text(page, encoding="utf-8")
 
@@ -579,6 +586,7 @@ def write_index_page(
         top_nav=index_nav,
         footer_nav=index_nav,
         is_index=True,
+        asset_prefix=_SITE_ASSET_PREFIX,
     )
     (html_dir / "index.html").write_text(index_html, encoding="utf-8")
 
@@ -819,10 +827,21 @@ def build_single_page(
     return output
 
 
+def remove_legacy_site_html(artifact_dir: Path, ebook_name: str) -> None:
+    """Drop multi-page HTML left beside the one-file ebook by older builds."""
+    if not artifact_dir.is_dir():
+        return
+    for path in artifact_dir.iterdir():
+        if not path.is_file() or path.name == ebook_name:
+            continue
+        if path.name == "index.html" or _STALE_CHAPTER_HTML.fullmatch(path.name):
+            path.unlink()
+
+
 def build_site(
     *,
     pages_dir: Path,
-    html_dir: Path,
+    artifact_dir: Path,
     book_title: str,
     clean: bool,
     only: str | None,
@@ -830,11 +849,14 @@ def build_site(
 ) -> None:
     chapters = load_chapters(pages_dir)
     require_sources(pages_dir, chapters)
+    site_dir = artifact_dir / "pages"
 
-    if clean and html_dir.exists():
-        shutil.rmtree(html_dir)
-    html_dir.mkdir(parents=True, exist_ok=True)
-    ensure_assets(html_dir, refresh=only is None)
+    if clean and artifact_dir.exists():
+        shutil.rmtree(artifact_dir)
+    if one_page_path is not None:
+        remove_legacy_site_html(artifact_dir, one_page_path.name)
+    site_dir.mkdir(parents=True, exist_ok=True)
+    ensure_assets(artifact_dir, refresh=only is None)
 
     if only:
         key = only.removesuffix(".md").removesuffix(".html")
@@ -855,23 +877,23 @@ def build_site(
             chapters=chapters,
             index=idx,
             pages_dir=pages_dir,
-            html_dir=html_dir,
+            html_dir=site_dir,
             book_title=book_title,
         )
-        if not (html_dir / "index.html").is_file():
+        if not (site_dir / "index.html").is_file():
             write_index_page(
                 chapters=chapters,
                 pages_dir=pages_dir,
-                html_dir=html_dir,
+                html_dir=site_dir,
                 book_title=book_title,
             )
-        print(f"Built 1 page → {html_dir / match.html_name}")
+        print(f"Built 1 page → {site_dir / match.html_name}")
         return
 
     write_index_page(
         chapters=chapters,
         pages_dir=pages_dir,
-        html_dir=html_dir,
+        html_dir=site_dir,
         book_title=book_title,
     )
     for index, chapter in enumerate(chapters):
@@ -880,10 +902,10 @@ def build_site(
             chapters=chapters,
             index=index,
             pages_dir=pages_dir,
-            html_dir=html_dir,
+            html_dir=site_dir,
             book_title=book_title,
         )
-    print(f"Built {len(chapters)} chapters → {html_dir}")
+    print(f"Built {len(chapters)} chapters → {site_dir}")
     if one_page_path is not None:
         build_one_page_book(
             pages_dir,
@@ -896,8 +918,9 @@ def build_site(
 def build() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Compile a Markdown book to build/<pages>/ (multi-page site and "
-            "one-page ebook). Requires skill .venv (python3 scripts/ensure_venv.py)"
+            "Compile a Markdown book to build/<pages>/pages/ plus "
+            "build/<pages>/<name>.html. Requires skill .venv "
+            "(python3 scripts/ensure_venv.py)"
         )
     )
     parser.add_argument(
@@ -965,14 +988,14 @@ def build() -> None:
     root = config.deck_root()
     book = config.load_book(root)
     paths = config.output_paths(root)
-    html_dir = paths.html.parent
+    artifact_dir = paths.html.parent
     book_title = args.title or book.title
 
     if args.page is not None:
         page = args.page if args.page.is_absolute() else (root / args.page)
         dest = args.output
         if dest is None:
-            dest = html_dir / f"{page.stem}.html"
+            dest = artifact_dir / f"{page.stem}.html"
         elif not dest.is_absolute():
             dest = root / dest
         build_single_page(page, output=dest.resolve(), title=args.title)
@@ -1007,7 +1030,7 @@ def build() -> None:
 
     build_site(
         pages_dir=book.pages,
-        html_dir=html_dir,
+        artifact_dir=artifact_dir,
         book_title=book_title,
         clean=args.clean,
         only=args.only,

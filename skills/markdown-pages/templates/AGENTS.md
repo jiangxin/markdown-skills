@@ -38,5 +38,5 @@ make serve
 ```
 
 Replace `<dir>` with this directory's name (for example `pages` or `example-pages`).
-Artifacts go under `build/<dir>/` (multi-page site, one-file `<name>.html`, and PDF).
+Artifacts go under `build/<dir>/pages/` (multi-page site) and `build/<dir>/<name>.html` / `<name>.pdf` (one-file HTML and PDF).
 The skill Makefile creates `<skill>/.venv` from `requirements.txt` (`markdown`) via `scripts/ensure_venv.py`, then runs `.venv/bin/python`. Commit Markdown before building when you care about the git stamp. Leave `build/`, `node_modules/`, `.cache/`, and `.venv/` untracked.

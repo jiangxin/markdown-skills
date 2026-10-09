@@ -22,7 +22,8 @@ chapters.
 
 ## Home page
 
-`README.md` is the home chapter. The generator writes it as `index.html`.
+`README.md` is the home chapter. The generator writes it as
+`pages/index.html` under the artifact directory.
 `index.md` is not the preferred home; use `README.md` so the source tree
 matches a typical GitHub book.
 
@@ -66,9 +67,11 @@ set `order` and `sort` together.
 
 ## Artifacts
 
-From the deck root, `make html <name>` writes a multi-page site and a
-one-file ebook under `build/<name>/`. `make pdf <name>` writes
-`build/<name>/<name>.pdf`. PPTX is not this skill.
+From the deck root, `make html <name>` writes the multi-page site to
+`build/<name>/pages/` and the one-file ebook to
+`build/<name>/<name>.html`. `make pdf <name>` writes
+`build/<name>/<name>.pdf`. Shared CSS and MathJax stay in
+`build/<name>/assets/`. PPTX is not this skill.
 
 In the multi-page site, `.md` links rewrite to `.html`. In the one-file
 ebook, `.md` links rewrite to in-page anchors.

@@ -55,8 +55,9 @@ class TestBuildPages(unittest.TestCase):
             )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         out = SKILL_ROOT / "build" / "examples" / "pages"
-        index = (out / "index.html").read_text(encoding="utf-8")
-        intro = (out / "01-intro.html").read_text(encoding="utf-8")
+        site = out / "pages"
+        index = (site / "index.html").read_text(encoding="utf-8")
+        intro = (site / "01-intro.html").read_text(encoding="utf-8")
         ebook = (out / "markdown-pages-examples.html").read_text(encoding="utf-8")
         self.assertIn("Markdown Pages Examples", index)
         self.assertIn("Intro", index)
@@ -70,6 +71,9 @@ class TestBuildPages(unittest.TestCase):
         self.assertIn("<style>", ebook)
         self.assertTrue(".chapter-nav" in ebook or "@media print" in ebook)
         self.assertNotIn('href="assets/book.css"', ebook)
+        self.assertIn('href="../assets/book.css"', index)
+        self.assertIn('href="../assets/book.css"', intro)
+        self.assertFalse((out / "index.html").is_file())
         self.assertTrue((out / "assets" / "book.css").is_file())
         css = (out / "assets" / "book.css").read_text(encoding="utf-8")
         self.assertIn(".chapter-nav", css)
@@ -101,8 +105,9 @@ class TestBuildPages(unittest.TestCase):
             )
             self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
             out = deck / "build" / "pages"
-            index = (out / "index.html").read_text(encoding="utf-8")
-            intro = (out / "01-intro.html").read_text(encoding="utf-8")
+            site = out / "pages"
+            index = (site / "index.html").read_text(encoding="utf-8")
+            intro = (site / "01-intro.html").read_text(encoding="utf-8")
             ebook = (out / "my-book.html").read_text(encoding="utf-8")
             self.assertIn("Home", index)
             self.assertIn("My Book", index)

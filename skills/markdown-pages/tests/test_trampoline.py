@@ -150,7 +150,7 @@ class TestTrampolineDispatch(unittest.TestCase):
             slides_html = deck / "build" / "slides" / "demo-deck.html"
             self.assertTrue(slides_html.is_file())
             self.assertIn("Demo Slides", slides_html.read_text(encoding="utf-8"))
-            index = deck / "build" / "pages" / "index.html"
+            index = deck / "build" / "pages" / "pages" / "index.html"
             ebook = deck / "build" / "pages" / "demo-book.html"
             self.assertTrue(index.is_file(), result.stdout)
             self.assertTrue(ebook.is_file(), result.stdout)

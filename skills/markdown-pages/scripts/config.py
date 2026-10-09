@@ -55,7 +55,11 @@ class Book:
 
 @dataclass(frozen=True)
 class Outputs:
-    """Artifact paths under ``<build_root>/<pages>/``."""
+    """Artifact paths under ``<build_root>/<pages>/``.
+
+    ``site`` is the multi-page directory. ``html`` and ``pdf`` are the
+    one-file ebook and PDF beside it.
+    """
 
     root: Path
     name: str
@@ -64,6 +68,7 @@ class Outputs:
     pages_rel: str
     html: Path
     pdf: Path
+    site: Path
     build_root: Path
 
 
@@ -135,8 +140,10 @@ def build_root(deck_root: Path) -> Path:
 
 
 def output_paths(root: Path | None = None) -> Outputs:
-    """Return ``<build_root>/<pages>/<name>.html`` and ``.pdf``.
+    """Return artifact paths for the selected book.
 
+    The multi-page site is ``<build_root>/<pages>/pages/``. The one-file
+    HTML and PDF are ``<build_root>/<pages>/<name>.html`` and ``.pdf``.
     ``name`` comes from that directory's ``meta.toml``. When ``root`` is
     omitted, the deck root is ``deck_root()``. ``--doc`` and ``DOC``
     select the book directory. ``[paths] build_root`` overrides ``build/``.
@@ -153,6 +160,7 @@ def output_paths(root: Path | None = None) -> Outputs:
         pages_rel=book.pages_rel,
         html=out_dir / f"{book.name}.html",
         pdf=out_dir / f"{book.name}.pdf",
+        site=out_dir / "pages",
         build_root=artifacts,
     )
 

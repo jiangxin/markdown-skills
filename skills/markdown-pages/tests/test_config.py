@@ -135,6 +135,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(paths.pages_rel, "custom/pages")
             self.assertEqual(paths.html, resolved / "build" / "custom" / "pages" / "my-book.html")
             self.assertEqual(paths.pdf, resolved / "build" / "custom" / "pages" / "my-book.pdf")
+            self.assertEqual(paths.site, resolved / "build" / "custom" / "pages" / "pages")
             self.assertEqual(paths.build_root, resolved / "build")
             self.assertFalse(hasattr(paths, "pptx"))
 

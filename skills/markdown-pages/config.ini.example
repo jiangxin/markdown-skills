@@ -26,9 +26,10 @@
 ;         cache falls back to system fonts; viewing never hits Google Fonts.
 ; MathJax is vendored under vendor/mathjax/ and copied into build assets.
 ;
-; Artifacts: <build_root>/<name>/index.html, chapter pages, <name>.html, <name>.pdf
-;         make html <name>      multi-page site + one-file HTML
-;         make pdf <name>       PDF from the one-file HTML
+; Artifacts: <build_root>/<dir>/pages/index.html and chapter pages,
+;         <build_root>/<dir>/<name>.html, <build_root>/<dir>/<name>.pdf
+;         make html <dir>       multi-page site + one-file HTML
+;         make pdf <dir>        PDF from the one-file HTML
 ;         make serve            preview <build_root>/
 ;         make fonts            download Google Fonts into skill caches
 
