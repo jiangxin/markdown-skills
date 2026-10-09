@@ -40,6 +40,7 @@ MD_LINK_RE = re.compile(
     r"\[([^\]]+)\]\(([^)]+\.md)(#[^)]*)?\)",
     re.IGNORECASE,
 )
+_END_NAV_LINE = re.compile(r"^(?:下一篇[:：].*|返回首页(?:[:：].*)?|\[返回首页\]\([^)]*\))$")
 HEADING_RE = re.compile(
     r"<h([23])\s+[^>]*id=\"([^\"]+)\"[^>]*>(.*?)</h\1>",
     re.IGNORECASE | re.DOTALL,
@@ -136,8 +137,30 @@ def prepare_chapter_md(
     if chapter is not None:
         md_text = apply_chapter_section_numbers(md_text, chapter)
     if one_page:
-        return rewrite_md_links_one_page(md_text, pages_dir)
+        return rewrite_md_links_one_page(strip_one_page_end_nav(md_text), pages_dir)
     return rewrite_md_links(md_text, pages_dir)
+
+
+def strip_one_page_end_nav(md_text: str) -> str:
+    """Drop trailing next-chapter and home links from a one-file article.
+
+    The one-file HTML and the PDF printed from it are one article. Lines at
+    the end of a chapter that only say ``下一篇：`` or link back with
+    ``返回首页`` stay in the multi-page site and are omitted here.
+    """
+    lines = md_text.splitlines()
+    changed = False
+    while lines and not lines[-1].strip():
+        lines.pop()
+        changed = True
+    while lines and _END_NAV_LINE.fullmatch(lines[-1].strip()):
+        lines.pop()
+        changed = True
+        while lines and not lines[-1].strip():
+            lines.pop()
+    if not changed:
+        return md_text
+    return "\n".join(lines) + ("\n" if lines else "")
 
 
 def rewrite_md_links(md_text: str, pages_dir: Path) -> str:

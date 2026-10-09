@@ -123,6 +123,32 @@ class TestBuildPages(unittest.TestCase):
             self.assertTrue(".chapter-nav" in ebook or "@media print" in ebook)
             self.assertNotIn('href="assets/book.css"', ebook)
 
+    def test_one_page_omits_trailing_chapter_nav(self):
+        with tempfile.TemporaryDirectory() as raw:
+            deck = Path(raw)
+            write_book(deck / "pages", "nav-book", "Nav Book")
+            (deck / "pages" / "01-intro.md").write_text(
+                "# Intro\n\nSee [Next](02-next.md) in the body.\n\n" "下一篇：[Next](02-next.md)\n",
+                encoding="utf-8",
+            )
+            (deck / "pages" / "02-next.md").write_text(
+                "# Next\n\nDone.\n\n返回首页：[Home](README.md)\n",
+                encoding="utf-8",
+            )
+            proc = _run_build(deck)
+            self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
+            site = deck / "build" / "pages" / "pages"
+            intro = (site / "01-intro.html").read_text(encoding="utf-8")
+            nxt = (site / "02-next.html").read_text(encoding="utf-8")
+            ebook = (deck / "build" / "pages" / "nav-book.html").read_text(encoding="utf-8")
+            self.assertIn("下一篇", intro)
+            self.assertIn("02-next.html", intro)
+            self.assertIn("返回首页", nxt)
+            self.assertNotIn("下一篇", ebook)
+            self.assertNotIn("返回首页", ebook)
+            self.assertIn('href="#ch-02-next"', ebook)
+            self.assertIn("Done.", ebook)
+
     def test_missing_markdown_matches_source(self):
         code = r"""
 import importlib.abc

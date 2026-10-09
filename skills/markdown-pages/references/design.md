@@ -74,7 +74,10 @@ From the deck root, `make html <name>` writes the multi-page site to
 `build/<name>/assets/`. PPTX is not this skill.
 
 In the multi-page site, `.md` links rewrite to `.html`. In the one-file
-ebook, `.md` links rewrite to in-page anchors.
+ebook, `.md` links rewrite to in-page anchors. Trailing lines that only
+point onward (`下一篇：`) or back home (`返回首页`) are left in the
+multi-page site and omitted from the one-file HTML and the PDF, which
+are one article.
 
 ## Engine
 
