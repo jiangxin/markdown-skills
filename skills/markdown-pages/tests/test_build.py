@@ -85,6 +85,10 @@ class TestBuildPages(unittest.TestCase):
             self.assertNotIn("fonts.gstatic.com", html)
             self.assertNotIn("cdn.jsdelivr.net", html)
             self.assertIn("assets/mathjax/tex-chtml.js", html)
+            self.assertIn('name="revision"', html)
+            self.assertIn('location.protocol === "file:"', html)
+            self.assertIn("location.replace(url)", html)
+            self.assertIn('"_v="', html)
         self.assertTrue((out / "assets" / "mathjax" / "tex-chtml.js").is_file())
 
     def test_temp_deck_via_make_html(self):
@@ -124,6 +128,8 @@ class TestBuildPages(unittest.TestCase):
             self.assertIn("<style>", ebook)
             self.assertTrue(".chapter-nav" in ebook or "@media print" in ebook)
             self.assertNotIn('href="assets/book.css"', ebook)
+            self.assertIn('content="unknown"', index)
+            self.assertIn('location.protocol === "file:"', ebook)
 
     def test_one_page_omits_trailing_chapter_nav(self):
         with tempfile.TemporaryDirectory() as raw:

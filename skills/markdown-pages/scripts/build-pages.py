@@ -416,6 +416,61 @@ def mathjax_script_tag(asset_prefix: str = "") -> str:
 """
 
 
+_GIT_DESCRIBE: dict[Path, str] = {}
+
+
+def git_describe(root: Path | None = None) -> str:
+    """``git describe --always --dirty`` in the deck root, or ``unknown``."""
+    resolved = (root if root is not None else config.deck_root()).resolve()
+    cached = _GIT_DESCRIBE.get(resolved)
+    if cached is None:
+        cached = _read_git_describe(resolved)
+        _GIT_DESCRIBE[resolved] = cached
+    return cached
+
+
+def _read_git_describe(root: Path) -> str:
+    try:
+        result = subprocess.run(
+            ["git", "describe", "--always", "--dirty"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return "unknown"
+    text = (result.stdout or "").strip()
+    return text if result.returncode == 0 and text else "unknown"
+
+
+def cache_bust_html(revision: str) -> str:
+    """Head tags that reload HTML when the revision changes.
+
+    ``file:`` is left alone so PDF export can open the one-file HTML
+    directly. An iframe load also skips the redirect.
+    """
+    rev = html.escape(revision, quote=True)
+    return f"""  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="revision" content="{rev}" />
+  <script>
+    (function () {{
+      if (location.protocol === "file:") return;
+      if (window.self !== window.top) return;
+      var m = document.querySelector('meta[name="revision"]');
+      var rev = m ? m.content : "";
+      if (!rev) return;
+      var key = "_v=" + encodeURIComponent(rev);
+      if (location.search.indexOf(key) === -1) {{
+        var url = location.origin + location.pathname + "?" + key + location.hash;
+        location.replace(url);
+      }}
+    }})();
+  </script>"""
+
+
 def shell_page(
     *,
     title: str,
@@ -449,6 +504,7 @@ def shell_page(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+{cache_bust_html(git_describe())}
   <title>{html.escape(title)}</title>
   {style_block}
 {mathjax}</head>

@@ -103,4 +103,4 @@ Later chapter edits change Markdown, then commit, then rebuild. Do not hand-edit
 
 ## Cover version stamp
 
-The generator may write a git describe stamp into the built HTML. Do not put the revision in the chapter Markdown. A build before the sources are committed prints `unknown`.
+The generator writes a `git describe --always --dirty` stamp into each HTML page as `<meta name="revision">`. Browsers that open the page over HTTP reload it as `?_v=<revision>` when that query is missing, and keep the hash. `file:` URLs and iframes skip the reload so PDF export can open the one-file HTML directly. Do not put the revision in the chapter Markdown. A build outside a git work tree uses `unknown`.
