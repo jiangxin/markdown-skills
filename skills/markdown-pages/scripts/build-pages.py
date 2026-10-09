@@ -137,17 +137,18 @@ def prepare_chapter_md(
     chapter = chapter_num_from_stem(stem)
     if chapter is not None:
         md_text = apply_chapter_section_numbers(md_text, chapter)
+    md_text = strip_end_nav(md_text)
     if one_page:
-        return rewrite_md_links_one_page(strip_one_page_end_nav(md_text), pages_dir)
+        return rewrite_md_links_one_page(md_text, pages_dir)
     return rewrite_md_links(md_text, pages_dir)
 
 
-def strip_one_page_end_nav(md_text: str) -> str:
-    """Drop trailing next-chapter and home links from a one-file article.
+def strip_end_nav(md_text: str) -> str:
+    """Drop trailing next-chapter and home lines from chapter Markdown.
 
-    The one-file HTML and the PDF printed from it are one article. Lines at
-    the end of a chapter that only say ``下一篇：`` or link back with
-    ``返回首页`` stay in the multi-page site and are omitted here.
+    Multi-page HTML already renders previous, next, and home links in the
+    page footer. Those lines are not chapter prose, so they are omitted
+    from both the multi-page site and the one-file HTML.
     """
     lines = md_text.splitlines()
     changed = False

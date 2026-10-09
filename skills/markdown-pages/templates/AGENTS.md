@@ -21,7 +21,7 @@ Replace the links below if this deck uses another skill path.
 
 - Flat book directory: optional home `index.md`, then numbered `NN-slug.md` or `NNN-slug.md` chapters. A line that is only `[TOC]` in `index.md` is where the chapter list is inserted on the home page and in the one-file HTML. `README.md` is a repository summary and is not compiled. `meta.toml` and this `AGENTS.md` are not compiled either. Authoring notes may live under `references/` (for example `plan.md`); that tree is not chapters.
 - Chapter bodies are ordinary CommonMark (headings, lists, links, code fences).
-- Do **not** use slide layouts, `layout:` frontmatter, or `:::card` fences.
+- Do **not** end a chapter with 「下一篇：」 or 「返回首页」. The multi-page HTML footer already links to the previous chapter, the next chapter, and home. The one-file HTML does not insert those lines between chapters.
 - Order defaults to filename sort (`[book] order = auto`). Optional `[book] sort = <file.md>` uses a heading link list instead.
 
 For filenames, home page rules, `meta.toml` keys, and link rewriting, follow the dialect file above.

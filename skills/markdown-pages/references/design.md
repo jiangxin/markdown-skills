@@ -82,11 +82,12 @@ From the deck root, `make html <name>` writes the multi-page site to
 `build/<name>/<name>.pdf`. Shared CSS and MathJax stay in
 `build/<name>/assets/`. PPTX is not this skill.
 
-In the multi-page site, `.md` links rewrite to `.html`. In the one-file
-ebook, `.md` links rewrite to in-page anchors. Trailing lines that only
-point onward (`下一篇：`) or back home (`返回首页`) are left in the
-multi-page site and omitted from the one-file HTML and the PDF, which
-are one article.
+In the multi-page site, `.md` links rewrite to `.html`, and each chapter
+page footer links to the previous chapter, the next chapter, and home.
+In the one-file ebook, `.md` links rewrite to in-page anchors. Do not
+end a chapter with `下一篇：` or `返回首页`. The builder drops a trailing
+line that only says that, so it does not appear between chapters in the
+one-file HTML or again under the multi-page footer.
 
 ## Engine
 
